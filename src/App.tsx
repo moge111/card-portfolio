@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import DashboardLayout from './components/layout/DashboardLayout';
 import OverviewPage from './components/overview/OverviewPage';
 import GradingPage from './components/grading/GradingPage';
@@ -6,7 +6,7 @@ import SealedPage from './components/sealed/SealedPage';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<OverviewPage />} />
@@ -14,6 +14,6 @@ export default function App() {
           <Route path="/sealed" element={<SealedPage />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
