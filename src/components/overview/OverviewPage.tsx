@@ -26,15 +26,25 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function OverviewPage() {
   const stats = useMemo(() => {
+    const EBAY_FEE = 0.1325;
+    const PSA_SHIPPING = 22.08;
     const gradingInvested = gradingPortfolio.reduce((s, c) => s + c.totalInvestment, 0);
-    const gradingProfit = gradingPortfolio.reduce((s, c) => s + c.profit, 0);
     const sealedInvested = sealedCollection.reduce((s, c) => s + c.totalCost, 0);
     const sealedProfit = sealedCollection.reduce((s, c) => s + c.profit, 0);
     const totalInvested = gradingInvested + sealedInvested;
+
+    // Blended grading profit: actual for graded, expected for remaining
+    const blendedGradingRevenue = gradingPortfolio.reduce((s, c) => {
+      const actualRev = (c.actual10s * c.psa10Value + c.actual9s * c.psa9Value + c.actualSub9s * c.costPerCard) * (1 - EBAY_FEE);
+      const remainingQty = c.qty - c.gradedQty;
+      const expectedRevPerCard = c.netRevenue / c.qty;
+      return s + actualRev + remainingQty * expectedRevPerCard;
+    }, 0);
+    const gradingProfit = blendedGradingRevenue - gradingInvested - PSA_SHIPPING;
+
     const totalProfit = gradingProfit + sealedProfit;
-    const gradingRevenue = gradingPortfolio.reduce((s, c) => s + c.netRevenue, 0);
     const sealedMarket = sealedCollection.reduce((s, c) => s + c.totalMarketValue, 0);
-    const totalValue = gradingRevenue + sealedMarket;
+    const totalValue = blendedGradingRevenue + sealedMarket;
 
     return { gradingInvested, gradingProfit, sealedInvested, sealedProfit, totalInvested, totalProfit, totalValue };
   }, []);

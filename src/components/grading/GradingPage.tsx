@@ -143,8 +143,63 @@ export default function GradingPage() {
   const totals = useMemo(() => {
     const totalCards = gradingPortfolio.reduce((s, c) => s + c.qty, 0);
     const invested = gradingPortfolio.reduce((s, c) => s + c.totalInvestment, 0);
-    const profit = gradingPortfolio.reduce((s, c) => s + c.profit, 0);
-    return { totalCards, invested, profit, roi: (profit / invested) * 100 };
+
+    // Blended profit: actual results for graded cards + expected for ungraded
+    const blendedRevenue = gradingPortfolio.reduce((s, c) => {
+      const actualRev = calcActualRevenue(c); // revenue from graded cards
+      const remainingQty = c.qty - c.gradedQty;
+      const expectedRevPerCard = c.netRevenue / c.qty;
+      return s + actualRev + remainingQty * expectedRevPerCard;
+    }, 0);
+    const blendedProfit = blendedRevenue - invested - PSA_SHIPPING_COSTS;
+
+    // Original expected (no actuals)
+    const expectedProfit = gradingPortfolio.reduce((s, c) => s + c.profit, 0);
+
+    // Breakdown by submission
+    // Sub 1 (Order 26141760): 25 graded cards - use actual results
+    // Sub 2 (Order 26141834): 24 cards shipping - Pokemon + 1 Shanks
+    // Sub 3 (Order 14231923): 23 cards - One Piece + Naruto
+    const SUB2_MAP: Record<number, number> = {
+      1: 4, 2: 3, 3: 1, 4: 2, 5: 1, 6: 1, 7: 1, 8: 1,
+      21: 1, 22: 1, 23: 1, 24: 1, 25: 1, 26: 1, 27: 1, 28: 1, 29: 1, 30: 1,
+    };
+    const SUB3_IDS = new Set([31, 32, 33, 34]);
+
+    const calcSubStats = (getQty: (c: GradingCard) => number) => {
+      let subInvested = 0;
+      let subRevenue = 0;
+      gradingPortfolio.forEach((c) => {
+        const qty = getQty(c);
+        if (qty <= 0) return;
+        const investPerCard = c.totalInvestment / c.qty;
+        const revPerCard = c.netRevenue / c.qty;
+        subInvested += investPerCard * qty;
+        subRevenue += revPerCard * qty;
+      });
+      return { invested: subInvested, profit: subRevenue - subInvested };
+    };
+
+    // Sub 1: actual results
+    const sub1Revenue = gradingPortfolio.reduce((s, c) => s + calcActualRevenue(c), 0);
+    const sub1Invested = gradingPortfolio.reduce((s, c) => {
+      const perCard = c.totalInvestment / c.qty;
+      return s + perCard * c.gradedQty;
+    }, 0);
+    const sub1 = { invested: sub1Invested, profit: sub1Revenue - sub1Invested - PSA_SHIPPING_COSTS, cards: 25 };
+
+    // Sub 2: expected for these cards
+    const sub2Raw = calcSubStats((c) => SUB2_MAP[c.id] || 0);
+    const sub2 = { ...sub2Raw, cards: 24 };
+
+    // Sub 3: expected for these cards
+    const sub3Raw = calcSubStats((c) => SUB3_IDS.has(c.id) ? c.qty : 0);
+    const sub3 = { ...sub3Raw, cards: 23 };
+
+    return {
+      totalCards, invested, blendedProfit, expectedProfit, roi: (blendedProfit / invested) * 100,
+      sub1, sub2, sub3,
+    };
   }, []);
 
   const actualStats = useMemo(() => {
@@ -214,8 +269,66 @@ export default function GradingPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard title="Total Cards" value={String(totals.totalCards)} icon={CreditCard} />
         <StatCard title="Total Invested" value={formatCurrency(totals.invested)} icon={DollarSign} />
-        <StatCard title="Expected Profit" value={formatCurrency(totals.profit)} icon={TrendingUp} trend="up" />
+        <StatCard
+          title="Blended Profit"
+          value={formatCurrency(totals.blendedProfit)}
+          subtitle={`Originally expected: ${formatCurrency(totals.expectedProfit)}`}
+          icon={TrendingUp}
+          trend="up"
+        />
         <StatCard title="Portfolio ROI" value={formatPercent(totals.roi)} icon={Target} trend="up" />
+      </div>
+
+      {/* Profit by Submission */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="bg-surface rounded-xl border border-border p-5">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-sm font-semibold text-text-primary">Sub 1</h3>
+            <span className="text-xs px-2 py-0.5 rounded bg-profit/10 text-profit">Graded</span>
+          </div>
+          <p className="text-xs text-text-secondary mb-3">{totals.sub1.cards} cards &middot; {formatCurrency(totals.sub1.invested)} invested</p>
+          <div className="flex items-baseline gap-2">
+            <span className={`text-2xl font-bold ${totals.sub1.profit >= 0 ? 'text-profit' : 'text-loss'}`}>
+              {formatCurrency(totals.sub1.profit)}
+            </span>
+            <span className={`text-sm ${totals.sub1.profit >= 0 ? 'text-profit' : 'text-loss'}`}>
+              {formatPercent((totals.sub1.profit / totals.sub1.invested) * 100)} ROI
+            </span>
+          </div>
+          <p className="text-xs text-text-secondary mt-2">Actual profit</p>
+        </div>
+        <div className="bg-surface rounded-xl border border-border p-5 border-dashed">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-sm font-semibold text-text-primary">Sub 2</h3>
+            <span className="text-xs px-2 py-0.5 rounded bg-yellow-400/10 text-yellow-400">Shipping</span>
+          </div>
+          <p className="text-xs text-text-secondary mb-3">{totals.sub2.cards} cards &middot; Pokemon &middot; {formatCurrency(totals.sub2.invested)} invested</p>
+          <div className="flex items-baseline gap-2">
+            <span className={`text-2xl font-bold ${totals.sub2.profit >= 0 ? 'text-profit' : 'text-loss'}`}>
+              ~{formatCurrency(totals.sub2.profit)}
+            </span>
+            <span className={`text-sm ${totals.sub2.profit >= 0 ? 'text-profit' : 'text-loss'}`}>
+              {formatPercent((totals.sub2.profit / totals.sub2.invested) * 100)} ROI
+            </span>
+          </div>
+          <p className="text-xs text-text-secondary mt-2">Estimated from pop report rates</p>
+        </div>
+        <div className="bg-surface rounded-xl border border-border p-5 border-dashed">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-sm font-semibold text-text-primary">Sub 3</h3>
+            <span className="text-xs px-2 py-0.5 rounded bg-accent/10 text-accent-light">~3 months out</span>
+          </div>
+          <p className="text-xs text-text-secondary mb-3">{totals.sub3.cards} cards &middot; One Piece / Naruto &middot; {formatCurrency(totals.sub3.invested)} invested</p>
+          <div className="flex items-baseline gap-2">
+            <span className={`text-2xl font-bold ${totals.sub3.profit >= 0 ? 'text-profit' : 'text-loss'}`}>
+              ~{formatCurrency(totals.sub3.profit)}
+            </span>
+            <span className={`text-sm ${totals.sub3.profit >= 0 ? 'text-profit' : 'text-loss'}`}>
+              {formatPercent((totals.sub3.profit / totals.sub3.invested) * 100)} ROI
+            </span>
+          </div>
+          <p className="text-xs text-text-secondary mt-2">Estimated from pop report rates</p>
+        </div>
       </div>
 
       {/* Actual Results Banner */}
