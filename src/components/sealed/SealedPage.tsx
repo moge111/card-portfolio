@@ -8,8 +8,9 @@ import { type ColumnDef } from '@tanstack/react-table';
 import StatCard from '../shared/StatCard';
 import ChartCard from '../shared/ChartCard';
 import DataTable from '../shared/DataTable';
-import CategoryBadge from '../shared/CategoryBadge';
-import { sealedCollection } from '../../data';
+import EditableCell, { EditableSelect } from '../shared/EditableCell';
+import { usePortfolio } from '../../context/PortfolioContext';
+import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
 import type { SealedProduct } from '../../types/portfolio';
@@ -28,64 +29,115 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-const columns: ColumnDef<SealedProduct, any>[] = [
-  {
-    accessorKey: 'name',
-    header: 'Product',
-    cell: ({ row }) => (
-      <div className="flex flex-col gap-1">
-        <span className="text-text-primary font-medium text-sm">{row.original.name}</span>
-        <CategoryBadge category={row.original.category} />
-      </div>
-    ),
-  },
-  { accessorKey: 'qty', header: 'Qty' },
-  {
-    accessorKey: 'costPerUnit',
-    header: 'Cost/Unit',
-    cell: ({ getValue }) => formatCurrency(getValue()),
-  },
-  {
-    accessorKey: 'marketValuePerUnit',
-    header: 'Market/Unit',
-    cell: ({ getValue }) => formatCurrency(getValue()),
-  },
-  {
-    accessorKey: 'totalCost',
-    header: 'Total Cost',
-    cell: ({ getValue }) => formatCurrency(getValue()),
-  },
-  {
-    accessorKey: 'totalMarketValue',
-    header: 'Market Value',
-    cell: ({ getValue }) => <span className="text-text-primary font-medium">{formatCurrency(getValue())}</span>,
-  },
-  {
-    accessorKey: 'profit',
-    header: 'Profit',
-    cell: ({ getValue }) => {
-      const v = getValue() as number;
-      return <span className={v >= 0 ? 'text-profit' : 'text-loss'}>{formatCurrency(v)}</span>;
-    },
-  },
-  {
-    accessorKey: 'roi',
-    header: 'ROI',
-    cell: ({ getValue }) => {
-      const v = getValue() as number;
-      return <span className={v >= 0 ? 'text-profit' : 'text-loss'}>{formatPercent(v)}</span>;
-    },
-  },
-];
-
 export default function SealedPage() {
+  const { sealedCollection, updateSealedProduct, addSealedProduct, deleteSealedProduct } = usePortfolio();
+  const isAdmin = useAdmin();
+  const CATEGORIES = ['Pokemon', 'One Piece', 'MTG', 'Naruto'];
+
+  const columns: ColumnDef<SealedProduct, any>[] = useMemo(() => {
+    const cols: ColumnDef<SealedProduct, any>[] = [
+      {
+        accessorKey: 'name',
+        header: 'Product',
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            <EditableCell
+              value={row.original.name}
+              onSave={(v) => updateSealedProduct(row.original.id, 'name', v)}
+              type="text"
+              inputWidth="w-40"
+              className="text-text-primary font-medium text-sm"
+            />
+            <EditableSelect
+              value={row.original.category}
+              options={CATEGORIES}
+              onSave={(v) => updateSealedProduct(row.original.id, 'category', v)}
+            />
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'qty',
+        header: 'Qty',
+        cell: ({ row }) => (
+          <EditableCell
+            value={row.original.qty}
+            onSave={(v) => updateSealedProduct(row.original.id, 'qty', v)}
+          />
+        ),
+      },
+      {
+        accessorKey: 'costPerUnit',
+        header: 'Cost/Unit',
+        cell: ({ row }) => (
+          <EditableCell
+            value={row.original.costPerUnit}
+            onSave={(v) => updateSealedProduct(row.original.id, 'costPerUnit', v)}
+            format={formatCurrency}
+          />
+        ),
+      },
+      {
+        accessorKey: 'marketValuePerUnit',
+        header: 'Market/Unit',
+        cell: ({ row }) => (
+          <EditableCell
+            value={row.original.marketValuePerUnit}
+            onSave={(v) => updateSealedProduct(row.original.id, 'marketValuePerUnit', v)}
+            format={formatCurrency}
+          />
+        ),
+      },
+      {
+        accessorKey: 'totalCost',
+        header: 'Total Cost',
+        cell: ({ getValue }) => formatCurrency(getValue()),
+      },
+      {
+        accessorKey: 'totalMarketValue',
+        header: 'Market Value',
+        cell: ({ getValue }) => <span className="text-text-primary font-medium">{formatCurrency(getValue())}</span>,
+      },
+      {
+        accessorKey: 'profit',
+        header: 'Profit',
+        cell: ({ getValue }) => {
+          const v = getValue() as number;
+          return <span className={v >= 0 ? 'text-profit' : 'text-loss'}>{formatCurrency(v)}</span>;
+        },
+      },
+      {
+        accessorKey: 'roi',
+        header: 'ROI',
+        cell: ({ getValue }) => {
+          const v = getValue() as number;
+          return <span className={v >= 0 ? 'text-profit' : 'text-loss'}>{formatPercent(v)}</span>;
+        },
+      },
+    ];
+    if (isAdmin) {
+      cols.push({
+        id: 'actions',
+        header: '',
+        cell: ({ row }) => (
+          <button
+            onClick={() => { if (confirm('Delete this product?')) deleteSealedProduct(row.original.id); }}
+            className="text-loss/50 hover:text-loss text-xs transition-colors"
+            title="Delete"
+          >✕</button>
+        ),
+      });
+    }
+    return cols;
+  }, [updateSealedProduct, deleteSealedProduct, isAdmin]);
+
   const totals = useMemo(() => {
     const totalUnits = sealedCollection.reduce((s, p) => s + p.qty, 0);
     const invested = sealedCollection.reduce((s, p) => s + p.totalCost, 0);
     const profit = sealedCollection.reduce((s, p) => s + p.profit, 0);
     const marketValue = sealedCollection.reduce((s, p) => s + p.totalMarketValue, 0);
     return { totalUnits, invested, profit, marketValue, roi: (profit / invested) * 100 };
-  }, []);
+  }, [sealedCollection]);
 
   const costVsMarket = useMemo(() => {
     return sealedCollection
@@ -96,7 +148,7 @@ export default function SealedPage() {
       }))
       .sort((a, b) => b.market - a.market)
       .slice(0, 10);
-  }, []);
+  }, [sealedCollection]);
 
   const roiDistribution = useMemo(() => {
     const ranges = [
@@ -111,7 +163,7 @@ export default function SealedPage() {
       if (r) r.count++;
     });
     return ranges;
-  }, []);
+  }, [sealedCollection]);
 
   const categoryAllocation = useMemo(() => {
     const map: Record<string, number> = {};
@@ -119,7 +171,7 @@ export default function SealedPage() {
       map[p.category] = (map[p.category] || 0) + p.totalCost;
     });
     return Object.entries(map).map(([name, value]) => ({ name, value }));
-  }, []);
+  }, [sealedCollection]);
 
   const categories = [...new Set(sealedCollection.map((p) => p.category))];
 
@@ -187,7 +239,17 @@ export default function SealedPage() {
       </div>
 
       <div className="bg-surface rounded-xl border border-border p-5">
-        <h3 className="text-sm font-semibold text-text-primary mb-4">All Sealed Products</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-text-primary">All Sealed Products</h3>
+          {isAdmin && (
+            <button
+              onClick={addSealedProduct}
+              className="px-3 py-1.5 bg-accent text-white text-xs font-medium rounded-lg hover:bg-accent/80 transition-colors"
+            >
+              + Add Product
+            </button>
+          )}
+        </div>
         <DataTable data={sealedCollection} columns={columns} categories={categories} />
       </div>
     </div>

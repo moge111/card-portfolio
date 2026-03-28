@@ -26,6 +26,8 @@ export interface GradingCard {
   actual10s: number;
   actual9s: number;
   actualSub9s: number;
+  // Actual sale tracking (net $ received per sale, after all platform fees)
+  soldPrices: number[];
 }
 
 export interface SealedProduct {

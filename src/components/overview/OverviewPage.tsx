@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import StatCard from '../shared/StatCard';
 import ChartCard from '../shared/ChartCard';
-import { gradingPortfolio, sealedCollection } from '../../data';
+import { usePortfolio } from '../../context/PortfolioContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
 
@@ -25,20 +25,26 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function OverviewPage() {
+  const { gradingPortfolio, sealedCollection } = usePortfolio();
   const stats = useMemo(() => {
     const EBAY_FEE = 0.1325;
-    const PSA_SHIPPING = 22.08;
+    const PSA_SHIPPING = 47.33;
     const gradingInvested = gradingPortfolio.reduce((s, c) => s + c.totalInvestment, 0);
     const sealedInvested = sealedCollection.reduce((s, c) => s + c.totalCost, 0);
     const sealedProfit = sealedCollection.reduce((s, c) => s + c.profit, 0);
     const totalInvested = gradingInvested + sealedInvested;
 
-    // Blended grading profit: actual for graded, expected for remaining
+    // Blended grading revenue: sold (actual) + unsold graded (estimated) + ungraded (expected)
     const blendedGradingRevenue = gradingPortfolio.reduce((s, c) => {
-      const actualRev = (c.actual10s * c.psa10Value + c.actual9s * c.psa9Value + c.actualSub9s * c.costPerCard) * (1 - EBAY_FEE);
+      const prices = c.soldPrices || [];
+      const sold = prices.reduce((a, p) => a + p, 0);
+      const unsoldGraded = c.gradedQty - prices.length;
+      const unsoldGradedRev = unsoldGraded > 0 && c.gradedQty > 0
+        ? (c.actual10s * c.psa10Value + c.actual9s * c.psa9Value + c.actualSub9s * c.costPerCard) * (unsoldGraded / c.gradedQty) * (1 - EBAY_FEE)
+        : 0;
       const remainingQty = c.qty - c.gradedQty;
-      const expectedRevPerCard = c.netRevenue / c.qty;
-      return s + actualRev + remainingQty * expectedRevPerCard;
+      const expectedRevPerCard = c.qty > 0 ? c.netRevenue / c.qty : 0;
+      return s + sold + unsoldGradedRev + remainingQty * expectedRevPerCard;
     }, 0);
     const gradingProfit = blendedGradingRevenue - gradingInvested - PSA_SHIPPING;
 
@@ -47,7 +53,7 @@ export default function OverviewPage() {
     const totalValue = blendedGradingRevenue + sealedMarket;
 
     return { gradingInvested, gradingProfit, sealedInvested, sealedProfit, totalInvested, totalProfit, totalValue };
-  }, []);
+  }, [gradingPortfolio, sealedCollection]);
 
   const investmentSplitData = [
     { name: 'PSA Grading', value: stats.gradingInvested },
@@ -77,7 +83,7 @@ export default function OverviewPage() {
       profit: Math.round(data.profit),
       roi: data.invested > 0 ? Math.round((data.profit / data.invested) * 100) : 0,
     })).sort((a, b) => b.invested - a.invested);
-  }, []);
+  }, [gradingPortfolio, sealedCollection]);
 
   const top10 = useMemo(() => {
     const all = [
@@ -85,7 +91,7 @@ export default function OverviewPage() {
       ...sealedCollection.map((p) => ({ name: p.name, profit: p.profit, category: p.category })),
     ];
     return all.sort((a, b) => b.profit - a.profit).slice(0, 10);
-  }, []);
+  }, [gradingPortfolio, sealedCollection]);
 
   return (
     <div>
