@@ -5,21 +5,51 @@ import type { GradingCard, SealedProduct, Category } from '../types/portfolio';
 
 const STORAGE_KEY_GRADING = 'portfolio-grading';
 const STORAGE_KEY_SEALED = 'portfolio-sealed';
+const STORAGE_KEY_VERSION = 'portfolio-data-version';
+const CURRENT_DATA_VERSION = 2; // Bump when default data changes
+
+function loadGradingWithMerge(defaults: GradingCard[]): GradingCard[] {
+  try {
+    const version = parseInt(localStorage.getItem(STORAGE_KEY_VERSION) || '0');
+    const raw = localStorage.getItem(STORAGE_KEY_GRADING);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEY_VERSION, String(CURRENT_DATA_VERSION));
+      return defaults;
+    }
+    const stored: GradingCard[] = JSON.parse(raw);
+    if (version >= CURRENT_DATA_VERSION) {
+      for (const card of stored) {
+        if (!Array.isArray(card.soldPrices)) card.soldPrices = [];
+      }
+      return stored;
+    }
+    // Merge: use defaults but preserve user-entered soldPrices
+    const soldMap = new Map(stored.map((c) => [c.id, c.soldPrices || []]));
+    const merged = defaults.map((c) => ({
+      ...c,
+      soldPrices: soldMap.get(c.id) || [],
+    }));
+    // Keep any user-added cards not in defaults
+    const defaultIds = new Set(defaults.map((c) => c.id));
+    for (const c of stored) {
+      if (!defaultIds.has(c.id)) {
+        if (!Array.isArray(c.soldPrices)) c.soldPrices = [];
+        merged.push(c);
+      }
+    }
+    localStorage.setItem(STORAGE_KEY_GRADING, JSON.stringify(merged));
+    localStorage.setItem(STORAGE_KEY_VERSION, String(CURRENT_DATA_VERSION));
+    return merged;
+  } catch {
+    return defaults;
+  }
+}
 
 function loadFromStorage<T>(key: string, fallback: T[]): T[] {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return fallback;
-    const parsed = JSON.parse(raw);
-    // Migrate grading cards: ensure soldPrices array exists
-    if (key === STORAGE_KEY_GRADING) {
-      for (const card of parsed) {
-        if (!Array.isArray(card.soldPrices)) {
-          card.soldPrices = [];
-        }
-      }
-    }
-    return parsed;
+    return JSON.parse(raw);
   } catch {
     return fallback;
   }
@@ -43,7 +73,7 @@ const PortfolioContext = createContext<PortfolioContextType | null>(null);
 
 export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [grading, setGrading] = useState<GradingCard[]>(() =>
-    loadFromStorage(STORAGE_KEY_GRADING, defaultGrading),
+    loadGradingWithMerge(defaultGrading),
   );
   const [sealed, setSealed] = useState<SealedProduct[]>(() =>
     loadFromStorage(STORAGE_KEY_SEALED, defaultSealed),
