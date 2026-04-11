@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { DollarSign, TrendingUp, PieChart as PieIcon, BarChart3 } from 'lucide-react';
+import { DollarSign, TrendingUp, PieChart as PieIcon, BarChart3, CheckCircle } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -28,31 +28,55 @@ export default function OverviewPage() {
   const { gradingPortfolio, sealedCollection } = usePortfolio();
   const stats = useMemo(() => {
     const EBAY_FEE = 0.1325;
-    const PSA_SHIPPING = 47.33;
+    const SUB1_SHIPPING = 47.33;
+    const SUB2_SHIPPING = 46.55;
+    const TOTAL_SHIPPING = SUB1_SHIPPING + SUB2_SHIPPING;
     const gradingInvested = gradingPortfolio.reduce((s, c) => s + c.totalInvestment, 0);
     const sealedInvested = sealedCollection.reduce((s, c) => s + c.totalCost, 0);
     const sealedProfit = sealedCollection.reduce((s, c) => s + c.profit, 0);
     const totalInvested = gradingInvested + sealedInvested;
 
-    // Blended grading revenue: sold (actual) + unsold graded (estimated) + ungraded (expected)
-    const blendedGradingRevenue = gradingPortfolio.reduce((s, c) => {
+    // Realized profit: actual sales minus cost basis of sold cards
+    let totalSoldRevenue = 0;
+    let soldCostBasis = 0;
+    let totalSoldCount = 0;
+    let totalReceivedCards = 0;
+    gradingPortfolio.forEach((c) => {
       const prices = c.soldPrices || [];
-      const sold = prices.reduce((a, p) => a + p, 0);
+      totalSoldRevenue += prices.reduce((a, p) => a + p, 0);
+      const costPerCard = c.qty > 0 ? c.totalInvestment / c.qty : 0;
+      soldCostBasis += costPerCard * prices.length;
+      totalSoldCount += prices.length;
+      if (c.gradedQty > 0) totalReceivedCards += c.gradedQty;
+    });
+    const proportionalShipping = totalReceivedCards > 0
+      ? TOTAL_SHIPPING * (totalSoldCount / totalReceivedCards)
+      : 0;
+    const realizedProfit = totalSoldRevenue - soldCostBasis - proportionalShipping;
+
+    // Unsold holdings value: graded unsold + ungraded expected + sealed market
+    const unsoldGradingValue = gradingPortfolio.reduce((s, c) => {
+      const prices = c.soldPrices || [];
       const unsoldGraded = c.gradedQty - prices.length;
       const unsoldGradedRev = unsoldGraded > 0 && c.gradedQty > 0
         ? (c.actual10s * c.psa10Value + c.actual9s * c.psa9Value + c.actualSub9s * c.costPerCard) * (unsoldGraded / c.gradedQty) * (1 - EBAY_FEE)
         : 0;
       const remainingQty = c.qty - c.gradedQty;
       const expectedRevPerCard = c.qty > 0 ? c.netRevenue / c.qty : 0;
-      return s + sold + unsoldGradedRev + remainingQty * expectedRevPerCard;
+      return s + unsoldGradedRev + remainingQty * expectedRevPerCard;
     }, 0);
-    const gradingProfit = blendedGradingRevenue - gradingInvested - PSA_SHIPPING;
-
-    const totalProfit = gradingProfit + sealedProfit;
     const sealedMarket = sealedCollection.reduce((s, c) => s + c.totalMarketValue, 0);
-    const totalValue = blendedGradingRevenue + sealedMarket;
+    const holdingsValue = unsoldGradingValue + sealedMarket;
 
-    return { gradingInvested, gradingProfit, sealedInvested, sealedProfit, totalInvested, totalProfit, totalValue };
+    // Blended total profit (holdings unrealized + realized)
+    const gradingProfit = (unsoldGradingValue + totalSoldRevenue) - gradingInvested - TOTAL_SHIPPING;
+    const totalProfit = gradingProfit + sealedProfit;
+
+    return {
+      gradingInvested, gradingProfit, sealedInvested, sealedProfit,
+      totalInvested, totalProfit, holdingsValue,
+      realizedProfit, totalSoldCount, totalSoldRevenue,
+    };
   }, [gradingPortfolio, sealedCollection]);
 
   const investmentSplitData = [
@@ -101,10 +125,17 @@ export default function OverviewPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard title="Total Value" value={formatCurrency(stats.totalValue)} icon={DollarSign} trend="up" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <StatCard title="Holdings Value" value={formatCurrency(stats.holdingsValue)} subtitle="Unsold cards + sealed" icon={DollarSign} trend="up" />
         <StatCard title="Total Invested" value={formatCurrency(stats.totalInvested)} icon={PieIcon} />
-        <StatCard title="Total Profit" value={formatCurrency(stats.totalProfit)} icon={TrendingUp} trend="up" />
+        <StatCard
+          title="Realized Profit"
+          value={formatCurrency(stats.realizedProfit)}
+          subtitle={`${stats.totalSoldCount} sold · ${formatCurrency(stats.totalSoldRevenue)} revenue`}
+          icon={CheckCircle}
+          trend={stats.realizedProfit >= 0 ? 'up' : 'down'}
+        />
+        <StatCard title="Total Profit" value={formatCurrency(stats.totalProfit)} subtitle="Realized + unrealized" icon={TrendingUp} trend={stats.totalProfit >= 0 ? 'up' : 'down'} />
         <StatCard
           title="Overall ROI"
           value={formatPercent((stats.totalProfit / stats.totalInvested) * 100)}
