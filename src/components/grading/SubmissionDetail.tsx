@@ -4,6 +4,7 @@ import { formatCurrency } from '../../utils/formatters';
 import type { GradingCard } from '../../types/portfolio';
 
 const EBAY_FEE = 0.1325;
+const SHIPPING_COST_PER_SALE = 2; // $5 charged - ~$7 FedEx avg = $2 out of pocket
 
 interface CardEntry {
   card: GradingCard;
@@ -32,7 +33,7 @@ function AddSaleRow({ card, onAdd }: { card: GradingCard; onAdd: (price: number)
     const promo = parseFloat(promoFee) || 0;
     if (!isNaN(salePrice) && salePrice > 0) {
       const totalFeeRate = EBAY_FEE + promo / 100;
-      const net = +(salePrice * (1 - totalFeeRate)).toFixed(2);
+      const net = +(salePrice * (1 - totalFeeRate) - SHIPPING_COST_PER_SALE).toFixed(2);
       for (let i = 0; i < q; i++) onAdd(net);
     }
     setPrice('');
@@ -80,7 +81,7 @@ function AddSaleRow({ card, onAdd }: { card: GradingCard; onAdd: (price: number)
         className="w-20 bg-background border border-border rounded px-1.5 py-0.5 text-xs text-text-primary outline-none focus:border-accent"
         placeholder="sale price"
       />
-      <span className="text-text-secondary text-xs">- 13.25%</span>
+      <span className="text-text-secondary text-xs">- 13.25% - $2 ship</span>
       <span className="text-text-secondary text-xs">-</span>
       <input
         type="text"

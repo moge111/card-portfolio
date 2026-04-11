@@ -1,4 +1,4 @@
-import type { GradingCard, SealedProduct } from '../types/portfolio';
+import type { GradingCard, SealedProduct, Single } from '../types/portfolio';
 
 const EBAY_FEE = 0.1325;
 
@@ -36,4 +36,13 @@ export function recalcSealedProduct(p: SealedProduct): SealedProduct {
   const roi = totalCost > 0 ? +((profit / totalCost) * 100).toFixed(1) : 0;
 
   return { ...p, totalCost, totalMarketValue, profit, roi };
+}
+
+export function recalcSingle(s: Single): Single {
+  const totalCost = +(s.qty * s.costPerCard).toFixed(2);
+  const totalMarketValue = +(s.qty * s.marketValue).toFixed(2);
+  const profit = +(totalMarketValue - totalCost).toFixed(2);
+  const roi = totalCost > 0 ? +((profit / totalCost) * 100).toFixed(1) : 0;
+
+  return { ...s, totalCost, totalMarketValue, profit, roi };
 }

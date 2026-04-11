@@ -43,6 +43,19 @@ export interface SealedProduct {
   roi: number;
 }
 
+export interface Single {
+  id: number;
+  name: string;
+  category: Category;
+  qty: number;
+  costPerCard: number;
+  marketValue: number;
+  totalCost: number;
+  totalMarketValue: number;
+  profit: number;
+  roi: number;
+}
+
 export interface PortfolioSummary {
   totalItems: number;
   totalInvested: number;

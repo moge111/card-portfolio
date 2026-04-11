@@ -5,6 +5,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import OverviewPage from './components/overview/OverviewPage';
 import GradingPage from './components/grading/GradingPage';
 import SealedPage from './components/sealed/SealedPage';
+import SinglesPage from './components/singles/SinglesPage';
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
             <Route path="/" element={<OverviewPage />} />
             <Route path="/grading" element={<GradingPage />} />
             <Route path="/sealed" element={<SealedPage />} />
+            <Route path="/singles" element={<SinglesPage />} />
           </Route>
         </Routes>
       </HashRouter>

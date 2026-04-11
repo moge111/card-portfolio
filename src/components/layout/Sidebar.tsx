@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CreditCard, Package, Menu, X } from 'lucide-react';
+import { LayoutDashboard, CreditCard, Package, Layers, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Overview' },
   { to: '/grading', icon: CreditCard, label: 'PSA Grading' },
+  { to: '/singles', icon: Layers, label: 'Singles' },
   { to: '/sealed', icon: Package, label: 'Sealed' },
 ];
 

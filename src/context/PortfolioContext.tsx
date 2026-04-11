@@ -1,12 +1,13 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import { gradingPortfolio as defaultGrading, sealedCollection as defaultSealed } from '../data';
-import { recalcGradingCard, recalcSealedProduct } from '../utils/calculations';
-import type { GradingCard, SealedProduct, Category } from '../types/portfolio';
+import { gradingPortfolio as defaultGrading, sealedCollection as defaultSealed, singlesCollection as defaultSingles } from '../data';
+import { recalcGradingCard, recalcSealedProduct, recalcSingle } from '../utils/calculations';
+import type { GradingCard, SealedProduct, Single, Category } from '../types/portfolio';
 
 const STORAGE_KEY_GRADING = 'portfolio-grading';
 const STORAGE_KEY_SEALED = 'portfolio-sealed';
+const STORAGE_KEY_SINGLES = 'portfolio-singles';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 2; // Bump when default data changes
+const CURRENT_DATA_VERSION = 5; // Bump when default data changes
 
 function loadGradingWithMerge(defaults: GradingCard[]): GradingCard[] {
   try {
@@ -24,7 +25,13 @@ function loadGradingWithMerge(defaults: GradingCard[]): GradingCard[] {
       return stored;
     }
     // Merge: use defaults but preserve user-entered soldPrices
+    // v5 migration: subtract $2 shipping cost from all existing sales
     const soldMap = new Map(stored.map((c) => [c.id, c.soldPrices || []]));
+    if (version < 5) {
+      for (const [id, prices] of soldMap) {
+        soldMap.set(id, prices.map((p) => +(p - 2).toFixed(2)));
+      }
+    }
     const merged = defaults.map((c) => ({
       ...c,
       soldPrices: soldMap.get(c.id) || [],
@@ -58,12 +65,16 @@ function loadFromStorage<T>(key: string, fallback: T[]): T[] {
 interface PortfolioContextType {
   gradingPortfolio: GradingCard[];
   sealedCollection: SealedProduct[];
+  singlesCollection: Single[];
   updateGradingCard: (id: number, field: keyof GradingCard, value: number | string) => void;
   updateSealedProduct: (id: number, field: keyof SealedProduct, value: number | string) => void;
+  updateSingle: (id: number, field: keyof Single, value: number | string) => void;
   addGradingCard: () => void;
   addSealedProduct: () => void;
+  addSingle: () => void;
   deleteGradingCard: (id: number) => void;
   deleteSealedProduct: (id: number) => void;
+  deleteSingle: (id: number) => void;
   addSale: (cardId: number, price: number) => void;
   removeSale: (cardId: number, index: number) => void;
   resetAll: () => void;
@@ -77,6 +88,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   );
   const [sealed, setSealed] = useState<SealedProduct[]>(() =>
     loadFromStorage(STORAGE_KEY_SEALED, defaultSealed),
+  );
+  const [singles, setSingles] = useState<Single[]>(() =>
+    loadFromStorage(STORAGE_KEY_SINGLES, defaultSingles),
   );
 
   const updateGradingCard = useCallback((id: number, field: keyof GradingCard, value: number | string) => {
@@ -130,6 +144,18 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         return { ...c, soldPrices };
       });
       localStorage.setItem(STORAGE_KEY_GRADING, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const updateSingle = useCallback((id: number, field: keyof Single, value: number | string) => {
+    setSingles((prev) => {
+      const next = prev.map((s) => {
+        if (s.id !== id) return s;
+        const updated = { ...s, [field]: value };
+        return recalcSingle(updated);
+      });
+      localStorage.setItem(STORAGE_KEY_SINGLES, JSON.stringify(next));
       return next;
     });
   }, []);
@@ -191,6 +217,27 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const addSingle = useCallback(() => {
+    setSingles((prev) => {
+      const maxId = prev.reduce((max, s) => Math.max(max, s.id), 0);
+      const newSingle: Single = {
+        id: maxId + 1,
+        name: 'New Card',
+        category: 'Pokemon' as Category,
+        qty: 1,
+        costPerCard: 0,
+        marketValue: 0,
+        totalCost: 0,
+        totalMarketValue: 0,
+        profit: 0,
+        roi: 0,
+      };
+      const next = [...prev, newSingle];
+      localStorage.setItem(STORAGE_KEY_SINGLES, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const deleteGradingCard = useCallback((id: number) => {
     setGrading((prev) => {
       const next = prev.filter((c) => c.id !== id);
@@ -207,19 +254,29 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const deleteSingle = useCallback((id: number) => {
+    setSingles((prev) => {
+      const next = prev.filter((s) => s.id !== id);
+      localStorage.setItem(STORAGE_KEY_SINGLES, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const resetAll = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY_GRADING);
     localStorage.removeItem(STORAGE_KEY_SEALED);
+    localStorage.removeItem(STORAGE_KEY_SINGLES);
     setGrading(defaultGrading);
     setSealed(defaultSealed);
+    setSingles(defaultSingles);
   }, []);
 
   return (
     <PortfolioContext.Provider value={{
-      gradingPortfolio: grading, sealedCollection: sealed,
-      updateGradingCard, updateSealedProduct,
-      addGradingCard, addSealedProduct,
-      deleteGradingCard, deleteSealedProduct,
+      gradingPortfolio: grading, sealedCollection: sealed, singlesCollection: singles,
+      updateGradingCard, updateSealedProduct, updateSingle,
+      addGradingCard, addSealedProduct, addSingle,
+      deleteGradingCard, deleteSealedProduct, deleteSingle,
       addSale, removeSale,
       resetAll,
     }}>

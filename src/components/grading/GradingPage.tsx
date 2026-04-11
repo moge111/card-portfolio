@@ -17,6 +17,7 @@ import SubmissionDetail from './SubmissionDetail';
 import type { GradingCard } from '../../types/portfolio';
 
 const EBAY_FEE = 0.1325;
+const SHIPPING_COST_PER_SALE = 2; // $5 charged - ~$7 FedEx avg = $2 out of pocket
 // Shipping costs from PSA Invoice PSI26960405
 const SUB1_SHIPPING = 47.33; // Order 26141760
 const SUB2_SHIPPING = 46.55; // Order 26141834
@@ -70,7 +71,7 @@ function SalesCell({ card, onAdd, onRemove, isAdmin }: { card: GradingCard; onAd
     const promo = parseFloat(promoDraft) || 0;
     if (!isNaN(salePrice) && salePrice > 0) {
       const totalFeeRate = EBAY_FEE + promo / 100;
-      onAdd(+(salePrice * (1 - totalFeeRate)).toFixed(2));
+      onAdd(+(salePrice * (1 - totalFeeRate) - SHIPPING_COST_PER_SALE).toFixed(2));
     }
     setDraft('');
     setPromoDraft('');
@@ -350,9 +351,14 @@ export default function GradingPage() {
     const expectedProfit = gradingPortfolio.reduce((s, c) => s + c.profit, 0);
 
     // Breakdown by submission
-    const calcActualSubStats = (subMap: Record<number, number>, shippingCost: number) => {
+    // Attribute sales to earliest sub first: Sub 1 fills before Sub 2
+    const calcActualSubStats = (subMap: Record<number, number>, priorSubMap: Record<number, number> | null, shippingCost: number) => {
       let subInvested = 0;
       let subRevenue = 0;
+      let soldCount = 0;
+      let soldRevenue = 0;
+      let soldInvestment = 0;
+      const cards = Object.values(subMap).reduce((s, v) => s + v, 0);
       gradingPortfolio.forEach((c) => {
         const subQty = subMap[c.id];
         if (!subQty) return;
@@ -361,10 +367,23 @@ export default function GradingPage() {
         if (c.gradedQty > 0) {
           const revPerGraded = calcActualRevenue(c) / c.gradedQty;
           subRevenue += revPerGraded * subQty;
+          // Attribute sales: prior subs get first claim
+          const sales = c.soldPrices || [];
+          const priorClaim = priorSubMap ? (priorSubMap[c.id] || 0) : 0;
+          const salesAfterPrior = Math.max(0, sales.length - priorClaim);
+          const subSoldCount = Math.min(salesAfterPrior, subQty);
+          soldCount += subSoldCount;
+          // Take the actual sale prices attributed to this sub
+          const startIdx = priorClaim;
+          const subSales = sales.slice(startIdx, startIdx + subSoldCount);
+          soldRevenue += subSales.reduce((s, p) => s + p, 0);
+          soldInvestment += investPerCard * subSoldCount;
         }
       });
-      const cards = Object.values(subMap).reduce((s, v) => s + v, 0);
-      return { invested: subInvested, profit: subRevenue - subInvested - shippingCost, cards };
+      const soldShipping = cards > 0 ? shippingCost * (soldCount / cards) : 0;
+      const soldProfit = soldRevenue - soldInvestment - soldShipping;
+      const currentPL = soldRevenue - subInvested - shippingCost;
+      return { invested: subInvested, profit: subRevenue - subInvested - shippingCost, cards, soldCount, soldProfit, soldRevenue, currentPL };
     };
 
     const calcExpectedSubStats = (getQty: (c: GradingCard) => number) => {
@@ -381,16 +400,21 @@ export default function GradingPage() {
       return { invested: subInvested, profit: subRevenue - subInvested };
     };
 
-    const sub1 = calcActualSubStats(SUB1_MAP, SUB1_SHIPPING);
-    const sub2 = calcActualSubStats(SUB2_MAP, SUB2_SHIPPING);
+    const sub1 = calcActualSubStats(SUB1_MAP, null, SUB1_SHIPPING);
+    const sub2 = calcActualSubStats(SUB2_MAP, SUB1_MAP, SUB2_SHIPPING);
 
     // Sub 3: expected for these cards
     const sub3Raw = calcExpectedSubStats((c) => SUB3_IDS.has(c.id) ? c.qty : 0);
-    const sub3 = { ...sub3Raw, cards: 23 };
+    const sub3 = { ...sub3Raw, cards: 23, soldCount: 0, soldProfit: 0, soldRevenue: 0, currentPL: -sub3Raw.invested };
+
+    const totalSoldRevenue = gradingPortfolio.reduce((s, c) => s + (c.soldPrices || []).reduce((a, p) => a + p, 0), 0);
+    const totalSoldCount = gradingPortfolio.reduce((s, c) => s + (c.soldPrices || []).length, 0);
+    const receivedInvested = sub1.invested + sub2.invested;
+    const currentPL = totalSoldRevenue - receivedInvested - SUB1_SHIPPING - SUB2_SHIPPING;
 
     return {
       totalCards, invested, blendedProfit, expectedProfit, roi: (blendedProfit / invested) * 100,
-      sub1, sub2, sub3,
+      sub1, sub2, sub3, currentPL, totalSoldRevenue, totalSoldCount,
     };
   }, [gradingPortfolio]);
 
@@ -458,9 +482,16 @@ export default function GradingPage() {
         <p className="text-text-secondary text-sm mt-1">34 card types, {totals.totalCards} total cards submitted</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <StatCard title="Total Cards" value={String(totals.totalCards)} icon={CreditCard} />
         <StatCard title="Total Invested" value={formatCurrency(totals.invested)} icon={DollarSign} />
+        <StatCard
+          title="Current P/L"
+          value={formatCurrency(totals.currentPL)}
+          subtitle={`Sub 1 & 2 only · ${totals.totalSoldCount} sold · ${formatCurrency(totals.totalSoldRevenue)} revenue`}
+          icon={DollarSign}
+          trend={totals.currentPL >= 0 ? 'up' : 'down'}
+        />
         <StatCard
           title="Blended Profit"
           value={formatCurrency(totals.blendedProfit)}
@@ -500,7 +531,20 @@ export default function GradingPage() {
                 {formatPercent((sub.data.profit / sub.data.invested) * 100)} ROI
               </span>
             </div>
-            <p className="text-xs text-text-secondary mt-2">{sub.label} · <span className="text-accent">click to simulate</span></p>
+            {sub.solid && (
+              <div className="mt-2 pt-2 border-t border-border/50">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-xs text-text-secondary">Current P/L</span>
+                  <span className={`text-sm font-bold ${sub.data.currentPL >= 0 ? 'text-profit' : 'text-loss'}`}>
+                    {formatCurrency(sub.data.currentPL)}
+                  </span>
+                </div>
+                <p className="text-xs text-text-secondary mt-0.5">
+                  {sub.data.soldCount}/{sub.data.cards} sold · {formatCurrency(sub.data.soldRevenue)} revenue
+                </p>
+              </div>
+            )}
+            <p className="text-xs text-text-secondary mt-1">{sub.label} · <span className="text-accent">click to simulate</span></p>
           </div>
         ))}
       </div>
