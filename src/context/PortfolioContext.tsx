@@ -77,6 +77,7 @@ interface PortfolioContextType {
   deleteSingle: (id: number) => void;
   addSale: (cardId: number, price: number) => void;
   removeSale: (cardId: number, index: number) => void;
+  updateSale: (cardId: number, index: number, newPrice: number) => void;
   resetAll: () => void;
 }
 
@@ -141,6 +142,19 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       const next = prev.map((c) => {
         if (c.id !== cardId) return c;
         const soldPrices = c.soldPrices.filter((_, i) => i !== index);
+        return { ...c, soldPrices };
+      });
+      localStorage.setItem(STORAGE_KEY_GRADING, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const updateSale = useCallback((cardId: number, index: number, newPrice: number) => {
+    setGrading((prev) => {
+      const next = prev.map((c) => {
+        if (c.id !== cardId) return c;
+        const soldPrices = [...c.soldPrices];
+        soldPrices[index] = newPrice;
         return { ...c, soldPrices };
       });
       localStorage.setItem(STORAGE_KEY_GRADING, JSON.stringify(next));
@@ -277,7 +291,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       updateGradingCard, updateSealedProduct, updateSingle,
       addGradingCard, addSealedProduct, addSingle,
       deleteGradingCard, deleteSealedProduct, deleteSingle,
-      addSale, removeSale,
+      addSale, removeSale, updateSale,
       resetAll,
     }}>
       {children}

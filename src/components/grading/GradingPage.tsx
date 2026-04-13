@@ -56,11 +56,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-function SalesCell({ card, onAdd, onRemove, isAdmin }: { card: GradingCard; onAdd: (price: number) => void; onRemove: (index: number) => void; isAdmin: boolean }) {
+function SalesCell({ card, onAdd, onRemove, onUpdate, isAdmin }: { card: GradingCard; onAdd: (price: number) => void; onRemove: (index: number) => void; onUpdate: (index: number, newPrice: number) => void; isAdmin: boolean }) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
   const [promoDraft, setPromoDraft] = useState('');
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const editRef = useRef<HTMLInputElement>(null);
 
   if (card.gradedQty === 0) return <span className="text-text-secondary text-xs">—</span>;
 
@@ -78,12 +81,48 @@ function SalesCell({ card, onAdd, onRemove, isAdmin }: { card: GradingCard; onAd
     setAdding(false);
   };
 
+  const commitEdit = () => {
+    if (editingIndex === null) return;
+    const newPrice = parseFloat(editDraft);
+    if (!isNaN(newPrice)) {
+      onUpdate(editingIndex, +newPrice.toFixed(2));
+    }
+    setEditingIndex(null);
+    setEditDraft('');
+  };
+
   return (
     <div className="flex flex-col gap-0.5">
       {card.soldPrices.map((price, i) => (
         <div key={i} className="flex items-center gap-1 text-xs">
-          <span className="text-profit">{formatCurrency(price)}</span>
-          {isAdmin && (
+          {editingIndex === i ? (
+            <input
+              ref={editRef}
+              type="text"
+              inputMode="decimal"
+              value={editDraft}
+              onChange={(e) => setEditDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitEdit();
+                if (e.key === 'Escape') { setEditingIndex(null); setEditDraft(''); }
+              }}
+              onBlur={commitEdit}
+              className="w-16 bg-background border border-accent rounded px-1.5 py-0.5 text-xs text-text-primary outline-none focus:ring-1 focus:ring-accent"
+            />
+          ) : (
+            <span
+              className={`text-profit ${isAdmin ? 'cursor-pointer hover:underline' : ''}`}
+              onClick={() => {
+                if (!isAdmin) return;
+                setEditingIndex(i);
+                setEditDraft(String(price));
+                setTimeout(() => editRef.current?.focus(), 0);
+              }}
+            >
+              {formatCurrency(price)}
+            </span>
+          )}
+          {isAdmin && editingIndex !== i && (
             <button onClick={() => onRemove(i)} className="text-loss/40 hover:text-loss transition-colors">
               <X size={10} />
             </button>
@@ -151,7 +190,7 @@ const SUB2_MAP: Record<number, number> = {
 const SUB3_IDS = new Set([31, 32, 33, 34]);
 
 export default function GradingPage() {
-  const { gradingPortfolio, updateGradingCard, addGradingCard, deleteGradingCard, addSale, removeSale } = usePortfolio();
+  const { gradingPortfolio, updateGradingCard, addGradingCard, deleteGradingCard, addSale, removeSale, updateSale } = usePortfolio();
   const isAdmin = useAdmin();
   const CATEGORIES = ['Pokemon', 'One Piece', 'MTG', 'Naruto'];
   const [openSim, setOpenSim] = useState<number | null>(null);
@@ -276,6 +315,7 @@ export default function GradingPage() {
             card={row.original}
             onAdd={(price) => addSale(row.original.id, price)}
             onRemove={(index) => removeSale(row.original.id, index)}
+            onUpdate={(index, newPrice) => updateSale(row.original.id, index, newPrice)}
             isAdmin={isAdmin}
           />
         ),
@@ -333,7 +373,7 @@ export default function GradingPage() {
       });
     }
     return cols;
-  }, [updateGradingCard, deleteGradingCard, addSale, removeSale, shippingPerCard, isAdmin]);
+  }, [updateGradingCard, deleteGradingCard, addSale, removeSale, updateSale, shippingPerCard, isAdmin]);
   const totals = useMemo(() => {
     const totalCards = gradingPortfolio.reduce((s, c) => s + c.qty, 0);
     const invested = gradingPortfolio.reduce((s, c) => s + c.totalInvestment, 0);
@@ -559,6 +599,7 @@ export default function GradingPage() {
           onClose={() => setOpenSim(null)}
           onAddSale={addSale}
           onRemoveSale={removeSale}
+          onUpdateSale={updateSale}
         />
       )}
       {openSim === 2 && (
@@ -571,6 +612,7 @@ export default function GradingPage() {
           onClose={() => setOpenSim(null)}
           onAddSale={addSale}
           onRemoveSale={removeSale}
+          onUpdateSale={updateSale}
         />
       )}
       {openSim === 3 && (
@@ -583,6 +625,7 @@ export default function GradingPage() {
           onClose={() => setOpenSim(null)}
           onAddSale={addSale}
           onRemoveSale={removeSale}
+          onUpdateSale={updateSale}
         />
       )}
 

@@ -18,6 +18,7 @@ interface SubmissionDetailProps {
   onClose: () => void;
   onAddSale: (cardId: number, price: number) => void;
   onRemoveSale: (cardId: number, index: number) => void;
+  onUpdateSale: (cardId: number, index: number, newPrice: number) => void;
 }
 
 function AddSaleRow({ card, onAdd }: { card: GradingCard; onAdd: (price: number) => void }) {
@@ -101,7 +102,52 @@ function AddSaleRow({ card, onAdd }: { card: GradingCard; onAdd: (price: number)
   );
 }
 
-export default function SubmissionDetail({ title, cards, shippingCost, onClose, onAddSale, onRemoveSale }: SubmissionDetailProps) {
+function EditableSaleChip({ price, onUpdate, onRemove }: { price: number; onUpdate: (newPrice: number) => void; onRemove: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const ref = useRef<HTMLInputElement>(null);
+
+  const commit = () => {
+    const v = parseFloat(draft);
+    if (!isNaN(v)) onUpdate(+v.toFixed(2));
+    setEditing(false);
+    setDraft('');
+  };
+
+  if (editing) {
+    return (
+      <input
+        ref={ref}
+        type="text"
+        inputMode="decimal"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') { setEditing(false); setDraft(''); }
+        }}
+        onBlur={commit}
+        className="w-16 bg-background border border-accent rounded px-1.5 py-0.5 text-xs text-text-primary outline-none focus:ring-1 focus:ring-accent"
+      />
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 bg-profit/10 text-profit px-2 py-0.5 rounded text-xs">
+      <span
+        className="cursor-pointer hover:underline"
+        onClick={() => { setEditing(true); setDraft(String(price)); setTimeout(() => ref.current?.focus(), 0); }}
+      >
+        {formatCurrency(price)}
+      </span>
+      <button onClick={onRemove} className="text-profit/40 hover:text-profit transition-colors">
+        <X size={10} />
+      </button>
+    </span>
+  );
+}
+
+export default function SubmissionDetail({ title, cards, shippingCost, onClose, onAddSale, onRemoveSale, onUpdateSale }: SubmissionDetailProps) {
   const [profitTarget, setProfitTarget] = useState(30);
   const totalInvest = cards.reduce((s, { card, subQty }) => s + (card.totalInvestment / card.qty) * subQty, 0);
   const totalSold = cards.reduce((s, { card }) => s + (card.soldPrices || []).reduce((a, p) => a + p, 0), 0);
@@ -212,15 +258,12 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
               {sales.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {sales.map((price, i) => (
-                    <span key={i} className="inline-flex items-center gap-1 bg-profit/10 text-profit px-2 py-0.5 rounded text-xs">
-                      {formatCurrency(price)}
-                      <button
-                        onClick={() => onRemoveSale(card.id, i)}
-                        className="text-profit/40 hover:text-profit transition-colors"
-                      >
-                        <X size={10} />
-                      </button>
-                    </span>
+                    <EditableSaleChip
+                      key={i}
+                      price={price}
+                      onUpdate={(newPrice) => onUpdateSale(card.id, i, newPrice)}
+                      onRemove={() => onRemoveSale(card.id, i)}
+                    />
                   ))}
                 </div>
               )}
