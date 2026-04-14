@@ -25,23 +25,27 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function OverviewPage() {
-  const { gradingPortfolio, sealedCollection } = usePortfolio();
+  const { gradingPortfolio, sealedCollection, singlesCollection } = usePortfolio();
   const stats = useMemo(() => {
     const EBAY_FEE = 0.1325;
     const SUB1_SHIPPING = 47.33;
     const SUB2_SHIPPING = 46.55;
     const TOTAL_SHIPPING = SUB1_SHIPPING + SUB2_SHIPPING;
+    const sellable = gradingPortfolio.filter((c) => !c.isKeeper);
     const gradingInvested = gradingPortfolio.reduce((s, c) => s + c.totalInvestment, 0);
     const sealedInvested = sealedCollection.reduce((s, c) => s + c.totalCost, 0);
     const sealedProfit = sealedCollection.reduce((s, c) => s + c.profit, 0);
-    const totalInvested = gradingInvested + sealedInvested;
+    const singlesInvested = singlesCollection.reduce((s, c) => s + c.totalCost, 0);
+    const singlesMarket = singlesCollection.reduce((s, c) => s + c.totalMarketValue, 0);
+    const singlesProfit = singlesCollection.reduce((s, c) => s + c.profit, 0);
+    const totalInvested = gradingInvested + sealedInvested + singlesInvested;
 
     // Realized profit: actual sales minus cost basis of sold cards
     let totalSoldRevenue = 0;
     let soldCostBasis = 0;
     let totalSoldCount = 0;
     let totalReceivedCards = 0;
-    gradingPortfolio.forEach((c) => {
+    sellable.forEach((c) => {
       const prices = c.soldPrices || [];
       totalSoldRevenue += prices.reduce((a, p) => a + p, 0);
       const costPerCard = c.qty > 0 ? c.totalInvestment / c.qty : 0;
@@ -54,8 +58,8 @@ export default function OverviewPage() {
       : 0;
     const realizedProfit = totalSoldRevenue - soldCostBasis - proportionalShipping;
 
-    // Unsold holdings value: graded unsold + ungraded expected + sealed market
-    const unsoldGradingValue = gradingPortfolio.reduce((s, c) => {
+    // Unsold holdings value: graded unsold + ungraded expected + sealed market + singles market
+    const unsoldGradingValue = sellable.reduce((s, c) => {
       const prices = c.soldPrices || [];
       const unsoldGraded = c.gradedQty - prices.length;
       const unsoldGradedRev = unsoldGraded > 0 && c.gradedQty > 0
@@ -66,32 +70,35 @@ export default function OverviewPage() {
       return s + unsoldGradedRev + remainingQty * expectedRevPerCard;
     }, 0);
     const sealedMarket = sealedCollection.reduce((s, c) => s + c.totalMarketValue, 0);
-    const holdingsValue = unsoldGradingValue + sealedMarket;
+    const holdingsValue = unsoldGradingValue + sealedMarket + singlesMarket;
 
     // Blended total profit (holdings unrealized + realized)
     const gradingProfit = (unsoldGradingValue + totalSoldRevenue) - gradingInvested - TOTAL_SHIPPING;
-    const totalProfit = gradingProfit + sealedProfit;
+    const totalProfit = gradingProfit + sealedProfit + singlesProfit;
 
     return {
       gradingInvested, gradingProfit, sealedInvested, sealedProfit,
+      singlesInvested, singlesMarket, singlesProfit,
       totalInvested, totalProfit, holdingsValue,
       realizedProfit, totalSoldCount, totalSoldRevenue,
     };
-  }, [gradingPortfolio, sealedCollection]);
+  }, [gradingPortfolio, sealedCollection, singlesCollection]);
 
   const investmentSplitData = [
     { name: 'PSA Grading', value: stats.gradingInvested },
     { name: 'Sealed', value: stats.sealedInvested },
+    ...(stats.singlesInvested > 0 ? [{ name: 'Singles', value: stats.singlesInvested }] : []),
   ];
 
   const profitComparisonData = [
     { name: 'PSA Grading', profit: stats.gradingProfit },
     { name: 'Sealed', profit: stats.sealedProfit },
+    ...(stats.singlesMarket > 0 ? [{ name: 'Singles', profit: stats.singlesProfit }] : []),
   ];
 
   const categoryData = useMemo(() => {
     const map: Record<string, { invested: number; profit: number }> = {};
-    gradingPortfolio.forEach((c) => {
+    gradingPortfolio.filter((c) => !c.isKeeper).forEach((c) => {
       if (!map[c.category]) map[c.category] = { invested: 0, profit: 0 };
       map[c.category].invested += c.totalInvestment;
       map[c.category].profit += c.profit;
@@ -101,21 +108,27 @@ export default function OverviewPage() {
       map[p.category].invested += p.totalCost;
       map[p.category].profit += p.profit;
     });
+    singlesCollection.forEach((s) => {
+      if (!map[s.category]) map[s.category] = { invested: 0, profit: 0 };
+      map[s.category].invested += s.totalCost;
+      map[s.category].profit += s.profit;
+    });
     return Object.entries(map).map(([name, data]) => ({
       name,
       invested: Math.round(data.invested),
       profit: Math.round(data.profit),
       roi: data.invested > 0 ? Math.round((data.profit / data.invested) * 100) : 0,
     })).sort((a, b) => b.invested - a.invested);
-  }, [gradingPortfolio, sealedCollection]);
+  }, [gradingPortfolio, sealedCollection, singlesCollection]);
 
   const top10 = useMemo(() => {
     const all = [
-      ...gradingPortfolio.map((c) => ({ name: c.name, profit: c.profit, category: c.category })),
+      ...gradingPortfolio.filter((c) => !c.isKeeper).map((c) => ({ name: c.name, profit: c.profit, category: c.category })),
       ...sealedCollection.map((p) => ({ name: p.name, profit: p.profit, category: p.category })),
+      ...singlesCollection.map((s) => ({ name: s.name, profit: s.profit, category: s.category })),
     ];
     return all.sort((a, b) => b.profit - a.profit).slice(0, 10);
-  }, [gradingPortfolio, sealedCollection]);
+  }, [gradingPortfolio, sealedCollection, singlesCollection]);
 
   return (
     <div>

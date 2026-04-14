@@ -183,9 +183,11 @@ const SUB1_MAP: Record<number, number> = {
   1: 4, 2: 2, 3: 2, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1,
   9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1, 17: 1, 18: 1, 19: 1, 20: 1,
 };
+// Sub 2 originally had Shanks (id 24) but he's now a keeper tracked in singles —
+// the $18.99 grading cost still counts via keeperCost added to totals.invested
 const SUB2_MAP: Record<number, number> = {
   1: 4, 2: 3, 3: 1, 4: 2, 5: 1, 6: 1, 7: 1,
-  21: 1, 22: 1, 23: 1, 24: 1, 25: 1, 26: 1, 27: 1, 28: 1, 29: 1, 30: 1,
+  21: 1, 22: 1, 23: 1, 25: 1, 26: 1, 27: 1, 28: 1, 29: 1, 30: 1,
 };
 const SUB3_IDS = new Set([31, 32, 33, 34]);
 
@@ -195,7 +197,14 @@ export default function GradingPage() {
   const CATEGORIES = ['Pokemon', 'One Piece', 'MTG', 'Naruto'];
   const [openSim, setOpenSim] = useState<number | null>(null);
 
-  const totalGradedCards = gradingPortfolio.reduce((s, card) => s + card.gradedQty, 0);
+  // Sellable cards = cards actually for sale (keepers are tracked here for cost but not for revenue/display)
+  const sellableCards = useMemo(() => gradingPortfolio.filter((c) => !c.isKeeper), [gradingPortfolio]);
+  const keeperCost = useMemo(
+    () => gradingPortfolio.filter((c) => c.isKeeper).reduce((s, c) => s + c.totalInvestment, 0),
+    [gradingPortfolio],
+  );
+
+  const totalGradedCards = sellableCards.reduce((s, card) => s + card.gradedQty, 0);
   const totalShipping = SUB1_SHIPPING + SUB2_SHIPPING;
   const shippingPerCard = totalGradedCards > 0 ? totalShipping / totalGradedCards : 0;
 
@@ -375,11 +384,12 @@ export default function GradingPage() {
     return cols;
   }, [updateGradingCard, deleteGradingCard, addSale, removeSale, updateSale, shippingPerCard, isAdmin]);
   const totals = useMemo(() => {
-    const totalCards = gradingPortfolio.reduce((s, c) => s + c.qty, 0);
-    const invested = gradingPortfolio.reduce((s, c) => s + c.totalInvestment, 0);
+    const totalCards = sellableCards.reduce((s, c) => s + c.qty, 0);
+    const sellableInvested = sellableCards.reduce((s, c) => s + c.totalInvestment, 0);
+    const invested = sellableInvested + keeperCost; // keeper grading cost still counts
 
-    // Blended profit: actual results for graded cards + expected for ungraded
-    const blendedRevenue = gradingPortfolio.reduce((s, c) => {
+    // Blended profit: actual results for graded cards + expected for ungraded (sellable only)
+    const blendedRevenue = sellableCards.reduce((s, c) => {
       const actualRev = calcActualRevenue(c); // revenue from graded cards
       const remainingQty = c.qty - c.gradedQty;
       const expectedRevPerCard = c.netRevenue / c.qty;
@@ -388,7 +398,7 @@ export default function GradingPage() {
     const blendedProfit = blendedRevenue - invested - SUB1_SHIPPING - SUB2_SHIPPING;
 
     // Original expected (no actuals)
-    const expectedProfit = gradingPortfolio.reduce((s, c) => s + c.profit, 0);
+    const expectedProfit = sellableCards.reduce((s, c) => s + c.profit, 0) - keeperCost;
 
     // Breakdown by submission
     // Attribute sales to earliest sub first: Sub 1 fills before Sub 2
@@ -399,7 +409,7 @@ export default function GradingPage() {
       let soldRevenue = 0;
       let soldInvestment = 0;
       const cards = Object.values(subMap).reduce((s, v) => s + v, 0);
-      gradingPortfolio.forEach((c) => {
+      sellableCards.forEach((c) => {
         const subQty = subMap[c.id];
         if (!subQty) return;
         const investPerCard = c.totalInvestment / c.qty;
@@ -429,7 +439,7 @@ export default function GradingPage() {
     const calcExpectedSubStats = (getQty: (c: GradingCard) => number) => {
       let subInvested = 0;
       let subRevenue = 0;
-      gradingPortfolio.forEach((c) => {
+      sellableCards.forEach((c) => {
         const qty = getQty(c);
         if (qty <= 0) return;
         const investPerCard = c.totalInvestment / c.qty;
@@ -447,8 +457,8 @@ export default function GradingPage() {
     const sub3Raw = calcExpectedSubStats((c) => SUB3_IDS.has(c.id) ? c.qty : 0);
     const sub3 = { ...sub3Raw, cards: 23, soldCount: 0, soldProfit: 0, soldRevenue: 0, currentPL: -sub3Raw.invested };
 
-    const totalSoldRevenue = gradingPortfolio.reduce((s, c) => s + (c.soldPrices || []).reduce((a, p) => a + p, 0), 0);
-    const totalSoldCount = gradingPortfolio.reduce((s, c) => s + (c.soldPrices || []).length, 0);
+    const totalSoldRevenue = sellableCards.reduce((s, c) => s + (c.soldPrices || []).reduce((a, p) => a + p, 0), 0);
+    const totalSoldCount = sellableCards.reduce((s, c) => s + (c.soldPrices || []).length, 0);
     const receivedInvested = sub1.invested + sub2.invested;
     const currentPL = totalSoldRevenue - receivedInvested - SUB1_SHIPPING - SUB2_SHIPPING;
 
@@ -456,10 +466,10 @@ export default function GradingPage() {
       totalCards, invested, blendedProfit, expectedProfit, roi: (blendedProfit / invested) * 100,
       sub1, sub2, sub3, currentPL, totalSoldRevenue, totalSoldCount,
     };
-  }, [gradingPortfolio]);
+  }, [sellableCards, keeperCost]);
 
   const actualStats = useMemo(() => {
-    const graded = gradingPortfolio.filter((c) => c.gradedQty > 0);
+    const graded = sellableCards.filter((c) => c.gradedQty > 0);
     const totalGraded = graded.reduce((s, c) => s + c.gradedQty, 0);
     const total10s = graded.reduce((s, c) => s + c.actual10s, 0);
     const total9s = graded.reduce((s, c) => s + c.actual9s, 0);
@@ -470,10 +480,10 @@ export default function GradingPage() {
       const perCard = c.totalInvestment / c.qty;
       return s + perCard * c.gradedQty;
     }, 0);
-    const totalWithShipping = gradedInvestment + SUB1_SHIPPING + SUB2_SHIPPING;
+    const totalWithShipping = gradedInvestment + SUB1_SHIPPING + SUB2_SHIPPING + keeperCost;
     const actualProfit = actualRevenue - totalWithShipping;
     return { totalGraded, total10s, total9s, totalSub9s, actualRevenue, gradedInvestment, totalWithShipping, actualProfit };
-  }, [gradingPortfolio]);
+  }, [sellableCards, keeperCost]);
 
   const roiDistribution = useMemo(() => {
     const ranges = [
@@ -483,15 +493,15 @@ export default function GradingPage() {
       { range: '200-400%', min: 200, max: 400, count: 0 },
       { range: '400%+', min: 400, max: Infinity, count: 0 },
     ];
-    gradingPortfolio.forEach((c) => {
+    sellableCards.forEach((c) => {
       const r = ranges.find((r) => c.roi >= r.min && c.roi < r.max);
       if (r) r.count++;
     });
     return ranges;
-  }, [gradingPortfolio]);
+  }, [sellableCards]);
 
   const gradeDistribution = useMemo(() => {
-    return gradingPortfolio
+    return sellableCards
       .filter((c) => c.qty >= 2)
       .map((c) => ({
         name: c.name.length > 20 ? c.name.slice(0, 18) + '...' : c.name,
@@ -499,17 +509,17 @@ export default function GradingPage() {
         'PSA 9': c.expected9s,
         'Sub-9': c.expectedSub9s,
       }));
-  }, [gradingPortfolio]);
+  }, [sellableCards]);
 
   const categoryProfit = useMemo(() => {
     const map: Record<string, number> = {};
-    gradingPortfolio.forEach((c) => {
+    sellableCards.forEach((c) => {
       map[c.category] = (map[c.category] || 0) + c.profit;
     });
     return Object.entries(map).map(([name, value]) => ({ name, value: Math.round(value) }));
-  }, [gradingPortfolio]);
+  }, [sellableCards]);
 
-  const categories = [...new Set(gradingPortfolio.map((c) => c.category))];
+  const categories = [...new Set(sellableCards.map((c) => c.category))];
 
   const psa10Rate = actualStats.totalGraded > 0
     ? (actualStats.total10s / actualStats.totalGraded * 100)
@@ -519,7 +529,7 @@ export default function GradingPage() {
     <div>
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-text-primary">PSA Grading Portfolio</h2>
-        <p className="text-text-secondary text-sm mt-1">34 card types, {totals.totalCards} total cards submitted</p>
+        <p className="text-text-secondary text-sm mt-1">{sellableCards.length} card types, {totals.totalCards} total cards submitted</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
@@ -592,7 +602,7 @@ export default function GradingPage() {
       {openSim === 1 && (
         <SubmissionDetail
           title="Sub 1 — Order 26141760"
-          cards={gradingPortfolio
+          cards={sellableCards
             .filter((c) => SUB1_MAP[c.id])
             .map((c) => ({ card: c, subQty: SUB1_MAP[c.id] }))}
           shippingCost={SUB1_SHIPPING}
@@ -605,7 +615,7 @@ export default function GradingPage() {
       {openSim === 2 && (
         <SubmissionDetail
           title="Sub 2 — Order 26141834"
-          cards={gradingPortfolio
+          cards={sellableCards
             .filter((c) => SUB2_MAP[c.id])
             .map((c) => ({ card: c, subQty: SUB2_MAP[c.id] }))}
           shippingCost={SUB2_SHIPPING}
@@ -618,7 +628,7 @@ export default function GradingPage() {
       {openSim === 3 && (
         <SubmissionDetail
           title="Sub 3 — Order 14231923"
-          cards={gradingPortfolio
+          cards={sellableCards
             .filter((c) => SUB3_IDS.has(c.id))
             .map((c) => ({ card: c, subQty: c.qty }))}
           shippingCost={0}
@@ -735,7 +745,7 @@ export default function GradingPage() {
             </button>
           )}
         </div>
-        <DataTable data={gradingPortfolio} columns={columns} categories={categories} />
+        <DataTable data={sellableCards} columns={columns} categories={categories} />
       </div>
     </div>
   );

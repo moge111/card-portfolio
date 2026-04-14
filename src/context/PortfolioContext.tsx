@@ -7,18 +7,22 @@ const STORAGE_KEY_GRADING = 'portfolio-grading';
 const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 5; // Bump when default data changes
+const CURRENT_DATA_VERSION = 6; // Bump when default data changes
 
-function loadGradingWithMerge(defaults: GradingCard[]): GradingCard[] {
+function getStoredVersion(): number {
   try {
-    const version = parseInt(localStorage.getItem(STORAGE_KEY_VERSION) || '0');
+    return parseInt(localStorage.getItem(STORAGE_KEY_VERSION) || '0');
+  } catch {
+    return 0;
+  }
+}
+
+function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): GradingCard[] {
+  try {
     const raw = localStorage.getItem(STORAGE_KEY_GRADING);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY_VERSION, String(CURRENT_DATA_VERSION));
-      return defaults;
-    }
+    if (!raw) return defaults;
     const stored: GradingCard[] = JSON.parse(raw);
-    if (version >= CURRENT_DATA_VERSION) {
+    if (storedVersion >= CURRENT_DATA_VERSION) {
       for (const card of stored) {
         if (!Array.isArray(card.soldPrices)) card.soldPrices = [];
       }
@@ -27,7 +31,7 @@ function loadGradingWithMerge(defaults: GradingCard[]): GradingCard[] {
     // Merge: use defaults but preserve user-entered soldPrices
     // v5 migration: subtract $2 shipping cost from all existing sales
     const soldMap = new Map(stored.map((c) => [c.id, c.soldPrices || []]));
-    if (version < 5) {
+    if (storedVersion < 5) {
       for (const [id, prices] of soldMap) {
         soldMap.set(id, prices.map((p) => +(p - 2).toFixed(2)));
       }
@@ -45,7 +49,29 @@ function loadGradingWithMerge(defaults: GradingCard[]): GradingCard[] {
       }
     }
     localStorage.setItem(STORAGE_KEY_GRADING, JSON.stringify(merged));
-    localStorage.setItem(STORAGE_KEY_VERSION, String(CURRENT_DATA_VERSION));
+    return merged;
+  } catch {
+    return defaults;
+  }
+}
+
+function loadSinglesWithMerge(defaults: Single[], storedVersion: number): Single[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_SINGLES);
+    if (!raw) return defaults;
+    const stored: Single[] = JSON.parse(raw);
+    if (storedVersion >= CURRENT_DATA_VERSION) return stored;
+    // v6 migration: ensure default "keeper" singles are present without duplicating user entries
+    const byName = new Set(stored.map((s) => s.name.toLowerCase()));
+    const maxId = stored.reduce((m, s) => Math.max(m, s.id), 0);
+    const merged = [...stored];
+    let nextId = maxId + 1;
+    for (const def of defaults) {
+      if (!byName.has(def.name.toLowerCase())) {
+        merged.push({ ...def, id: nextId++ });
+      }
+    }
+    localStorage.setItem(STORAGE_KEY_SINGLES, JSON.stringify(merged));
     return merged;
   } catch {
     return defaults;
@@ -84,15 +110,23 @@ interface PortfolioContextType {
 const PortfolioContext = createContext<PortfolioContextType | null>(null);
 
 export function PortfolioProvider({ children }: { children: ReactNode }) {
+  const storedVersion = getStoredVersion();
   const [grading, setGrading] = useState<GradingCard[]>(() =>
-    loadGradingWithMerge(defaultGrading),
+    loadGradingWithMerge(defaultGrading, storedVersion),
   );
   const [sealed, setSealed] = useState<SealedProduct[]>(() =>
     loadFromStorage(STORAGE_KEY_SEALED, defaultSealed),
   );
   const [singles, setSingles] = useState<Single[]>(() =>
-    loadFromStorage(STORAGE_KEY_SINGLES, defaultSingles),
+    loadSinglesWithMerge(defaultSingles, storedVersion),
   );
+  if (storedVersion < CURRENT_DATA_VERSION) {
+    try {
+      localStorage.setItem(STORAGE_KEY_VERSION, String(CURRENT_DATA_VERSION));
+    } catch {
+      // ignore storage errors
+    }
+  }
 
   const updateGradingCard = useCallback((id: number, field: keyof GradingCard, value: number | string) => {
     setGrading((prev) => {

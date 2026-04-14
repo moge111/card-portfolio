@@ -28,6 +28,8 @@ export interface GradingCard {
   actualSub9s: number;
   // Actual sale tracking (net $ received per sale, after all platform fees)
   soldPrices: number[];
+  // Keeper cards: cost still counts but no sale is expected; tracked in Singles instead
+  isKeeper?: boolean;
 }
 
 export interface SealedProduct {
