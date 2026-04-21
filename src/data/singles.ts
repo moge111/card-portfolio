@@ -13,4 +13,16 @@ export const singlesCollection: Single[] = [
     profit: 200,
     roi: 0,
   },
+  {
+    id: 2,
+    name: 'McDonalds Pikachu PSA 10 JP',
+    category: 'Pokemon',
+    qty: 1,
+    costPerCard: 0,
+    marketValue: 60,
+    totalCost: 0,
+    totalMarketValue: 60,
+    profit: 60,
+    roi: 0,
+  },
 ];

@@ -183,10 +183,11 @@ const SUB1_MAP: Record<number, number> = {
   1: 4, 2: 2, 3: 2, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1,
   9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1, 17: 1, 18: 1, 19: 1, 20: 1,
 };
-// Sub 2 originally had Shanks (id 24) but he's now a keeper tracked in singles —
-// the $18.99 grading cost still counts via keeperCost added to totals.invested
+// Sub 2 originally had Shanks (id 24) and 3x McDonalds Pikachu (id 2) — both
+// moved to keepers in singles. Their grading cost still counts via keeperCost
+// added to totals.invested. McDonalds dropped from 3 → 2 (1 kept); Shanks removed.
 const SUB2_MAP: Record<number, number> = {
-  1: 4, 2: 3, 3: 1, 4: 2, 5: 1, 6: 1, 7: 1,
+  1: 4, 2: 2, 3: 1, 4: 2, 5: 1, 6: 1, 7: 1,
   21: 1, 22: 1, 23: 1, 25: 1, 26: 1, 27: 1, 28: 1, 29: 1, 30: 1,
 };
 const SUB3_IDS = new Set([31, 32, 33, 34]);

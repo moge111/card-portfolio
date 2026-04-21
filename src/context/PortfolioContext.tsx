@@ -7,7 +7,7 @@ const STORAGE_KEY_GRADING = 'portfolio-grading';
 const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 6; // Bump when default data changes
+const CURRENT_DATA_VERSION = 7; // Bump when default data changes
 
 function getStoredVersion(): number {
   try {
