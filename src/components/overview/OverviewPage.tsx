@@ -30,7 +30,8 @@ export default function OverviewPage() {
     const EBAY_FEE = 0.1325;
     const SUB1_SHIPPING = 47.33;
     const SUB2_SHIPPING = 46.55;
-    const TOTAL_SHIPPING = SUB1_SHIPPING + SUB2_SHIPPING;
+    const SUB3_SHIPPING = 0; // TODO: update with actual Sub 3 shipping cost
+    const TOTAL_SHIPPING = SUB1_SHIPPING + SUB2_SHIPPING + SUB3_SHIPPING;
     const sellable = gradingPortfolio.filter((c) => !c.isKeeper);
     const gradingInvested = gradingPortfolio.reduce((s, c) => s + c.totalInvestment, 0);
     const sealedInvested = sealedCollection.reduce((s, c) => s + c.totalCost, 0);
