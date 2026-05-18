@@ -191,7 +191,7 @@ const SUB2_MAP: Record<number, number> = {
   21: 1, 22: 1, 23: 1, 25: 1, 26: 1, 27: 1, 28: 1, 29: 1, 30: 1,
 };
 const SUB3_MAP: Record<number, number> = { 31: 11, 32: 1, 33: 10, 34: 1 };
-const SUB3_SHIPPING = 46.55; // Order 26541215 receipt $483.32 - $436.77 grading = $46.55
+const SUB3_SHIPPING = 0; // TBD — not yet invoiced
 
 export default function GradingPage() {
   const { gradingPortfolio, updateGradingCard, addGradingCard, deleteGradingCard, addSale, removeSale, updateSale } = usePortfolio();

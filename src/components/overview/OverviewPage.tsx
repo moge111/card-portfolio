@@ -30,7 +30,7 @@ export default function OverviewPage() {
     const EBAY_FEE = 0.1325;
     const SUB1_SHIPPING = 47.33;
     const SUB2_SHIPPING = 46.55;
-    const SUB3_SHIPPING = 46.55; // Order 26541215 receipt $483.32 - $436.77 grading
+    const SUB3_SHIPPING = 0; // TBD — not yet invoiced
     const TOTAL_SHIPPING = SUB1_SHIPPING + SUB2_SHIPPING + SUB3_SHIPPING;
     const sellable = gradingPortfolio.filter((c) => !c.isKeeper);
     const gradingInvested = gradingPortfolio.reduce((s, c) => s + c.totalInvestment, 0);
