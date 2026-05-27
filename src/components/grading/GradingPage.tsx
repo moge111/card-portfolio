@@ -190,7 +190,9 @@ const SUB2_MAP: Record<number, number> = {
   1: 4, 2: 2, 3: 1, 4: 2, 5: 1, 6: 1, 7: 1,
   21: 1, 22: 1, 23: 1, 25: 1, 26: 1, 27: 1, 28: 1, 29: 1, 30: 1,
 };
-const SUB3_MAP: Record<number, number> = { 31: 11, 32: 1, 33: 10, 34: 1 };
+// id 31 split: 10 sellable + 1 keeper (id 36). id 34 (Naruto) is a whole keeper.
+// Keepers stay in the map so their grading cost still counts toward Sub 3.
+const SUB3_MAP: Record<number, number> = { 31: 10, 36: 1, 32: 1, 33: 10, 34: 1 };
 const SUB3_SHIPPING = 0; // TBD — not yet invoiced
 
 export default function GradingPage() {
@@ -411,11 +413,12 @@ export default function GradingPage() {
       let soldRevenue = 0;
       let soldInvestment = 0;
       const cards = Object.values(subMap).reduce((s, v) => s + v, 0);
-      sellableCards.forEach((c) => {
+      gradingPortfolio.forEach((c) => {
         const subQty = subMap[c.id];
         if (!subQty) return;
         const investPerCard = c.totalInvestment / c.qty;
         subInvested += investPerCard * subQty;
+        if (c.isKeeper) return; // keeper cost counts toward the sub, but no sale revenue
         if (c.gradedQty > 0) {
           const revPerGraded = calcActualRevenue(c) / c.gradedQty;
           subRevenue += revPerGraded * subQty;
