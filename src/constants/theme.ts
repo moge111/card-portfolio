@@ -3,6 +3,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   'One Piece': '#ef4444',
   'MTG': '#a855f7',
   'Naruto': '#f97316',
+  'Sports': '#3b82f6',
 };
 
 export const CHART_COLORS = [

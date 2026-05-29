@@ -1,4 +1,4 @@
-export type Category = 'Pokemon' | 'One Piece' | 'MTG' | 'Naruto';
+export type Category = 'Pokemon' | 'One Piece' | 'MTG' | 'Naruto' | 'Sports';
 
 export interface GradingCard {
   id: number;

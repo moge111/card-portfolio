@@ -195,6 +195,13 @@ const SUB2_MAP: Record<number, number> = {
 const SUB3_MAP: Record<number, number> = { 31: 10, 36: 1, 32: 1, 33: 10, 34: 1 };
 const SUB3_SHIPPING = 0; // TBD — not yet invoiced
 
+// Sub 4 — Submission #14972306 (Value Bulk, submitted 5/28/26)
+const SUB4_MAP: Record<number, number> = {
+  37: 20, 38: 1, 39: 1, 40: 1, 41: 1, 42: 1, 43: 1, 44: 1, 45: 1, 46: 6,
+  47: 1, 48: 1, 49: 1, 50: 1, 51: 1, 52: 1, 53: 7, 54: 1, 55: 1, 56: 1,
+};
+const SUB4_SHIPPING = 112.07; // $19.99 inbound label + $20 Cabrella coverage + $72.08 insured return
+
 export default function GradingPage() {
   const { gradingPortfolio, updateGradingCard, addGradingCard, deleteGradingCard, addSale, removeSale, updateSale } = usePortfolio();
   const isAdmin = useAdmin();
@@ -209,7 +216,7 @@ export default function GradingPage() {
   );
 
   const totalGradedCards = sellableCards.reduce((s, card) => s + card.gradedQty, 0);
-  const totalShipping = SUB1_SHIPPING + SUB2_SHIPPING + SUB3_SHIPPING;
+  const totalShipping = SUB1_SHIPPING + SUB2_SHIPPING + SUB3_SHIPPING + SUB4_SHIPPING;
   const shippingPerCard = totalGradedCards > 0 ? totalShipping / totalGradedCards : 0;
 
   const columns: ColumnDef<GradingCard, any>[] = useMemo(() => {
@@ -399,7 +406,7 @@ export default function GradingPage() {
       const expectedRevPerCard = c.netRevenue / c.qty;
       return s + actualRev + remainingQty * expectedRevPerCard;
     }, 0);
-    const blendedProfit = blendedRevenue - invested - SUB1_SHIPPING - SUB2_SHIPPING - SUB3_SHIPPING;
+    const blendedProfit = blendedRevenue - invested - SUB1_SHIPPING - SUB2_SHIPPING - SUB3_SHIPPING - SUB4_SHIPPING;
 
     // Original expected (no actuals)
     const expectedProfit = sellableCards.reduce((s, c) => s + c.profit, 0) - keeperCost;
@@ -433,6 +440,10 @@ export default function GradingPage() {
           const subSales = sales.slice(startIdx, startIdx + subSoldCount);
           soldRevenue += subSales.reduce((s, p) => s + p, 0);
           soldInvestment += investPerCard * subSoldCount;
+        } else {
+          // Not yet graded — fall back to expected revenue from market values × rates
+          const revPerCard = c.qty > 0 ? c.netRevenue / c.qty : 0;
+          subRevenue += revPerCard * subQty;
         }
       });
       const soldShipping = cards > 0 ? shippingCost * (soldCount / cards) : 0;
@@ -444,15 +455,17 @@ export default function GradingPage() {
     const sub1 = calcActualSubStats(SUB1_MAP, null, SUB1_SHIPPING);
     const sub2 = calcActualSubStats(SUB2_MAP, SUB1_MAP, SUB2_SHIPPING);
     const sub3 = calcActualSubStats(SUB3_MAP, null, SUB3_SHIPPING);
+    const sub4 = calcActualSubStats(SUB4_MAP, null, SUB4_SHIPPING);
 
     const totalSoldRevenue = sellableCards.reduce((s, c) => s + (c.soldPrices || []).reduce((a, p) => a + p, 0), 0);
     const totalSoldCount = sellableCards.reduce((s, c) => s + (c.soldPrices || []).length, 0);
+    // Received = Sub 1, 2, 3 (Sub 4 is still in transit/grading)
     const receivedInvested = sub1.invested + sub2.invested + sub3.invested;
     const currentPL = totalSoldRevenue - receivedInvested - SUB1_SHIPPING - SUB2_SHIPPING - SUB3_SHIPPING;
 
     return {
       totalCards, invested, blendedProfit, expectedProfit, roi: (blendedProfit / invested) * 100,
-      sub1, sub2, sub3, currentPL, totalSoldRevenue, totalSoldCount,
+      sub1, sub2, sub3, sub4, currentPL, totalSoldRevenue, totalSoldCount,
     };
   }, [sellableCards, keeperCost]);
 
@@ -468,7 +481,7 @@ export default function GradingPage() {
       const perCard = c.totalInvestment / c.qty;
       return s + perCard * c.gradedQty;
     }, 0);
-    const totalWithShipping = gradedInvestment + SUB1_SHIPPING + SUB2_SHIPPING + SUB3_SHIPPING + keeperCost;
+    const totalWithShipping = gradedInvestment + SUB1_SHIPPING + SUB2_SHIPPING + SUB3_SHIPPING + SUB4_SHIPPING + keeperCost;
     const actualProfit = actualRevenue - totalWithShipping;
     return { totalGraded, total10s, total9s, totalSub9s, actualRevenue, gradedInvestment, totalWithShipping, actualProfit };
   }, [sellableCards, keeperCost]);
@@ -541,11 +554,12 @@ export default function GradingPage() {
       </div>
 
       {/* Profit by Submission */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
           { key: 1, title: 'Sub 1', data: totals.sub1, badge: 'Graded', badgeClass: 'bg-profit/10 text-profit', desc: '', label: 'Actual profit', solid: true },
           { key: 2, title: 'Sub 2', data: totals.sub2, badge: 'Graded', badgeClass: 'bg-profit/10 text-profit', desc: 'Pokemon', label: 'Actual profit', solid: true },
           { key: 3, title: 'Sub 3', data: totals.sub3, badge: 'Graded', badgeClass: 'bg-profit/10 text-profit', desc: 'One Piece / Naruto', label: 'Actual profit', solid: true },
+          { key: 4, title: 'Sub 4', data: totals.sub4, badge: 'Submitted', badgeClass: 'bg-accent/10 text-accent-light', desc: 'Mixed', label: 'Estimated from market values', solid: false },
         ].map((sub) => (
           <div
             key={sub.key}
@@ -620,6 +634,19 @@ export default function GradingPage() {
             .filter((c) => SUB3_MAP[c.id])
             .map((c) => ({ card: c, subQty: SUB3_MAP[c.id] }))}
           shippingCost={SUB3_SHIPPING}
+          onClose={() => setOpenSim(null)}
+          onAddSale={addSale}
+          onRemoveSale={removeSale}
+          onUpdateSale={updateSale}
+        />
+      )}
+      {openSim === 4 && (
+        <SubmissionDetail
+          title="Sub 4 — Submission #14972306"
+          cards={sellableCards
+            .filter((c) => SUB4_MAP[c.id])
+            .map((c) => ({ card: c, subQty: SUB4_MAP[c.id] }))}
+          shippingCost={SUB4_SHIPPING}
           onClose={() => setOpenSim(null)}
           onAddSale={addSale}
           onRemoveSale={removeSale}
