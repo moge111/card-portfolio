@@ -19,6 +19,40 @@ interface SubmissionDetailProps {
   onAddSale: (cardId: number, price: number) => void;
   onRemoveSale: (cardId: number, index: number) => void;
   onUpdateSale: (cardId: number, index: number, newPrice: number) => void;
+  onUpdateCard: (cardId: number, field: keyof GradingCard, value: number | string) => void;
+  defaultMode?: 'sales' | 'pricing';
+}
+
+function NumberInput({ value, onSave, prefix, suffix, width = 'w-20', step }: { value: number; onSave: (v: number) => void; prefix?: string; suffix?: string; width?: string; step?: number }) {
+  const [draft, setDraft] = useState(String(value));
+  const [editing, setEditing] = useState(false);
+
+  // Sync draft when value changes externally
+  if (!editing && draft !== String(value)) setDraft(String(value));
+
+  const commit = () => {
+    const v = parseFloat(draft);
+    if (!isNaN(v) && v !== value) onSave(v);
+    setEditing(false);
+  };
+
+  return (
+    <span className="inline-flex items-center text-xs">
+      {prefix && <span className="text-text-secondary mr-0.5">{prefix}</span>}
+      <input
+        type="text"
+        inputMode="decimal"
+        value={draft}
+        onFocus={() => setEditing(true)}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+        onBlur={commit}
+        step={step}
+        className={`${width} bg-background border border-border rounded px-1.5 py-0.5 text-xs text-text-primary text-right outline-none focus:border-accent`}
+      />
+      {suffix && <span className="text-text-secondary ml-0.5">{suffix}</span>}
+    </span>
+  );
 }
 
 function AddSaleRow({ card, onAdd }: { card: GradingCard; onAdd: (price: number) => void }) {
@@ -147,8 +181,9 @@ function EditableSaleChip({ price, onUpdate, onRemove }: { price: number; onUpda
   );
 }
 
-export default function SubmissionDetail({ title, cards, shippingCost, onClose, onAddSale, onRemoveSale, onUpdateSale }: SubmissionDetailProps) {
+export default function SubmissionDetail({ title, cards, shippingCost, onClose, onAddSale, onRemoveSale, onUpdateSale, onUpdateCard, defaultMode = 'sales' }: SubmissionDetailProps) {
   const [profitTarget, setProfitTarget] = useState(30);
+  const [mode, setMode] = useState<'sales' | 'pricing'>(defaultMode);
   const totalInvest = cards.reduce((s, { card, subQty }) => s + (card.totalInvestment / card.qty) * subQty, 0);
   const totalSold = cards.reduce((s, { card }) => s + (card.soldPrices || []).reduce((a, p) => a + p, 0), 0);
   const totalSoldQty = cards.reduce((s, { card }) => s + (card.soldPrices || []).length, 0);
@@ -157,6 +192,10 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
     const soldCount = (card.soldPrices || []).length;
     return s + (card.totalInvestment / card.qty) * soldCount;
   }, 0) - (totalSoldQty > 0 ? shippingCost * (totalSoldQty / totalQty) : 0);
+
+  // Projected total profit (expected at market values) for this sub
+  const projectedRevenue = cards.reduce((s, { card, subQty }) => s + (card.qty > 0 ? (card.netRevenue / card.qty) * subQty : 0), 0);
+  const projectedProfit = projectedRevenue - totalInvest - shippingCost;
 
   return (
     <div className="bg-surface rounded-xl border border-accent/30 p-5 mb-8">
@@ -169,26 +208,49 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-text-secondary">Profit target:</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={profitTarget}
-              onChange={(e) => {
-                const v = parseInt(e.target.value);
-                if (!isNaN(v) && v >= 0) setProfitTarget(v);
-                else if (e.target.value === '') setProfitTarget(0);
-              }}
-              className="w-12 bg-background border border-border rounded px-1.5 py-0.5 text-xs text-text-primary text-center outline-none focus:border-accent"
-            />
-            <span className="text-xs text-text-secondary">%</span>
+          <div className="flex gap-0.5 bg-background border border-border rounded p-0.5">
+            <button
+              onClick={() => setMode('sales')}
+              className={`px-2 py-0.5 text-xs rounded transition-colors ${mode === 'sales' ? 'bg-accent text-white' : 'text-text-secondary hover:text-text-primary'}`}
+            >Sales</button>
+            <button
+              onClick={() => setMode('pricing')}
+              className={`px-2 py-0.5 text-xs rounded transition-colors ${mode === 'pricing' ? 'bg-accent text-white' : 'text-text-secondary hover:text-text-primary'}`}
+            >Pricing</button>
           </div>
+          {mode === 'sales' && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-text-secondary">Profit target:</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={profitTarget}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value);
+                  if (!isNaN(v) && v >= 0) setProfitTarget(v);
+                  else if (e.target.value === '') setProfitTarget(0);
+                }}
+                className="w-12 bg-background border border-border rounded px-1.5 py-0.5 text-xs text-text-primary text-center outline-none focus:border-accent"
+              />
+              <span className="text-xs text-text-secondary">%</span>
+            </div>
+          )}
           <button onClick={onClose} className="text-text-secondary hover:text-text-primary transition-colors">
             <X size={16} />
           </button>
         </div>
       </div>
+
+      {mode === 'pricing' && (
+        <div className="mb-3 px-3 py-2 bg-background/50 rounded-lg border border-border/50 flex items-center justify-between text-xs">
+          <span className="text-text-secondary">
+            Enter buy cost (per card) + PSA 10/9 market values. Projected profit updates live.
+          </span>
+          <span className={`font-semibold ${projectedProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
+            Projected profit if all sold: {formatCurrency(projectedProfit)}
+          </span>
+        </div>
+      )}
 
       <div className="space-y-3">
         {cards.map(({ card, subQty }) => {
@@ -209,14 +271,18 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
             card.actualSub9s > 0 && { grade: 'Sub-9', count: card.actualSub9s, market: card.costPerCard, minSell: +(costBasis * 1.0 / (1 - EBAY_FEE)).toFixed(2) },
           ].filter(Boolean) as { grade: string; count: number; market: number; minSell: number }[] : [];
 
+          // Projected profit for this card (per subQty)
+          const projRevPerCard = card.qty > 0 ? card.netRevenue / card.qty : 0;
+          const projCardProfit = (projRevPerCard - investPerCard) * subQty;
+
           return (
             <div key={card.id} className="border border-border/50 rounded-lg p-3">
               <div className="flex items-start justify-between">
-                <div>
+                <div className="flex-1">
                   <div className="text-sm font-medium text-text-primary">{card.name}</div>
                   <div className="flex items-center gap-3 mt-1 text-xs text-text-secondary">
                     <span>{subQty} card{subQty > 1 ? 's' : ''}</span>
-                    <span>{formatCurrency(investPerCard)}/card</span>
+                    <span>{formatCurrency(investPerCard)}/card invested</span>
                     <span>Total: {formatCurrency(totalCardInvest)}</span>
                     {isGraded && (
                       <span className="flex gap-1">
@@ -226,7 +292,38 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
                       </span>
                     )}
                   </div>
-                  {gradeOffers.length > 0 && remaining > 0 && (
+
+                  {mode === 'pricing' && (
+                    <div className="mt-2 flex items-center gap-3 flex-wrap">
+                      <NumberInput
+                        prefix="Buy $"
+                        value={card.costPerCard}
+                        onSave={(v) => onUpdateCard(card.id, 'costPerCard', v)}
+                        width="w-20"
+                      />
+                      <NumberInput
+                        prefix="PSA 10 $"
+                        value={card.psa10Value}
+                        onSave={(v) => onUpdateCard(card.id, 'psa10Value', v)}
+                        width="w-20"
+                      />
+                      <NumberInput
+                        prefix="PSA 9 $"
+                        value={card.psa9Value}
+                        onSave={(v) => onUpdateCard(card.id, 'psa9Value', v)}
+                        width="w-20"
+                      />
+                      <NumberInput
+                        prefix="10 rate"
+                        suffix="%"
+                        value={+(card.psa10Rate * 100).toFixed(1)}
+                        onSave={(v) => onUpdateCard(card.id, 'psa10Rate', v / 100)}
+                        width="w-14"
+                      />
+                    </div>
+                  )}
+
+                  {mode === 'sales' && gradeOffers.length > 0 && remaining > 0 && (
                     <div className="mt-1.5 space-y-0.5">
                       {gradeOffers.map(({ grade, count, market, minSell }) => {
                         const netAfterFees = +(minSell * (1 - EBAY_FEE)).toFixed(2);
@@ -245,17 +342,24 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
                     </div>
                   )}
                 </div>
-                {sales.length > 0 && (
+                {mode === 'pricing' ? (
+                  <div className="text-right ml-3">
+                    <div className={`text-sm font-bold ${projCardProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
+                      {formatCurrency(projCardProfit)}
+                    </div>
+                    <div className="text-xs text-text-secondary">projected</div>
+                  </div>
+                ) : sales.length > 0 ? (
                   <div className="text-right">
                     <div className={`text-sm font-bold ${cardProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
                       {formatCurrency(cardProfit)}
                     </div>
                     <div className="text-xs text-text-secondary">{sales.length} sold</div>
                   </div>
-                )}
+                ) : null}
               </div>
 
-              {sales.length > 0 && (
+              {mode === 'sales' && sales.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {sales.map((price, i) => (
                     <EditableSaleChip
@@ -268,7 +372,7 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
                 </div>
               )}
 
-              <AddSaleRow card={card} onAdd={(price) => onAddSale(card.id, price)} />
+              {mode === 'sales' && <AddSaleRow card={card} onAdd={(price) => onAddSale(card.id, price)} />}
             </div>
           );
         })}

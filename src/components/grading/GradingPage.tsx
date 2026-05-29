@@ -612,6 +612,7 @@ export default function GradingPage() {
           onAddSale={addSale}
           onRemoveSale={removeSale}
           onUpdateSale={updateSale}
+          onUpdateCard={updateGradingCard}
         />
       )}
       {openSim === 2 && (
@@ -625,6 +626,7 @@ export default function GradingPage() {
           onAddSale={addSale}
           onRemoveSale={removeSale}
           onUpdateSale={updateSale}
+          onUpdateCard={updateGradingCard}
         />
       )}
       {openSim === 3 && (
@@ -638,6 +640,7 @@ export default function GradingPage() {
           onAddSale={addSale}
           onRemoveSale={removeSale}
           onUpdateSale={updateSale}
+          onUpdateCard={updateGradingCard}
         />
       )}
       {openSim === 4 && (
@@ -651,6 +654,8 @@ export default function GradingPage() {
           onAddSale={addSale}
           onRemoveSale={removeSale}
           onUpdateSale={updateSale}
+          onUpdateCard={updateGradingCard}
+          defaultMode="pricing"
         />
       )}
 
