@@ -556,49 +556,42 @@ export default function GradingPage() {
       {/* Profit by Submission */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
-          { key: 1, title: 'Sub 1', data: totals.sub1, badge: 'Graded', badgeClass: 'bg-profit/10 text-profit', desc: '', label: 'Actual profit', solid: true },
-          { key: 2, title: 'Sub 2', data: totals.sub2, badge: 'Graded', badgeClass: 'bg-profit/10 text-profit', desc: 'Pokemon', label: 'Actual profit', solid: true },
-          { key: 3, title: 'Sub 3', data: totals.sub3, badge: 'Graded', badgeClass: 'bg-profit/10 text-profit', desc: 'One Piece / Naruto', label: 'Actual profit', solid: true },
-          { key: 4, title: 'Sub 4', data: totals.sub4, badge: 'Submitted', badgeClass: 'bg-accent/10 text-accent-light', desc: 'Mixed', label: 'Estimated from market values', solid: false },
-        ].map((sub) => (
-          <div
-            key={sub.key}
-            onClick={() => setOpenSim(openSim === sub.key ? null : sub.key)}
-            className={`bg-surface rounded-xl border p-5 cursor-pointer transition-colors hover:border-accent/50 ${
-              sub.solid ? 'border-border' : 'border-border border-dashed'
-            } ${openSim === sub.key ? 'ring-1 ring-accent' : ''}`}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-semibold text-text-primary">{sub.title}</h3>
-              <span className={`text-xs px-2 py-0.5 rounded ${sub.badgeClass}`}>{sub.badge}</span>
-            </div>
-            <p className="text-xs text-text-secondary mb-3">
-              {sub.data.cards} cards{sub.desc ? ` · ${sub.desc}` : ''} · {formatCurrency(sub.data.invested)} invested
-            </p>
-            <div className="flex items-baseline gap-2">
-              <span className={`text-2xl font-bold ${sub.data.profit >= 0 ? 'text-profit' : 'text-loss'}`}>
-                {sub.solid ? '' : '~'}{formatCurrency(sub.data.profit)}
-              </span>
-              <span className={`text-sm ${sub.data.profit >= 0 ? 'text-profit' : 'text-loss'}`}>
-                {formatPercent((sub.data.profit / sub.data.invested) * 100)} ROI
-              </span>
-            </div>
-            {sub.solid && (
-              <div className="mt-2 pt-2 border-t border-border/50">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-xs text-text-secondary">Current P/L</span>
-                  <span className={`text-sm font-bold ${sub.data.currentPL >= 0 ? 'text-profit' : 'text-loss'}`}>
-                    {formatCurrency(sub.data.currentPL)}
-                  </span>
-                </div>
-                <p className="text-xs text-text-secondary mt-0.5">
-                  {sub.data.soldCount}/{sub.data.cards} sold · {formatCurrency(sub.data.soldRevenue)} revenue
-                </p>
+          { key: 1, title: 'Sub 1', data: totals.sub1, badge: 'Graded', badgeClass: 'bg-profit/10 text-profit', desc: '', solid: true },
+          { key: 2, title: 'Sub 2', data: totals.sub2, badge: 'Graded', badgeClass: 'bg-profit/10 text-profit', desc: 'Pokemon', solid: true },
+          { key: 3, title: 'Sub 3', data: totals.sub3, badge: 'Graded', badgeClass: 'bg-profit/10 text-profit', desc: 'One Piece / Naruto', solid: true },
+          { key: 4, title: 'Sub 4', data: totals.sub4, badge: 'Submitted', badgeClass: 'bg-accent/10 text-accent-light', desc: 'Mixed', solid: false },
+        ].map((sub) => {
+          const pl = sub.data.currentPL;
+          const roi = sub.data.invested > 0 ? (pl / sub.data.invested) * 100 : 0;
+          return (
+            <div
+              key={sub.key}
+              onClick={() => setOpenSim(openSim === sub.key ? null : sub.key)}
+              className={`bg-surface rounded-xl border p-5 cursor-pointer transition-colors hover:border-accent/50 ${
+                sub.solid ? 'border-border' : 'border-border border-dashed'
+              } ${openSim === sub.key ? 'ring-1 ring-accent' : ''}`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-sm font-semibold text-text-primary">{sub.title}</h3>
+                <span className={`text-xs px-2 py-0.5 rounded ${sub.badgeClass}`}>{sub.badge}</span>
               </div>
-            )}
-            <p className="text-xs text-text-secondary mt-1">{sub.label} · <span className="text-accent">click to simulate</span></p>
-          </div>
-        ))}
+              <p className="text-xs text-text-secondary mb-3">
+                {sub.data.cards} cards{sub.desc ? ` · ${sub.desc}` : ''} · {formatCurrency(sub.data.invested)} invested
+              </p>
+              <div className="flex items-baseline gap-2">
+                <span className={`text-2xl font-bold ${pl >= 0 ? 'text-profit' : 'text-loss'}`}>
+                  {formatCurrency(pl)}
+                </span>
+                <span className={`text-sm ${pl >= 0 ? 'text-profit' : 'text-loss'}`}>
+                  {formatPercent(roi)} ROI
+                </span>
+              </div>
+              <p className="text-xs text-text-secondary mt-1">
+                {sub.data.soldCount}/{sub.data.cards} sold · {formatCurrency(sub.data.soldRevenue)} revenue · <span className="text-accent">click to simulate</span>
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       {openSim === 1 && (
