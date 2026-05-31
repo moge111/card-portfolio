@@ -317,9 +317,27 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
                         prefix="10 rate"
                         suffix="%"
                         value={+(card.psa10Rate * 100).toFixed(1)}
-                        onSave={(v) => onUpdateCard(card.id, 'psa10Rate', v / 100)}
+                        onSave={(v) => {
+                          const newRate = v / 100;
+                          onUpdateCard(card.id, 'psa10Rate', newRate);
+                          onUpdateCard(card.id, 'sub9Rate', Math.max(0, +(1 - newRate - card.psa9Rate).toFixed(3)));
+                        }}
                         width="w-14"
                       />
+                      <NumberInput
+                        prefix="9 rate"
+                        suffix="%"
+                        value={+(card.psa9Rate * 100).toFixed(1)}
+                        onSave={(v) => {
+                          const newRate = v / 100;
+                          onUpdateCard(card.id, 'psa9Rate', newRate);
+                          onUpdateCard(card.id, 'sub9Rate', Math.max(0, +(1 - card.psa10Rate - newRate).toFixed(3)));
+                        }}
+                        width="w-14"
+                      />
+                      <span className="text-xs text-text-secondary">
+                        sub-9: {(card.sub9Rate * 100).toFixed(1)}%
+                      </span>
                     </div>
                   )}
 
