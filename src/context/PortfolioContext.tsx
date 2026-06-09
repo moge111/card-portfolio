@@ -7,7 +7,7 @@ const STORAGE_KEY_GRADING = 'portfolio-grading';
 const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 16; // Bump when default data changes
+const CURRENT_DATA_VERSION = 17; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -22,32 +22,30 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
     const raw = localStorage.getItem(STORAGE_KEY_GRADING);
     if (!raw) return defaults;
     const stored: GradingCard[] = JSON.parse(raw);
-    if (storedVersion >= CURRENT_DATA_VERSION) {
-      for (const card of stored) {
-        if (!Array.isArray(card.soldPrices)) card.soldPrices = [];
-      }
-      return stored;
+
+    // Always normalize soldPrices to an array
+    for (const card of stored) {
+      if (!Array.isArray(card.soldPrices)) card.soldPrices = [];
     }
-    // Merge: use defaults but preserve user-entered soldPrices
-    // v5 migration: subtract $2 shipping cost from all existing sales
-    const soldMap = new Map(stored.map((c) => [c.id, c.soldPrices || []]));
+
+    if (storedVersion >= CURRENT_DATA_VERSION) return stored;
+
+    // v5 migration: subtract $2 shipping cost from existing sales (one-time)
     if (storedVersion < 5) {
-      for (const [id, prices] of soldMap) {
-        soldMap.set(id, prices.map((p) => +(p - 2).toFixed(2)));
+      for (const card of stored) {
+        card.soldPrices = card.soldPrices.map((p) => +(p - 2).toFixed(2));
       }
     }
-    const merged = defaults.map((c) => ({
-      ...c,
-      soldPrices: soldMap.get(c.id) || [],
-    }));
-    // Keep any user-added cards not in defaults
-    const defaultIds = new Set(defaults.map((c) => c.id));
-    for (const c of stored) {
-      if (!defaultIds.has(c.id)) {
-        if (!Array.isArray(c.soldPrices)) c.soldPrices = [];
-        merged.push(c);
-      }
+
+    // For every other version bump: NEVER overwrite the user's stored card data.
+    // Only append brand-new cards introduced in defaults so we don't lose user
+    // edits to market values, rates, qty, costs, etc.
+    const storedIds = new Set(stored.map((c) => c.id));
+    const merged = [...stored];
+    for (const def of defaults) {
+      if (!storedIds.has(def.id)) merged.push({ ...def });
     }
+
     localStorage.setItem(STORAGE_KEY_GRADING, JSON.stringify(merged));
     return merged;
   } catch {
