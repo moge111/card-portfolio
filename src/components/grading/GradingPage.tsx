@@ -203,7 +203,7 @@ const SUB4_MAP: Record<number, number> = {
 const SUB4_SHIPPING = 112.07; // $19.99 inbound label + $20 Cabrella coverage + $72.08 insured return
 
 // Sub 5 — Chinese Pokemon submission; $70/card grading
-const SUB5_MAP: Record<number, number> = { 57: 1, 58: 5, 59: 1, 60: 1, 61: 3, 62: 3, 63: 7, 65: 3 };
+const SUB5_MAP: Record<number, number> = { 57: 1, 58: 5, 59: 1, 60: 1, 61: 3, 62: 3, 63: 7, 65: 3, 66: 2 };
 const SUB5_SHIPPING = 0; // TBD
 
 export default function GradingPage() {
