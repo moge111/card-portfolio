@@ -567,7 +567,10 @@ export default function GradingPage() {
           { key: 4, title: 'Sub 4', data: totals.sub4, badge: 'Submitted', badgeClass: 'bg-accent/10 text-accent-light', desc: 'Mixed', solid: false },
           { key: 5, title: 'Sub 5', data: totals.sub5, badge: 'Submitted', badgeClass: 'bg-accent/10 text-accent-light', desc: 'Chinese Pokemon', solid: false },
         ].map((sub) => {
-          const pl = sub.data.currentPL;
+          // If nothing has sold yet, show projected profit from market values.
+          // Once sales start coming in, switch to realized P/L.
+          const hasSales = sub.data.soldCount > 0;
+          const pl = hasSales ? sub.data.currentPL : sub.data.profit;
           const roi = sub.data.invested > 0 ? (pl / sub.data.invested) * 100 : 0;
           return (
             <div
@@ -593,7 +596,11 @@ export default function GradingPage() {
                 </span>
               </div>
               <p className="text-xs text-text-secondary mt-1">
-                {sub.data.soldCount}/{sub.data.cards} sold · {formatCurrency(sub.data.soldRevenue)} revenue · <span className="text-accent">click to simulate</span>
+                {hasSales
+                  ? `${sub.data.soldCount}/${sub.data.cards} sold · ${formatCurrency(sub.data.soldRevenue)} revenue`
+                  : `projected · 0/${sub.data.cards} sold`}
+                {' · '}
+                <span className="text-accent">click to simulate</span>
               </p>
             </div>
           );
