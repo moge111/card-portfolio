@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CreditCard, Package, Layers, Menu, X } from 'lucide-react';
+import { LayoutDashboard, CreditCard, Package, Layers, Menu, X, Download, Upload } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
@@ -8,6 +8,51 @@ const navItems = [
   { to: '/singles', icon: Layers, label: 'Singles' },
   { to: '/sealed', icon: Package, label: 'Sealed' },
 ];
+
+const BACKUP_KEYS = ['portfolio-grading', 'portfolio-singles', 'portfolio-sealed', 'portfolio-data-version'] as const;
+
+function exportBackup() {
+  const data: Record<string, string | null> = {};
+  for (const key of BACKUP_KEYS) data[key] = localStorage.getItem(key);
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    schema: 'card-portfolio-backup-v1',
+    data,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `card-portfolio-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importBackup() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json';
+  input.onchange = async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const payload = JSON.parse(text);
+      const data = payload?.data ?? payload; // accept either wrapped or flat
+      if (!confirm('This will REPLACE your current data with the backup. Continue?')) return;
+      for (const key of BACKUP_KEYS) {
+        const val = data[key];
+        if (typeof val === 'string') localStorage.setItem(key, val);
+      }
+      window.location.reload();
+    } catch (err) {
+      alert('Could not read backup file: ' + (err as Error).message);
+    }
+  };
+  input.click();
+}
 
 export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -64,7 +109,23 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border space-y-2">
+          <div className="flex gap-2">
+            <button
+              onClick={exportBackup}
+              title="Download your data as a JSON backup file"
+              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-background hover:bg-surface-hover border border-border rounded text-xs text-text-secondary hover:text-text-primary transition-colors"
+            >
+              <Download size={12} /> Export
+            </button>
+            <button
+              onClick={importBackup}
+              title="Restore data from a backup file"
+              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-background hover:bg-surface-hover border border-border rounded text-xs text-text-secondary hover:text-text-primary transition-colors"
+            >
+              <Upload size={12} /> Import
+            </button>
+          </div>
           <div className="text-xs text-text-secondary">
             160 items tracked
           </div>
