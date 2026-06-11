@@ -2,7 +2,7 @@ import { useMemo, useState, useRef } from 'react';
 import { CreditCard, DollarSign, TrendingUp, Target, CheckCircle, Clock, Plus, X } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
+  PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import { type ColumnDef } from '@tanstack/react-table';
 import StatCard from '../shared/StatCard';
@@ -800,18 +800,26 @@ export default function GradingPage() {
               <Pie
                 data={categoryProfit}
                 cx="50%"
-                cy="50%"
-                innerRadius={50}
-                outerRadius={80}
+                cy="45%"
+                innerRadius={48}
+                outerRadius={75}
                 dataKey="value"
                 strokeWidth={0}
-                label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
               >
                 {categoryProfit.map((entry) => (
                   <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || CHART_COLORS[0]} />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
+              <Legend
+                verticalAlign="bottom"
+                iconType="circle"
+                iconSize={7}
+                formatter={(name: string) => {
+                  const entry = categoryProfit.find((e) => e.name === name);
+                  return <span style={{ color: '#8d96b2', fontSize: 11 }}>{name} · {formatCurrency(entry?.value ?? 0)}</span>;
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
