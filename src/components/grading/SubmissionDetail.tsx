@@ -211,11 +211,11 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
           <div className="flex gap-0.5 bg-background border border-border rounded-lg p-0.5 font-mono text-[10px] uppercase tracking-wider">
             <button
               onClick={() => setMode('sales')}
-              className={`px-2.5 py-1 rounded-md transition-colors ${mode === 'sales' ? 'bg-accent text-background font-medium' : 'text-text-secondary hover:text-text-primary'}`}
+              className={`px-2.5 py-1 rounded-md transition-colors ${mode === 'sales' ? 'bg-gradient-to-r from-accent to-holo text-background font-bold' : 'text-text-secondary hover:text-text-primary'}`}
             >Sales</button>
             <button
               onClick={() => setMode('pricing')}
-              className={`px-2.5 py-1 rounded-md transition-colors ${mode === 'pricing' ? 'bg-accent text-background font-medium' : 'text-text-secondary hover:text-text-primary'}`}
+              className={`px-2.5 py-1 rounded-md transition-colors ${mode === 'pricing' ? 'bg-gradient-to-r from-accent to-holo text-background font-bold' : 'text-text-secondary hover:text-text-primary'}`}
             >Pricing</button>
           </div>
           {mode === 'sales' && (

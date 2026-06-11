@@ -93,13 +93,13 @@ export default function Sidebar() {
       >
         <div className="logo-area px-6 pt-7 pb-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <svg viewBox="0 0 40 40" className="pokeball-logo h-10 w-10 drop-shadow-[0_0_14px_rgba(229,87,95,0.45)]" aria-hidden>
-              <circle cx="20" cy="20" r="18.5" fill="#1d1713" stroke="#443524" strokeWidth="1" />
-              <path d="M1.5 20 a18.5 18.5 0 0 1 37 0 Z" fill="#e5575f" />
-              <rect x="1.8" y="18.4" width="36.4" height="3.2" fill="#0b0908" />
-              <circle cx="20" cy="20" r="5.5" fill="#0b0908" />
-              <circle cx="20" cy="20" r="3.6" fill="#ede4d6" />
-              <circle cx="20" cy="20" r="1.7" fill="#d4a24e" />
+            <svg viewBox="0 0 40 40" className="pokeball-logo h-10 w-10 drop-shadow-[0_0_14px_rgba(239,68,68,0.5)]" aria-hidden>
+              <circle cx="20" cy="20" r="18.5" fill="#171c2b" stroke="#364060" strokeWidth="1" />
+              <path d="M1.5 20 a18.5 18.5 0 0 1 37 0 Z" fill="#ef4444" />
+              <rect x="1.8" y="18.4" width="36.4" height="3.2" fill="#05070d" />
+              <circle cx="20" cy="20" r="5.5" fill="#05070d" />
+              <circle cx="20" cy="20" r="3.6" fill="#e9edf8" />
+              <circle cx="20" cy="20" r="1.7" fill="#38bdf8" />
             </svg>
             <div>
               <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-text-secondary">Gotta track 'em all</div>
@@ -122,7 +122,7 @@ export default function Sidebar() {
               className={({ isActive }) =>
                 `group relative flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-sm ${
                   isActive
-                    ? 'bg-accent/10 text-accent-light font-medium'
+                    ? 'bg-gradient-to-r from-accent/20 to-holo/15 text-accent-light font-medium shadow-[0_0_18px_-6px_rgba(56,189,248,0.5)]'
                     : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
                 }`
               }
@@ -131,7 +131,7 @@ export default function Sidebar() {
               {({ isActive }) => (
                 <>
                   <span
-                    className={`absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-gradient-to-b from-accent-light to-accent transition-opacity ${
+                    className={`absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-gradient-to-b from-accent to-holo transition-opacity ${
                       isActive ? 'opacity-100' : 'opacity-0'
                     }`}
                   />

@@ -87,7 +87,7 @@ export default function DataTable<T>({ data, columns, categories, csvName }: Dat
               onClick={() => setCategoryFilter('')}
               className={`rounded-full border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-colors ${
                 !categoryFilter
-                  ? 'border-accent/60 bg-accent/15 text-accent-light'
+                  ? 'border-transparent bg-gradient-to-r from-accent to-holo text-background font-bold'
                   : 'border-border bg-background/50 text-text-secondary hover:border-border-bright hover:text-text-primary'
               }`}
             >
@@ -99,7 +99,7 @@ export default function DataTable<T>({ data, columns, categories, csvName }: Dat
                 onClick={() => setCategoryFilter(cat === categoryFilter ? '' : cat)}
                 className={`rounded-full border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-colors ${
                   categoryFilter === cat
-                    ? 'border-accent/60 bg-accent/15 text-accent-light'
+                    ? 'border-transparent bg-gradient-to-r from-accent to-holo text-background font-bold'
                     : 'border-border bg-background/50 text-text-secondary hover:border-border-bright hover:text-text-primary'
                 }`}
               >

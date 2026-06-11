@@ -153,8 +153,8 @@ export default function OverviewPage() {
         <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
           <span className="twinkle mr-1">✦</span>Trainer HQ · Every Collection
         </div>
-        <h2 className="font-display text-4xl font-medium tracking-tight text-text-primary">
-          Portfolio <span className="italic text-accent-light">Overview</span>
+        <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
+          Portfolio <span className="holo-text italic">Overview</span>
           <span className="ml-4 align-middle text-2xl">
             <span className="floaty">⚡</span>
             <span className="floaty ml-1.5" style={{ animationDelay: '-1.1s' }}>🏴‍☠️</span>
@@ -322,11 +322,11 @@ export default function OverviewPage() {
         <ChartCard title="Profit Comparison" subtitle="Expected profit by portfolio type">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={profitComparisonData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
-              <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} tick={{ fill: '#a3937e', fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" tick={{ fill: '#a3937e', fontSize: 12 }} width={90} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
+              <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} tick={{ fill: '#8d96b2', fontSize: 12 }} />
+              <YAxis type="category" dataKey="name" tick={{ fill: '#8d96b2', fontSize: 12 }} width={90} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="profit" fill="#d4a24e" radius={[0, 6, 6, 0]} name="Profit" />
+              <Bar dataKey="profit" fill="#38bdf8" radius={[0, 6, 6, 0]} name="Profit" />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -337,13 +337,13 @@ export default function OverviewPage() {
         <ChartCard title="Investment by Category">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={categoryData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
-              <XAxis dataKey="name" tick={{ fill: '#a3937e', fontSize: 12 }} />
-              <YAxis tickFormatter={(v) => '$' + (v / 1000).toFixed(0) + 'k'} tick={{ fill: '#a3937e', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
+              <XAxis dataKey="name" tick={{ fill: '#8d96b2', fontSize: 12 }} />
+              <YAxis tickFormatter={(v) => '$' + (v / 1000).toFixed(0) + 'k'} tick={{ fill: '#8d96b2', fontSize: 12 }} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="invested" name="Invested" radius={[6, 6, 0, 0]}>
                 {categoryData.map((entry) => (
-                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || '#d4a24e'} />
+                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || '#38bdf8'} />
                 ))}
               </Bar>
             </BarChart>
@@ -353,13 +353,13 @@ export default function OverviewPage() {
         <ChartCard title="ROI by Category">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={categoryData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
-              <XAxis dataKey="name" tick={{ fill: '#a3937e', fontSize: 12 }} />
-              <YAxis tickFormatter={(v) => v + '%'} tick={{ fill: '#a3937e', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
+              <XAxis dataKey="name" tick={{ fill: '#8d96b2', fontSize: 12 }} />
+              <YAxis tickFormatter={(v) => v + '%'} tick={{ fill: '#8d96b2', fontSize: 12 }} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="roi" name="ROI %" radius={[6, 6, 0, 0]}>
                 {categoryData.map((entry) => (
-                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || '#d4a24e'} />
+                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || '#38bdf8'} />
                 ))}
               </Bar>
             </BarChart>

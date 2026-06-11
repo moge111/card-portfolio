@@ -135,8 +135,8 @@ export default function SinglesPage() {
         <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
           <span className="twinkle mr-1">✦</span>The Keepers · Not For Sale
         </div>
-        <h2 className="font-display text-4xl font-medium tracking-tight text-text-primary">
-          The <span className="italic text-accent-light">Singles</span>
+        <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
+          The <span className="holo-text italic">Singles</span>
           <span className="floaty ml-4 align-middle text-2xl">🍥</span>
           <span className="floaty ml-1.5 align-middle text-2xl" style={{ animationDelay: '-1.6s' }}>⚡</span>
         </h2>
@@ -155,7 +155,7 @@ export default function SinglesPage() {
           <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">All Singles</h3>
           <button
             onClick={addSingle}
-            className="rounded-lg bg-accent px-3 py-1.5 font-mono text-[10px] font-medium uppercase tracking-wider text-background transition-colors hover:bg-accent-light"
+            className="rounded-lg bg-gradient-to-r from-accent to-holo px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-background transition-all hover:brightness-125 hover:shadow-[0_0_16px_-2px_rgba(56,189,248,0.6)]"
           >
             + Add Card
           </button>

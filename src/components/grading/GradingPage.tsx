@@ -553,8 +553,8 @@ export default function GradingPage() {
         <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
           <span className="twinkle mr-1">✦</span>The Gem Hunt · PSA Submissions
         </div>
-        <h2 className="font-display text-4xl font-medium tracking-tight text-text-primary">
-          PSA <span className="italic text-accent-light">Grading</span>
+        <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
+          PSA <span className="holo-text italic">Grading</span>
           <span className="floaty ml-4 align-middle text-2xl">💎</span>
         </h2>
         <p className="text-text-secondary text-sm mt-2">{sellableCards.length} card types, {totals.totalCards} total cards submitted</p>
@@ -768,11 +768,11 @@ export default function GradingPage() {
         <ChartCard title="ROI Distribution" subtitle="Cards by ROI range">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={roiDistribution}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
-              <XAxis dataKey="range" tick={{ fill: '#a3937e', fontSize: 11 }} />
-              <YAxis tick={{ fill: '#a3937e', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
+              <XAxis dataKey="range" tick={{ fill: '#8d96b2', fontSize: 11 }} />
+              <YAxis tick={{ fill: '#8d96b2', fontSize: 12 }} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" name="Cards" fill="#d4a24e" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" name="Cards" fill="#38bdf8" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -780,13 +780,13 @@ export default function GradingPage() {
         <ChartCard title="Expected Grade Split" subtitle="Multi-copy submissions">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={gradeDistribution}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
-              <XAxis dataKey="name" tick={{ fill: '#a3937e', fontSize: 10 }} />
-              <YAxis tick={{ fill: '#a3937e', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
+              <XAxis dataKey="name" tick={{ fill: '#8d96b2', fontSize: 10 }} />
+              <YAxis tick={{ fill: '#8d96b2', fontSize: 12 }} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="PSA 10" stackId="a" fill="#46d39a" />
-              <Bar dataKey="PSA 9" stackId="a" fill="#d4a24e" />
-              <Bar dataKey="Sub-9" stackId="a" fill="#e5575f" />
+              <Bar dataKey="PSA 10" stackId="a" fill="#34d399" />
+              <Bar dataKey="PSA 9" stackId="a" fill="#38bdf8" />
+              <Bar dataKey="Sub-9" stackId="a" fill="#fb7185" />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -820,7 +820,7 @@ export default function GradingPage() {
           {isAdmin && (
             <button
               onClick={addGradingCard}
-              className="rounded-lg bg-accent px-3 py-1.5 font-mono text-[10px] font-medium uppercase tracking-wider text-background transition-colors hover:bg-accent-light"
+              className="rounded-lg bg-gradient-to-r from-accent to-holo px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-background transition-all hover:brightness-125 hover:shadow-[0_0_16px_-2px_rgba(56,189,248,0.6)]"
             >
               + Add Card
             </button>

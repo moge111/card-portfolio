@@ -1,19 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  /* The Vault — warm near-black, champagne gold, holo foil */
-  --color-bg: #0b0908;
-  --color-background: #070505;
-  --color-surface: #14100e;
-  --color-surface-hover: #1d1713;
-  --color-border: #2a2119;
-  --color-border-bright: #443524;
-  --color-text-primary: #ede4d6;
-  --color-text-secondary: #a3937e;
-  --color-accent: #d4a24e;
-  --color-accent-light: #ecc887;
-  --color-profit: #46d39a;
-  --color-loss: #e5575f;
+  /* Holo Night — ink navy, electric cyan, foil violet */
+  --color-bg: #090b14;
+  --color-background: #05070d;
+  --color-surface: #10141f;
+  --color-surface-hover: #171c2b;
+  --color-border: #222940;
+  --color-border-bright: #364060;
+  --color-text-primary: #e9edf8;
+  --color-text-secondary: #8d96b2;
+  --color-accent: #38bdf8;
+  --color-accent-light: #7dd3fc;
+  --color-holo: #a78bfa;
+  --color-profit: #34d399;
+  --color-loss: #fb7185;
   --color-pokemon: #facc15;
   --color-onepiece: #ef4444;
   --color-mtg: #a855f7;
@@ -28,9 +29,9 @@ body {
   margin: 0;
   background-color: var(--color-bg);
   background-image:
-    radial-gradient(ellipse 70% 45% at 18% -8%, rgba(212, 162, 78, 0.09), transparent 60%),
-    radial-gradient(ellipse 55% 40% at 85% 0%, rgba(120, 80, 170, 0.06), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 50% 110%, rgba(70, 211, 154, 0.04), transparent 60%);
+    radial-gradient(ellipse 70% 45% at 15% -8%, rgba(56, 189, 248, 0.1), transparent 60%),
+    radial-gradient(ellipse 55% 40% at 88% 0%, rgba(167, 139, 250, 0.09), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 50% 112%, rgba(244, 114, 182, 0.06), transparent 60%);
   background-attachment: fixed;
   color: var(--color-text-primary);
   font-family: var(--font-body);
@@ -45,7 +46,7 @@ body::after {
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  opacity: 0.035;
+  opacity: 0.03;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -54,28 +55,29 @@ body::after {
 }
 
 ::selection {
-  background: rgba(212, 162, 78, 0.3);
-  color: #fff7e8;
+  background: rgba(56, 189, 248, 0.35);
+  color: #f0faff;
 }
 
-/* ---------- The Vault utilities ---------- */
+/* ---------- Holo Night utilities ---------- */
 
-/* Holographic foil — reserved for the brand mark and rare moments */
+/* Holographic foil — brand mark, page titles, rare moments */
 .holo-text {
   background: linear-gradient(
     100deg,
-    #ecc887 0%,
-    #fff3d6 22%,
-    #d4a24e 40%,
-    #b0e8d2 62%,
-    #c9b3f0 80%,
-    #ecc887 100%
+    #7dd3fc 0%,
+    #e9f6ff 18%,
+    #38bdf8 36%,
+    #a78bfa 54%,
+    #f472b6 72%,
+    #facc15 88%,
+    #7dd3fc 100%
   );
   background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: foil-sheen 9s linear infinite;
+  animation: foil-sheen 7s linear infinite;
 }
 
 @keyframes foil-sheen {
@@ -86,11 +88,11 @@ body::after {
 .panel {
   position: relative;
   background:
-    linear-gradient(180deg, rgba(236, 200, 135, 0.04), transparent 40%),
+    linear-gradient(180deg, rgba(125, 211, 252, 0.05), transparent 40%),
     var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 14px;
-  box-shadow: 0 1px 0 rgba(255, 244, 214, 0.04) inset, 0 12px 32px -16px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 1px 0 rgba(233, 246, 255, 0.05) inset, 0 12px 32px -16px rgba(0, 0, 0, 0.7);
 }
 
 .panel-hover {
@@ -98,9 +100,12 @@ body::after {
   transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 .panel-hover:hover {
-  border-color: rgba(212, 162, 78, 0.4);
+  border-color: rgba(56, 189, 248, 0.5);
   transform: translateY(-3px);
-  box-shadow: 0 1px 0 rgba(255, 244, 214, 0.06) inset, 0 20px 44px -16px rgba(0, 0, 0, 0.85);
+  box-shadow:
+    0 1px 0 rgba(233, 246, 255, 0.07) inset,
+    0 20px 44px -16px rgba(0, 0, 0, 0.85),
+    0 0 30px -8px rgba(56, 189, 248, 0.25);
 }
 
 /* Holo shine sweep across a panel on hover */
@@ -114,9 +119,9 @@ body::after {
   background: linear-gradient(
     105deg,
     transparent 38%,
-    rgba(250, 204, 21, 0.05) 46%,
-    rgba(255, 243, 214, 0.1) 50%,
-    rgba(168, 85, 247, 0.05) 54%,
+    rgba(56, 189, 248, 0.08) 46%,
+    rgba(233, 246, 255, 0.14) 50%,
+    rgba(167, 139, 250, 0.08) 54%,
     transparent 62%
   );
   background-size: 250% 100%;
@@ -131,7 +136,7 @@ body::after {
   to { background-position: -60% 0; }
 }
 
-/* Gold hairline along a panel's top edge */
+/* Cyan hairline along a panel's top edge */
 .gold-hairline::before {
   content: '';
   position: absolute;
@@ -139,7 +144,7 @@ body::after {
   left: 10%;
   right: 10%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212, 162, 78, 0.55), transparent);
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.6), rgba(167, 139, 250, 0.5), transparent);
 }
 
 /* Page-load choreography — springy pop-in */
@@ -159,15 +164,15 @@ body::after {
   position: fixed;
   z-index: -1;
   border-radius: 9999px;
-  filter: blur(90px);
-  opacity: 0.12;
+  filter: blur(80px);
+  opacity: 0.2;
   pointer-events: none;
-  animation: drift 26s ease-in-out infinite alternate;
+  animation: drift 22s ease-in-out infinite alternate;
 }
 @keyframes drift {
   from { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(40px, -50px) scale(1.18); }
-  to { transform: translate(-30px, 30px) scale(0.95); }
+  50% { transform: translate(50px, -60px) scale(1.2); }
+  to { transform: translate(-40px, 40px) scale(0.92); }
 }
 
 /* Gentle bob for decorative bits (header emoji, logo) */
@@ -258,10 +263,10 @@ body::after {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a2119;
+  background: #222940;
   border-radius: 4px;
   border: 2px solid var(--color-bg);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #443524;
+  background: #364060;
 }

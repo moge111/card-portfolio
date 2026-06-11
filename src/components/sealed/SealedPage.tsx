@@ -189,8 +189,8 @@ export default function SealedPage() {
         <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
           <span className="twinkle mr-1">✦</span>The Treasure Hold · Unopened
         </div>
-        <h2 className="font-display text-4xl font-medium tracking-tight text-text-primary">
-          Sealed <span className="italic text-accent-light">Collection</span>
+        <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
+          Sealed <span className="holo-text italic">Collection</span>
           <span className="floaty ml-4 align-middle text-2xl">📦</span>
           <span className="floaty ml-1.5 align-middle text-2xl" style={{ animationDelay: '-1.6s' }}>🏴‍☠️</span>
         </h2>
@@ -208,11 +208,11 @@ export default function SealedPage() {
         <ChartCard title="ROI Distribution" subtitle="Products by ROI range">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={roiDistribution}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
-              <XAxis dataKey="range" tick={{ fill: '#a3937e', fontSize: 11 }} />
-              <YAxis tick={{ fill: '#a3937e', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
+              <XAxis dataKey="range" tick={{ fill: '#8d96b2', fontSize: 11 }} />
+              <YAxis tick={{ fill: '#8d96b2', fontSize: 12 }} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" name="Products" fill="#d4a24e" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" name="Products" fill="#38bdf8" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -242,12 +242,12 @@ export default function SealedPage() {
         <ChartCard title="Top Market Gainers" subtitle="Cost vs Market Value">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={costVsMarket.slice(0, 5)}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
-              <XAxis dataKey="name" tick={{ fill: '#a3937e', fontSize: 9 }} />
-              <YAxis tickFormatter={(v) => '$' + (v / 1000).toFixed(0) + 'k'} tick={{ fill: '#a3937e', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
+              <XAxis dataKey="name" tick={{ fill: '#8d96b2', fontSize: 9 }} />
+              <YAxis tickFormatter={(v) => '$' + (v / 1000).toFixed(0) + 'k'} tick={{ fill: '#8d96b2', fontSize: 12 }} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="cost" name="Cost" fill="#d4a24e" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="market" name="Market" fill="#46d39a" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="cost" name="Cost" fill="#38bdf8" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="market" name="Market" fill="#34d399" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -259,7 +259,7 @@ export default function SealedPage() {
           {isAdmin && (
             <button
               onClick={addSealedProduct}
-              className="rounded-lg bg-accent px-3 py-1.5 font-mono text-[10px] font-medium uppercase tracking-wider text-background transition-colors hover:bg-accent-light"
+              className="rounded-lg bg-gradient-to-r from-accent to-holo px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-background transition-all hover:brightness-125 hover:shadow-[0_0_16px_-2px_rgba(56,189,248,0.6)]"
             >
               + Add Product
             </button>

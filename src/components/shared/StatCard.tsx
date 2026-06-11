@@ -23,7 +23,9 @@ export default function StatCard({ title, value, subtitle, icon: Icon, trend, in
             </span>
           )}
         </span>
-        <Icon size={16} className="wiggle text-accent/50 transition-colors group-hover:text-accent" />
+        <span className="rounded-lg bg-gradient-to-br from-accent/25 to-holo/25 p-1.5 shadow-[0_0_14px_-4px_rgba(56,189,248,0.55)]">
+          <Icon size={15} className="wiggle text-accent-light" />
+        </span>
       </div>
       <div className={`font-display text-[1.75rem] font-medium leading-none tracking-tight tabular-nums ${trendColor}`}>
         {value}
