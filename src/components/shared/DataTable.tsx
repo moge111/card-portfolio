@@ -10,7 +10,7 @@ import {
 } from '@tanstack/react-table';
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, FileDown } from 'lucide-react';
 import CategoryBadge from './CategoryBadge';
-import { triggerFlyBy } from './FlyBy';
+import { triggerFlyBy } from '../../constants/flair';
 
 interface DataTableProps<T> {
   data: T[];

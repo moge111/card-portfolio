@@ -1,5 +1,5 @@
 import { CATEGORY_COLORS } from '../../constants/theme';
-import { triggerFlyBy } from './FlyBy';
+import { triggerFlyBy } from '../../constants/flair';
 
 export default function CategoryBadge({ category }: { category: string }) {
   const color = CATEGORY_COLORS[category] || '#38bdf8';

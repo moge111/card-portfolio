@@ -15,7 +15,7 @@ import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
 import SubmissionDetail from './SubmissionDetail';
 import { FLAIR_HERO } from '../../constants/flair';
-import { triggerFlyBy } from '../shared/FlyBy';
+import { triggerFlyBy } from '../../constants/flair';
 import type { GradingCard } from '../../types/portfolio';
 
 const EBAY_FEE = 0.1325;

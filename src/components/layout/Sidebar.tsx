@@ -3,7 +3,7 @@ import { LayoutDashboard, CreditCard, Package, Layers, Menu, X, Download, Upload
 import { useState } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { useAdminToggle } from '../../context/AdminContext';
-import { triggerFlyBy } from '../shared/FlyBy';
+import { triggerFlyBy } from '../../constants/flair';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Overview' },

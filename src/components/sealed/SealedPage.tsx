@@ -14,7 +14,7 @@ import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
 import { FLAIR_HERO } from '../../constants/flair';
-import { triggerFlyBy } from '../shared/FlyBy';
+import { triggerFlyBy } from '../../constants/flair';
 import type { SealedProduct } from '../../types/portfolio';
 
 const CustomTooltip = ({ active, payload, label }: any) => {

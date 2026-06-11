@@ -8,7 +8,7 @@ import { usePortfolio } from '../../context/PortfolioContext';
 import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { FLAIR_HERO } from '../../constants/flair';
-import { triggerFlyBy } from '../shared/FlyBy';
+import { triggerFlyBy } from '../../constants/flair';
 import type { Single } from '../../types/portfolio';
 
 export default function SinglesPage() {

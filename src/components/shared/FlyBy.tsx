@@ -13,10 +13,6 @@ interface Fly {
 const COOLDOWN_MS = 3500;
 let lastFly = 0;
 
-export function triggerFlyBy(category: string) {
-  window.dispatchEvent(new CustomEvent('vault-flyby', { detail: { category } }));
-}
-
 export default function FlyByLayer() {
   const [flies, setFlies] = useState<Fly[]>([]);
 

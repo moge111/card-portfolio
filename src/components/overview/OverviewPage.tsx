@@ -12,7 +12,7 @@ import { usePortfolio } from '../../context/PortfolioContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
 import { FLAIR_HERO } from '../../constants/flair';
-import { triggerFlyBy } from '../shared/FlyBy';
+import { triggerFlyBy } from '../../constants/flair';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
