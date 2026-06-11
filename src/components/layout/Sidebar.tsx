@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CreditCard, Package, Layers, Menu, X, Download, Upload, Gem, PencilLine } from 'lucide-react';
+import { LayoutDashboard, CreditCard, Package, Layers, Menu, X, Download, Upload, PencilLine } from 'lucide-react';
 import { useState } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { useAdminToggle } from '../../context/AdminContext';
@@ -91,13 +91,18 @@ export default function Sidebar() {
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 lg:static`}
       >
-        <div className="px-6 pt-7 pb-6 border-b border-border">
+        <div className="logo-area px-6 pt-7 pb-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-border-bright bg-gradient-to-b from-surface-hover to-background shadow-[0_0_24px_-6px_rgba(212,162,78,0.45)]">
-              <Gem size={19} className="text-accent" />
-            </div>
+            <svg viewBox="0 0 40 40" className="pokeball-logo h-10 w-10 drop-shadow-[0_0_14px_rgba(229,87,95,0.45)]" aria-hidden>
+              <circle cx="20" cy="20" r="18.5" fill="#1d1713" stroke="#443524" strokeWidth="1" />
+              <path d="M1.5 20 a18.5 18.5 0 0 1 37 0 Z" fill="#e5575f" />
+              <rect x="1.8" y="18.4" width="36.4" height="3.2" fill="#0b0908" />
+              <circle cx="20" cy="20" r="5.5" fill="#0b0908" />
+              <circle cx="20" cy="20" r="3.6" fill="#ede4d6" />
+              <circle cx="20" cy="20" r="1.7" fill="#d4a24e" />
+            </svg>
             <div>
-              <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-text-secondary">The Vault</div>
+              <div className="font-mono text-[9px] uppercase tracking-[0.3em] text-text-secondary">Gotta track 'em all</div>
               <h1 className="font-display text-lg font-semibold leading-tight tracking-tight">
                 Card <span className="holo-text italic">Portfolio</span>
               </h1>

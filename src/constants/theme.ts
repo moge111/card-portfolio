@@ -1,3 +1,11 @@
+export const CATEGORY_EMOJI: Record<string, string> = {
+  'Pokemon': '⚡',
+  'One Piece': '🏴‍☠️',
+  'MTG': '🔮',
+  'Naruto': '🍥',
+  'Sports': '🏆',
+};
+
 export const CATEGORY_COLORS: Record<string, string> = {
   'Pokemon': '#f2c744',
   'One Piece': '#e5575f',

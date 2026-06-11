@@ -150,9 +150,16 @@ export default function OverviewPage() {
   return (
     <div>
       <div className="mb-10 rise">
-        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">The Vault · Combined Ledger</div>
+        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
+          <span className="twinkle mr-1">✦</span>Trainer HQ · Every Collection
+        </div>
         <h2 className="font-display text-4xl font-medium tracking-tight text-text-primary">
           Portfolio <span className="italic text-accent-light">Overview</span>
+          <span className="ml-4 align-middle text-2xl">
+            <span className="floaty">⚡</span>
+            <span className="floaty ml-1.5" style={{ animationDelay: '-1.1s' }}>🏴‍☠️</span>
+            <span className="floaty ml-1.5" style={{ animationDelay: '-2.2s' }}>🍥</span>
+          </span>
         </h2>
         <p className="text-text-secondary text-sm mt-2">Grading, sealed and singles performance in one view</p>
       </div>
@@ -251,7 +258,7 @@ export default function OverviewPage() {
             <Link key={seg.to} to={seg.to} className="panel panel-hover group p-5 block">
               <div className="flex items-center justify-between mb-4">
                 <span className="flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
-                  <seg.icon size={14} className="text-accent" /> {seg.name}
+                  <seg.icon size={14} className="wiggle text-accent" /> {seg.name}
                 </span>
                 <ArrowUpRight size={14} className="text-text-secondary/40 transition-all group-hover:text-accent group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </div>
@@ -276,9 +283,9 @@ export default function OverviewPage() {
                 <span className={`font-mono text-[10px] font-medium ${seg.profit >= 0 ? 'text-profit' : 'text-loss'}`}>{formatPercent(roi)} ROI</span>
               </div>
               {seg.progress !== null && (
-                <div className="mt-2 h-1 overflow-hidden rounded-full bg-border">
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-accent to-profit"
+                    className="stripes h-full rounded-full bg-gradient-to-r from-accent to-profit"
                     style={{ width: `${Math.min(100, seg.progress * 100)}%` }}
                   />
                 </div>
@@ -393,6 +400,7 @@ export default function OverviewPage() {
         <ChartCard title="Needs Attention" subtitle="Items currently underwater">
           {performers.bottom.length === 0 ? (
             <div className="py-12 text-center font-mono text-xs text-text-secondary">
+              <span className="floaty mb-3 block text-3xl">🎉</span>
               Nothing underwater — every item is in profit.
             </div>
           ) : (

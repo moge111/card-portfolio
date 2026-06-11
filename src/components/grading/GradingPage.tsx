@@ -550,9 +550,12 @@ export default function GradingPage() {
   return (
     <div>
       <div className="mb-10 rise">
-        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">The Vault · Submissions</div>
+        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
+          <span className="twinkle mr-1">✦</span>The Gem Hunt · PSA Submissions
+        </div>
         <h2 className="font-display text-4xl font-medium tracking-tight text-text-primary">
           PSA <span className="italic text-accent-light">Grading</span>
+          <span className="floaty ml-4 align-middle text-2xl">💎</span>
         </h2>
         <p className="text-text-secondary text-sm mt-2">{sellableCards.length} card types, {totals.totalCards} total cards submitted</p>
       </div>
@@ -601,8 +604,8 @@ export default function GradingPage() {
           { key: 1, title: 'Sub 1', data: totals.sub1, badge: 'Graded', badgeClass: 'border-profit/30 bg-profit/10 text-profit', desc: '', solid: true },
           { key: 2, title: 'Sub 2', data: totals.sub2, badge: 'Graded', badgeClass: 'border-profit/30 bg-profit/10 text-profit', desc: 'Pokemon', solid: true },
           { key: 3, title: 'Sub 3', data: totals.sub3, badge: 'Graded', badgeClass: 'border-profit/30 bg-profit/10 text-profit', desc: 'One Piece / Naruto', solid: true },
-          { key: 4, title: 'Sub 4', data: totals.sub4, badge: 'Submitted', badgeClass: 'border-accent/30 bg-accent/10 text-accent-light', desc: 'Mixed', solid: false },
-          { key: 5, title: 'Sub 5', data: totals.sub5, badge: 'Submitted', badgeClass: 'border-accent/30 bg-accent/10 text-accent-light', desc: 'Chinese Pokemon', solid: false },
+          { key: 4, title: 'Sub 4', data: totals.sub4, badge: 'Submitted', badgeClass: 'pulse-soft border-accent/30 bg-accent/10 text-accent-light', desc: 'Mixed', solid: false },
+          { key: 5, title: 'Sub 5', data: totals.sub5, badge: 'Submitted', badgeClass: 'pulse-soft border-accent/30 bg-accent/10 text-accent-light', desc: 'Chinese Pokemon', solid: false },
         ].map((sub) => {
           // If nothing has sold yet, show projected profit from market values.
           // Once sales start coming in, switch to realized P/L.

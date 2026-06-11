@@ -10,6 +10,7 @@ import {
 } from '@tanstack/react-table';
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, FileDown } from 'lucide-react';
 import CategoryBadge from './CategoryBadge';
+import { CATEGORY_EMOJI } from '../../constants/theme';
 
 interface DataTableProps<T> {
   data: T[];
@@ -102,7 +103,7 @@ export default function DataTable<T>({ data, columns, categories, csvName }: Dat
                     : 'border-border bg-background/50 text-text-secondary hover:border-border-bright hover:text-text-primary'
                 }`}
               >
-                {cat}
+                {CATEGORY_EMOJI[cat] ? `${CATEGORY_EMOJI[cat]} ` : ''}{cat}
               </button>
             ))}
           </div>

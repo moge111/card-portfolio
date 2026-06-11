@@ -132,9 +132,13 @@ export default function SinglesPage() {
   return (
     <div>
       <div className="mb-10 rise">
-        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">The Vault · Personal Collection</div>
+        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
+          <span className="twinkle mr-1">✦</span>The Keepers · Not For Sale
+        </div>
         <h2 className="font-display text-4xl font-medium tracking-tight text-text-primary">
           The <span className="italic text-accent-light">Singles</span>
+          <span className="floaty ml-4 align-middle text-2xl">🍥</span>
+          <span className="floaty ml-1.5 align-middle text-2xl" style={{ animationDelay: '-1.6s' }}>⚡</span>
         </h2>
         <p className="text-text-secondary text-sm mt-2">Raw cards and keepers — not for sale</p>
       </div>
@@ -158,8 +162,8 @@ export default function SinglesPage() {
         </div>
         {singlesCollection.length === 0 ? (
           <div className="text-center py-12">
-            <Layers size={32} className="mx-auto text-text-secondary mb-3" />
-            <p className="text-text-secondary text-sm">No singles yet. Click "+ Add Card" to start tracking your raw cards.</p>
+            <span className="floaty mb-3 block text-4xl">🎒</span>
+            <p className="text-text-secondary text-sm">Your bag is empty. Click "+ Add Card" to start tracking your raw cards.</p>
           </div>
         ) : (
           <DataTable data={singlesCollection} columns={columns} categories={categories} csvName="singles" />

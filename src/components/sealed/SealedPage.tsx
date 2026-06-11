@@ -186,9 +186,13 @@ export default function SealedPage() {
   return (
     <div>
       <div className="mb-10 rise">
-        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">The Vault · Unopened</div>
+        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
+          <span className="twinkle mr-1">✦</span>The Treasure Hold · Unopened
+        </div>
         <h2 className="font-display text-4xl font-medium tracking-tight text-text-primary">
           Sealed <span className="italic text-accent-light">Collection</span>
+          <span className="floaty ml-4 align-middle text-2xl">📦</span>
+          <span className="floaty ml-1.5 align-middle text-2xl" style={{ animationDelay: '-1.6s' }}>🏴‍☠️</span>
         </h2>
         <p className="text-text-secondary text-sm mt-2">{sealedCollection.length} products, {totals.totalUnits} total units held</p>
       </div>

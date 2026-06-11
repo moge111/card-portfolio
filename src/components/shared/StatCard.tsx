@@ -23,7 +23,7 @@ export default function StatCard({ title, value, subtitle, icon: Icon, trend, in
             </span>
           )}
         </span>
-        <Icon size={16} className="text-accent/50 transition-colors group-hover:text-accent" />
+        <Icon size={16} className="wiggle text-accent/50 transition-colors group-hover:text-accent" />
       </div>
       <div className={`font-display text-[1.75rem] font-medium leading-none tracking-tight tabular-nums ${trendColor}`}>
         {value}

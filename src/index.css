@@ -94,11 +94,41 @@ body::after {
 }
 
 .panel-hover {
+  overflow: hidden;
   transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 .panel-hover:hover {
   border-color: rgba(212, 162, 78, 0.4);
-  box-shadow: 0 1px 0 rgba(255, 244, 214, 0.06) inset, 0 16px 40px -16px rgba(0, 0, 0, 0.8);
+  transform: translateY(-3px);
+  box-shadow: 0 1px 0 rgba(255, 244, 214, 0.06) inset, 0 20px 44px -16px rgba(0, 0, 0, 0.85);
+}
+
+/* Holo shine sweep across a panel on hover */
+.panel-hover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgba(250, 204, 21, 0.05) 46%,
+    rgba(255, 243, 214, 0.1) 50%,
+    rgba(168, 85, 247, 0.05) 54%,
+    transparent 62%
+  );
+  background-size: 250% 100%;
+  background-position: 130% 0;
+}
+.panel-hover:hover::after {
+  opacity: 1;
+  animation: shine 0.9s ease;
+}
+@keyframes shine {
+  from { background-position: 130% 0; }
+  to { background-position: -60% 0; }
 }
 
 /* Gold hairline along a panel's top edge */
@@ -112,21 +142,111 @@ body::after {
   background: linear-gradient(90deg, transparent, rgba(212, 162, 78, 0.55), transparent);
 }
 
-/* Page-load choreography */
+/* Page-load choreography — springy pop-in */
 @keyframes rise {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
-.rise { animation: rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.rise { animation: rise 0.6s cubic-bezier(0.34, 1.45, 0.64, 1) both; }
 .rise-1 { animation-delay: 0.05s; }
 .rise-2 { animation-delay: 0.12s; }
 .rise-3 { animation-delay: 0.19s; }
 .rise-4 { animation-delay: 0.26s; }
 .rise-5 { animation-delay: 0.33s; }
 
+/* Drifting franchise-colored aurora orbs (behind everything) */
+.orb {
+  position: fixed;
+  z-index: -1;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.12;
+  pointer-events: none;
+  animation: drift 26s ease-in-out infinite alternate;
+}
+@keyframes drift {
+  from { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -50px) scale(1.18); }
+  to { transform: translate(-30px, 30px) scale(0.95); }
+}
+
+/* Gentle bob for decorative bits (header emoji, logo) */
+@keyframes floaty {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-6px) rotate(3deg); }
+}
+.floaty {
+  display: inline-block;
+  animation: floaty 3.2s ease-in-out infinite;
+}
+
+/* Twinkling sparkle */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.35; transform: scale(0.8) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.2) rotate(20deg); }
+}
+.twinkle {
+  display: inline-block;
+  animation: twinkle 2.2s ease-in-out infinite;
+}
+
+/* Icon wiggle when its card is hovered */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-12deg) scale(1.15); }
+  75% { transform: rotate(12deg) scale(1.15); }
+}
+.group:hover .wiggle {
+  animation: wiggle 0.45s ease-in-out;
+}
+
+/* Soft pulse for "in progress" badges */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.pulse-soft { animation: pulse-soft 2.4s ease-in-out infinite; }
+
+/* Animated candy stripes for progress bars */
+.stripes {
+  position: relative;
+  overflow: hidden;
+}
+.stripes::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -34px;
+  right: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.22) 0 6px,
+    transparent 6px 12px
+  );
+  animation: stripe-slide 0.9s linear infinite;
+}
+@keyframes stripe-slide {
+  to { transform: translateX(17px); }
+}
+
+/* Pokeball logo — bobs gently, spins when you hover the sidebar header */
+.pokeball-logo {
+  animation: floaty 4s ease-in-out infinite;
+  transition: transform 0.3s ease;
+}
+.logo-area:hover .pokeball-logo {
+  animation: pokespin 0.7s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+@keyframes pokespin {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .rise { animation: none; }
-  .holo-text { animation: none; }
+  .rise, .holo-text, .orb, .floaty, .twinkle, .pulse-soft,
+  .stripes::after, .pokeball-logo, .group:hover .wiggle,
+  .panel-hover:hover::after { animation: none; }
 }
 
 /* Scrollbar */
