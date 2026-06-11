@@ -11,7 +11,7 @@ import CategoryBadge from '../shared/CategoryBadge';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
-import { FLAIR_HERO, triggerFlyBy } from '../../constants/flair';
+import { FLAIR_HERO } from '../../constants/flair';
 import Peeker from '../shared/Peeker';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -158,9 +158,9 @@ export default function OverviewPage() {
         <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
           Portfolio <span className="holo-text italic">Overview</span>
           <span className="ml-5 inline-flex items-end gap-1 align-middle">
-            <img src={FLAIR_HERO.pikachu} alt="Pikachu" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('Pokemon')} className="floaty h-12 w-12 cursor-pointer object-contain drop-shadow-[0_0_12px_rgba(250,204,21,0.45)]" />
-            <img src={FLAIR_HERO.luffy} alt="Luffy" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('One Piece')} className="floaty h-12 w-12 cursor-pointer object-contain drop-shadow-[0_0_12px_rgba(239,68,68,0.45)]" style={{ animationDelay: '-1.1s' }} />
-            <img src={FLAIR_HERO.naruto} alt="Naruto" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('Naruto')} className="floaty h-12 w-12 cursor-pointer object-contain drop-shadow-[0_0_12px_rgba(251,146,60,0.45)]" style={{ animationDelay: '-2.2s' }} />
+            <img src={FLAIR_HERO.pikachu} alt="Pikachu" className="floaty h-12 w-12 object-contain drop-shadow-[0_0_12px_rgba(250,204,21,0.45)]" />
+            <img src={FLAIR_HERO.luffy} alt="Luffy" className="floaty h-12 w-12 object-contain drop-shadow-[0_0_12px_rgba(239,68,68,0.45)]" style={{ animationDelay: '-1.1s' }} />
+            <img src={FLAIR_HERO.naruto} alt="Naruto" className="floaty h-12 w-12 object-contain drop-shadow-[0_0_12px_rgba(251,146,60,0.45)]" style={{ animationDelay: '-2.2s' }} />
           </span>
         </h2>
         <p className="text-text-secondary text-sm mt-2">Grading, sealed and singles performance in one view</p>
@@ -300,7 +300,7 @@ export default function OverviewPage() {
       {/* Row 2: Investment Split + Profit Comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 rise rise-3">
         <ChartCard title="Investment Split" subtitle="Grading vs Sealed allocation">
-          <Peeker src={FLAIR_HERO.dragonite} category="Pokemon" className="right-10" size={42} alt="Dragonite peeking" />
+          <Peeker src={FLAIR_HERO.dragonite} className="right-10" size={42} alt="Dragonite peeking" />
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
@@ -323,7 +323,7 @@ export default function OverviewPage() {
         </ChartCard>
 
         <ChartCard title="Profit Comparison" subtitle="Expected profit by portfolio type">
-          <Peeker src={FLAIR_HERO.gengar} category="Pokemon" className="right-14" size={38} alt="Gengar peeking" />
+          <Peeker src={FLAIR_HERO.gengar} className="right-14" size={38} alt="Gengar peeking" />
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={profitComparisonData} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#222940" />

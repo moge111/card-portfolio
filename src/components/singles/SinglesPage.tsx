@@ -7,7 +7,7 @@ import EditableCell, { EditableSelect } from '../shared/EditableCell';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
-import { FLAIR_HERO, triggerFlyBy } from '../../constants/flair';
+import { FLAIR_HERO } from '../../constants/flair';
 import Peeker from '../shared/Peeker';
 import type { Single } from '../../types/portfolio';
 
@@ -140,8 +140,8 @@ export default function SinglesPage() {
         <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
           The <span className="holo-text italic">Singles</span>
           <span className="ml-5 inline-flex items-end gap-1 align-middle">
-            <img src={FLAIR_HERO.naruto} alt="Naruto" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('Naruto')} className="floaty h-13 w-13 cursor-pointer object-contain drop-shadow-[0_0_12px_rgba(251,146,60,0.45)]" />
-            <img src={FLAIR_HERO.eevee} alt="Eevee" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('Pokemon')} className="floaty h-13 w-13 cursor-pointer object-contain drop-shadow-[0_0_12px_rgba(250,204,21,0.45)]" style={{ animationDelay: '-1.6s' }} />
+            <img src={FLAIR_HERO.naruto} alt="Naruto" className="floaty h-13 w-13 object-contain drop-shadow-[0_0_12px_rgba(251,146,60,0.45)]" />
+            <img src={FLAIR_HERO.eevee} alt="Eevee" className="floaty h-13 w-13 object-contain drop-shadow-[0_0_12px_rgba(250,204,21,0.45)]" style={{ animationDelay: '-1.6s' }} />
           </span>
         </h2>
         <p className="text-text-secondary text-sm mt-2">Raw cards and keepers — not for sale</p>
@@ -155,7 +155,7 @@ export default function SinglesPage() {
       </div>
 
       <div className="panel p-5 rise rise-2">
-        <Peeker src={FLAIR_HERO.kakashi} category="Naruto" className="right-14" size={42} alt="Kakashi peeking" />
+        <Peeker src={FLAIR_HERO.kakashi} className="right-14" size={42} alt="Kakashi peeking" />
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">All Singles</h3>
           <button

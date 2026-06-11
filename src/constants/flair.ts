@@ -6,10 +6,6 @@ export const FLAIR: Record<string, string[]> = {
   'Naruto': ['naruto', 'kakashi'].map((n) => base + n + '.png'),
 };
 
-export function triggerFlyBy(category: string) {
-  window.dispatchEvent(new CustomEvent('vault-flyby', { detail: { category } }));
-}
-
 export const FLAIR_HERO = {
   pikachu: base + 'pikachu.png',
   charizard: base + 'charizard.png',

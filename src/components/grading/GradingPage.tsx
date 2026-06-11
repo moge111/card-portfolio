@@ -14,7 +14,7 @@ import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
 import SubmissionDetail from './SubmissionDetail';
-import { FLAIR_HERO, triggerFlyBy } from '../../constants/flair';
+import { FLAIR_HERO } from '../../constants/flair';
 import Peeker from '../shared/Peeker';
 import type { GradingCard } from '../../types/portfolio';
 
@@ -557,7 +557,7 @@ export default function GradingPage() {
         </div>
         <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
           PSA <span className="holo-text italic">Grading</span>
-          <img src={FLAIR_HERO.charizard} alt="Charizard" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('Pokemon')} className="floaty ml-5 inline-block h-14 w-14 cursor-pointer object-contain align-middle drop-shadow-[0_0_14px_rgba(239,68,68,0.45)]" />
+          <img src={FLAIR_HERO.charizard} alt="Charizard" className="floaty ml-5 inline-block h-14 w-14 object-contain align-middle drop-shadow-[0_0_14px_rgba(239,68,68,0.45)]" />
         </h2>
         <p className="text-text-secondary text-sm mt-2">{sellableCards.length} card types, {totals.totalCards} total cards submitted</p>
       </div>
@@ -725,7 +725,7 @@ export default function GradingPage() {
       {/* Actual Results Banner */}
       {actualStats.totalGraded > 0 && (
         <div className="panel gold-hairline p-5 mb-8 rise rise-3">
-          <Peeker src={FLAIR_HERO.mewtwo} category="Pokemon" className="right-12" size={44} alt="Mewtwo peeking" />
+          <Peeker src={FLAIR_HERO.mewtwo} className="right-12" size={44} alt="Mewtwo peeking" />
           <div className="flex items-center gap-2 mb-5">
             <CheckCircle size={16} className="text-profit" />
             <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
@@ -818,7 +818,7 @@ export default function GradingPage() {
       </div>
 
       <div className="panel p-5 rise rise-5">
-        <Peeker src={FLAIR_HERO.pikachu} category="Pokemon" className="left-12" size={38} alt="Pikachu peeking" />
+        <Peeker src={FLAIR_HERO.pikachu} className="left-12" size={38} alt="Pikachu peeking" />
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">All Grading Submissions</h3>
           {isAdmin && (

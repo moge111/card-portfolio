@@ -13,7 +13,7 @@ import { usePortfolio } from '../../context/PortfolioContext';
 import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
-import { FLAIR_HERO, triggerFlyBy } from '../../constants/flair';
+import { FLAIR_HERO } from '../../constants/flair';
 import Peeker from '../shared/Peeker';
 import type { SealedProduct } from '../../types/portfolio';
 
@@ -194,8 +194,8 @@ export default function SealedPage() {
         <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
           Sealed <span className="holo-text italic">Collection</span>
           <span className="ml-5 inline-flex items-end gap-1 align-middle">
-            <img src={FLAIR_HERO.snorlax} alt="Snorlax" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('Pokemon')} className="floaty h-13 w-13 cursor-pointer object-contain drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]" />
-            <img src={FLAIR_HERO.chopper} alt="Chopper" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('One Piece')} className="floaty h-13 w-13 cursor-pointer object-contain drop-shadow-[0_0_12px_rgba(244,114,182,0.45)]" style={{ animationDelay: '-1.6s' }} />
+            <img src={FLAIR_HERO.snorlax} alt="Snorlax" className="floaty h-13 w-13 object-contain drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]" />
+            <img src={FLAIR_HERO.chopper} alt="Chopper" className="floaty h-13 w-13 object-contain drop-shadow-[0_0_12px_rgba(244,114,182,0.45)]" style={{ animationDelay: '-1.6s' }} />
           </span>
         </h2>
         <p className="text-text-secondary text-sm mt-2">{sealedCollection.length} products, {totals.totalUnits} total units held</p>
@@ -258,7 +258,7 @@ export default function SealedPage() {
       </div>
 
       <div className="panel p-5 rise rise-3">
-        <Peeker src={FLAIR_HERO.chopper} category="One Piece" className="right-14" size={42} alt="Chopper peeking" />
+        <Peeker src={FLAIR_HERO.chopper} className="right-14" size={42} alt="Chopper peeking" />
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">All Sealed Products</h3>
           {isAdmin && (

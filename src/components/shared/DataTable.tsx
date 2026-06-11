@@ -10,7 +10,6 @@ import {
 } from '@tanstack/react-table';
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, FileDown } from 'lucide-react';
 import CategoryBadge from './CategoryBadge';
-import { triggerFlyBy } from '../../constants/flair';
 
 interface DataTableProps<T> {
   data: T[];
@@ -96,7 +95,7 @@ export default function DataTable<T>({ data, columns, categories, csvName }: Dat
             {categories.map((cat) => (
               <button
                 key={cat}
-                onClick={() => { setCategoryFilter(cat === categoryFilter ? '' : cat); triggerFlyBy(cat); }}
+                onClick={() => setCategoryFilter(cat === categoryFilter ? '' : cat)}
                 className={`rounded-full border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-colors ${
                   categoryFilter === cat
                     ? 'border-transparent bg-gradient-to-r from-accent to-holo text-background font-bold'
