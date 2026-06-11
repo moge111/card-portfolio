@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { DollarSign, TrendingUp, PieChart as PieIcon, BarChart3, CheckCircle, CreditCard, Package, Layers, ArrowUpRight } from 'lucide-react';
+import { DollarSign, TrendingUp, PieChart as PieIcon, BarChart3, CheckCircle, CreditCard, Package, Layers, ArrowUpRight, Sparkles } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -82,6 +82,8 @@ export default function OverviewPage() {
     // value for graded/ungraded cards still held. Sealed and singles count
     // at market since those are straightforward holdings.
     const totalProfit = realizedProfit + sealedProfit + singlesProfit;
+    // Expected profit on grading inventory that hasn't sold yet
+    const gradedPotential = gradingProfit - realizedProfit;
 
     return {
       gradingInvested, gradingProfit, sealedInvested, sealedProfit,
@@ -89,7 +91,7 @@ export default function OverviewPage() {
       totalInvested, totalProfit, holdingsValue,
       realizedProfit, totalSoldCount, totalSoldRevenue,
       sealedMarket, gradingValue: unsoldGradingValue + totalSoldRevenue,
-      totalReceivedCards,
+      totalReceivedCards, gradedPotential,
     };
   }, [gradingPortfolio, sealedCollection, singlesCollection]);
 
@@ -156,7 +158,7 @@ export default function OverviewPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 rise rise-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 rise rise-1">
         <StatCard
           title="Holdings Value"
           value={formatCurrency(stats.holdingsValue)}
@@ -172,6 +174,25 @@ export default function OverviewPage() {
           info="Every dollar put in: card costs, grading fees, sealed and singles purchases."
         />
         <StatCard
+          title="Total Profit"
+          value={formatCurrency(stats.totalProfit)}
+          subtitle="Excludes graded potential"
+          icon={TrendingUp}
+          trend={stats.totalProfit >= 0 ? 'up' : 'down'}
+          info="Realized sales profit plus paper gains on sealed and singles. Graded-card potential is tracked separately below and only moves here when cards actually sell."
+        />
+        <StatCard
+          title="Overall ROI"
+          value={formatPercent((stats.totalProfit / stats.totalInvested) * 100)}
+          icon={BarChart3}
+          trend="up"
+          info="Total profit divided by total invested. Excludes graded potential."
+        />
+      </div>
+
+      {/* Profit breakdown */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 rise rise-1">
+        <StatCard
           title="Realized Profit"
           value={formatCurrency(stats.realizedProfit)}
           subtitle={`${stats.totalSoldCount} sold · ${formatCurrency(stats.totalSoldRevenue)} revenue`}
@@ -180,19 +201,28 @@ export default function OverviewPage() {
           info="Locked-in profit from actual sales: net sale proceeds minus the cost basis of the sold cards and their share of PSA shipping."
         />
         <StatCard
-          title="Total Profit"
-          value={formatCurrency(stats.totalProfit)}
-          subtitle="Sales + sealed/singles gains"
-          icon={TrendingUp}
-          trend={stats.totalProfit >= 0 ? 'up' : 'down'}
-          info="Realized sales profit plus paper gains on sealed and singles. Graded cards only count once they actually sell — no projected values."
+          title="Sealed Unrealized"
+          value={formatCurrency(stats.sealedProfit)}
+          subtitle="Market value − cost"
+          icon={Package}
+          trend={stats.sealedProfit >= 0 ? 'up' : 'down'}
+          info="Paper gain on sealed products: current market value minus what you paid. Realized only if you sell."
         />
         <StatCard
-          title="Overall ROI"
-          value={formatPercent((stats.totalProfit / stats.totalInvested) * 100)}
-          icon={BarChart3}
-          trend="up"
-          info="Total profit divided by total invested, across the whole portfolio."
+          title="Singles Unrealized"
+          value={formatCurrency(stats.singlesProfit)}
+          subtitle="Market value − cost"
+          icon={Layers}
+          trend={stats.singlesProfit >= 0 ? 'up' : 'down'}
+          info="Paper gain on raw singles and keepers: current market value minus what you paid."
+        />
+        <StatCard
+          title="Graded Potential"
+          value={formatCurrency(stats.gradedPotential)}
+          subtitle="If remaining cards sell at market"
+          icon={Sparkles}
+          trend="neutral"
+          info="Expected profit on grading inventory that hasn't sold yet: unsold graded cards at market (after eBay fees) plus expected value of cards still at PSA, minus their remaining cost basis and shipping."
         />
       </div>
 
