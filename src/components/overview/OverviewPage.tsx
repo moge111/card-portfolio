@@ -77,9 +77,11 @@ export default function OverviewPage() {
     const sealedMarket = sealedCollection.reduce((s, c) => s + c.totalMarketValue, 0);
     const holdingsValue = unsoldGradingValue + sealedMarket + singlesMarket;
 
-    // Blended total profit (holdings unrealized + realized)
     const gradingProfit = (unsoldGradingValue + totalSoldRevenue) - gradingInvested - TOTAL_SHIPPING;
-    const totalProfit = gradingProfit + sealedProfit + singlesProfit;
+    // Total profit counts only realized sales from grading — no projected
+    // value for graded/ungraded cards still held. Sealed and singles count
+    // at market since those are straightforward holdings.
+    const totalProfit = realizedProfit + sealedProfit + singlesProfit;
 
     return {
       gradingInvested, gradingProfit, sealedInvested, sealedProfit,
@@ -180,10 +182,10 @@ export default function OverviewPage() {
         <StatCard
           title="Total Profit"
           value={formatCurrency(stats.totalProfit)}
-          subtitle="Realized + unrealized"
+          subtitle="Sales + sealed/singles gains"
           icon={TrendingUp}
           trend={stats.totalProfit >= 0 ? 'up' : 'down'}
-          info="Realized sales profit plus paper gains on everything still held, after all fees and shipping."
+          info="Realized sales profit plus paper gains on sealed and singles. Graded cards only count once they actually sell — no projected values."
         />
         <StatCard
           title="Overall ROI"
