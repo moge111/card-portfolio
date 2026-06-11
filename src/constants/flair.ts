@@ -18,4 +18,9 @@ export const FLAIR_HERO = {
   eevee: base + 'eevee.png',
   naruto: base + 'naruto.png',
   luffy: base + 'luffy.png',
+  gengar: base + 'gengar.png',
+  dragonite: base + 'dragonite.png',
+  mewtwo: base + 'mewtwo.png',
+  kakashi: base + 'kakashi.png',
+  zoro: base + 'zoro.png',
 };

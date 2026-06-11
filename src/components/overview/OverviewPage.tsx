@@ -11,8 +11,8 @@ import CategoryBadge from '../shared/CategoryBadge';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
-import { FLAIR_HERO } from '../../constants/flair';
-import { triggerFlyBy } from '../../constants/flair';
+import { FLAIR_HERO, triggerFlyBy } from '../../constants/flair';
+import Peeker from '../shared/Peeker';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -300,6 +300,7 @@ export default function OverviewPage() {
       {/* Row 2: Investment Split + Profit Comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 rise rise-3">
         <ChartCard title="Investment Split" subtitle="Grading vs Sealed allocation">
+          <Peeker src={FLAIR_HERO.dragonite} category="Pokemon" className="right-10" size={42} alt="Dragonite peeking" />
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
@@ -322,6 +323,7 @@ export default function OverviewPage() {
         </ChartCard>
 
         <ChartCard title="Profit Comparison" subtitle="Expected profit by portfolio type">
+          <Peeker src={FLAIR_HERO.gengar} category="Pokemon" className="right-14" size={38} alt="Gengar peeking" />
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={profitComparisonData} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#222940" />

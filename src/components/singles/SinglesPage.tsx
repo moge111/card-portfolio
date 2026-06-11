@@ -7,8 +7,8 @@ import EditableCell, { EditableSelect } from '../shared/EditableCell';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
-import { FLAIR_HERO } from '../../constants/flair';
-import { triggerFlyBy } from '../../constants/flair';
+import { FLAIR_HERO, triggerFlyBy } from '../../constants/flair';
+import Peeker from '../shared/Peeker';
 import type { Single } from '../../types/portfolio';
 
 export default function SinglesPage() {
@@ -155,6 +155,7 @@ export default function SinglesPage() {
       </div>
 
       <div className="panel p-5 rise rise-2">
+        <Peeker src={FLAIR_HERO.kakashi} category="Naruto" className="right-14" size={42} alt="Kakashi peeking" />
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">All Singles</h3>
           <button

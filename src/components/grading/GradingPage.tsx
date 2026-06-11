@@ -14,8 +14,8 @@ import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
 import SubmissionDetail from './SubmissionDetail';
-import { FLAIR_HERO } from '../../constants/flair';
-import { triggerFlyBy } from '../../constants/flair';
+import { FLAIR_HERO, triggerFlyBy } from '../../constants/flair';
+import Peeker from '../shared/Peeker';
 import type { GradingCard } from '../../types/portfolio';
 
 const EBAY_FEE = 0.1325;
@@ -725,6 +725,7 @@ export default function GradingPage() {
       {/* Actual Results Banner */}
       {actualStats.totalGraded > 0 && (
         <div className="panel gold-hairline p-5 mb-8 rise rise-3">
+          <Peeker src={FLAIR_HERO.mewtwo} category="Pokemon" className="right-12" size={44} alt="Mewtwo peeking" />
           <div className="flex items-center gap-2 mb-5">
             <CheckCircle size={16} className="text-profit" />
             <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
@@ -817,6 +818,7 @@ export default function GradingPage() {
       </div>
 
       <div className="panel p-5 rise rise-5">
+        <Peeker src={FLAIR_HERO.pikachu} category="Pokemon" className="left-12" size={38} alt="Pikachu peeking" />
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">All Grading Submissions</h3>
           {isAdmin && (

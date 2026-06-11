@@ -265,6 +265,16 @@ body::after {
   to { transform: translateY(10px) rotate(3deg); }
 }
 
+/* Characters peeking over panel edges — slow shy bob */
+@keyframes peek-bob {
+  0%, 100% { transform: translateY(8px); }
+  50% { transform: translateY(0); }
+}
+.peeker-img {
+  animation: peek-bob 3.6s ease-in-out infinite;
+  filter: drop-shadow(0 -2px 10px rgba(0, 0, 0, 0.4));
+}
+
 /* Pokeball logo — bobs gently, spins when you hover the sidebar header */
 .pokeball-logo {
   animation: floaty 4s ease-in-out infinite;
@@ -283,6 +293,7 @@ body::after {
   .stripes::after, .pokeball-logo, .group:hover .wiggle,
   .panel-hover:hover::after { animation: none; }
   .flyby { display: none; }
+  .peeker-img { animation: none; }
 }
 
 /* Scrollbar */
