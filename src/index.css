@@ -61,6 +61,12 @@ body::after {
 
 /* ---------- Holo Night utilities ---------- */
 
+/* Recharts clips pie labels at the SVG edge — let them overflow */
+.recharts-wrapper,
+.recharts-wrapper svg {
+  overflow: visible !important;
+}
+
 /* Holographic foil — brand mark, page titles, rare moments */
 .holo-text {
   background: linear-gradient(
