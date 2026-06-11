@@ -45,7 +45,7 @@ function calcActualProfit(c: GradingCard, shippingPerCard: number): number {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-surface border border-border rounded-lg px-3 py-2 text-xs shadow-lg">
+    <div className="rounded-lg border border-border-bright bg-background/95 px-3 py-2 font-mono text-xs shadow-2xl backdrop-blur">
       <p className="text-text-primary font-medium mb-1">{label || payload[0]?.name}</p>
       {payload.map((entry: any, i: number) => (
         <p key={i} style={{ color: entry.color }}>
@@ -228,6 +228,7 @@ export default function GradingPage() {
       {
         accessorKey: 'name',
         header: 'Card',
+        footer: () => <span className="font-mono text-[10px] uppercase tracking-[0.18em]">Totals</span>,
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             <EditableCell
@@ -235,7 +236,7 @@ export default function GradingPage() {
               onSave={(v) => updateGradingCard(row.original.id, 'name', v)}
               type="text"
               inputWidth="w-40"
-              className="text-text-primary font-medium text-sm"
+              className="font-body text-text-primary font-medium text-sm"
             />
             <div className="flex items-center gap-2">
               <EditableSelect
@@ -266,6 +267,7 @@ export default function GradingPage() {
             onSave={(v) => updateGradingCard(row.original.id, 'qty', v)}
           />
         ),
+        footer: ({ table }) => table.getFilteredRowModel().rows.reduce((s, r) => s + r.original.qty, 0),
       },
       {
         accessorKey: 'costPerCard',
@@ -282,6 +284,7 @@ export default function GradingPage() {
         accessorKey: 'totalInvestment',
         header: 'Investment',
         cell: ({ getValue }) => formatCurrency(getValue()),
+        footer: ({ table }) => formatCurrency(table.getFilteredRowModel().rows.reduce((s, r) => s + r.original.totalInvestment, 0)),
       },
       {
         accessorKey: 'psa10Value',
@@ -344,6 +347,11 @@ export default function GradingPage() {
           />
         ),
         sortingFn: (a, b) => soldTotal(a.original) - soldTotal(b.original),
+        footer: ({ table }) => {
+          const rows = table.getFilteredRowModel().rows;
+          const count = rows.reduce((s, r) => s + (r.original.soldPrices || []).length, 0);
+          return `${count} · ${formatCurrency(rows.reduce((s, r) => s + soldTotal(r.original), 0))}`;
+        },
       },
       {
         id: 'actualPL',
@@ -353,8 +361,8 @@ export default function GradingPage() {
           if (c.gradedQty === 0) return <span className="text-text-secondary text-xs">Pending</span>;
           const pl = calcActualProfit(c, shippingPerCard);
           const label = pl > 5 ? 'Profit' : pl < -5 ? 'Loss' : 'Break-even';
-          const color = pl > 5 ? 'text-profit' : pl < -5 ? 'text-loss' : 'text-yellow-400';
-          const bgColor = pl > 5 ? 'bg-profit/10' : pl < -5 ? 'bg-loss/10' : 'bg-yellow-400/10';
+          const color = pl > 5 ? 'text-profit' : pl < -5 ? 'text-loss' : 'text-accent-light';
+          const bgColor = pl > 5 ? 'bg-profit/10' : pl < -5 ? 'bg-loss/10' : 'bg-accent/10';
           return (
             <div className="flex flex-col gap-0.5">
               <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold ${color} ${bgColor}`}>
@@ -365,6 +373,10 @@ export default function GradingPage() {
           );
         },
         sortingFn: (a, b) => calcActualProfit(a.original, shippingPerCard) - calcActualProfit(b.original, shippingPerCard),
+        footer: ({ table }) => {
+          const total = table.getFilteredRowModel().rows.reduce((s, r) => s + calcActualProfit(r.original, shippingPerCard), 0);
+          return <span className={total >= 0 ? 'text-profit' : 'text-loss'}>{formatCurrency(total)}</span>;
+        },
       },
       {
         accessorKey: 'profit',
@@ -372,6 +384,10 @@ export default function GradingPage() {
         cell: ({ getValue }) => {
           const v = getValue() as number;
           return <span className={v >= 0 ? 'text-profit' : 'text-loss'}>{formatCurrency(v)}</span>;
+        },
+        footer: ({ table }) => {
+          const total = table.getFilteredRowModel().rows.reduce((s, r) => s + r.original.profit, 0);
+          return <span className={total >= 0 ? 'text-profit' : 'text-loss'}>{formatCurrency(total)}</span>;
         },
       },
       {
@@ -533,20 +549,34 @@ export default function GradingPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-text-primary">PSA Grading Portfolio</h2>
-        <p className="text-text-secondary text-sm mt-1">{sellableCards.length} card types, {totals.totalCards} total cards submitted</p>
+      <div className="mb-10 rise">
+        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">The Vault · Submissions</div>
+        <h2 className="font-display text-4xl font-medium tracking-tight text-text-primary">
+          PSA <span className="italic text-accent-light">Grading</span>
+        </h2>
+        <p className="text-text-secondary text-sm mt-2">{sellableCards.length} card types, {totals.totalCards} total cards submitted</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        <StatCard title="Total Cards" value={String(totals.totalCards)} icon={CreditCard} />
-        <StatCard title="Total Invested" value={formatCurrency(totals.invested)} icon={DollarSign} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8 rise rise-1">
+        <StatCard
+          title="Total Cards"
+          value={String(totals.totalCards)}
+          icon={CreditCard}
+          info="Total sellable cards across all five PSA submissions (keepers excluded)."
+        />
+        <StatCard
+          title="Total Invested"
+          value={formatCurrency(totals.invested)}
+          icon={DollarSign}
+          info="Card costs plus grading fees for every submission, including grading fees on keeper cards."
+        />
         <StatCard
           title="Current P/L"
           value={formatCurrency(totals.currentPL)}
           subtitle={`All subs · ${totals.totalSoldCount} sold · ${formatCurrency(totals.totalSoldRevenue)} revenue`}
           icon={DollarSign}
           trend={totals.currentPL >= 0 ? 'up' : 'down'}
+          info="Cash position right now: actual sale revenue minus everything spent on the received submissions (1–3) including shipping. Goes up as more cards sell."
         />
         <StatCard
           title="Blended Profit"
@@ -554,18 +584,25 @@ export default function GradingPage() {
           subtitle={`Originally expected: ${formatCurrency(totals.expectedProfit)}`}
           icon={TrendingUp}
           trend="up"
+          info="Best estimate of where this ends up: actual results for returned cards plus expected value for cards still at PSA, minus all costs and shipping."
         />
-        <StatCard title="Portfolio ROI" value={formatPercent(totals.roi)} icon={Target} trend="up" />
+        <StatCard
+          title="Portfolio ROI"
+          value={formatPercent(totals.roi)}
+          icon={Target}
+          trend="up"
+          info="Blended profit divided by total invested."
+        />
       </div>
 
       {/* Profit by Submission */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8 rise rise-2">
         {[
-          { key: 1, title: 'Sub 1', data: totals.sub1, badge: 'Graded', badgeClass: 'bg-profit/10 text-profit', desc: '', solid: true },
-          { key: 2, title: 'Sub 2', data: totals.sub2, badge: 'Graded', badgeClass: 'bg-profit/10 text-profit', desc: 'Pokemon', solid: true },
-          { key: 3, title: 'Sub 3', data: totals.sub3, badge: 'Graded', badgeClass: 'bg-profit/10 text-profit', desc: 'One Piece / Naruto', solid: true },
-          { key: 4, title: 'Sub 4', data: totals.sub4, badge: 'Submitted', badgeClass: 'bg-accent/10 text-accent-light', desc: 'Mixed', solid: false },
-          { key: 5, title: 'Sub 5', data: totals.sub5, badge: 'Submitted', badgeClass: 'bg-accent/10 text-accent-light', desc: 'Chinese Pokemon', solid: false },
+          { key: 1, title: 'Sub 1', data: totals.sub1, badge: 'Graded', badgeClass: 'border-profit/30 bg-profit/10 text-profit', desc: '', solid: true },
+          { key: 2, title: 'Sub 2', data: totals.sub2, badge: 'Graded', badgeClass: 'border-profit/30 bg-profit/10 text-profit', desc: 'Pokemon', solid: true },
+          { key: 3, title: 'Sub 3', data: totals.sub3, badge: 'Graded', badgeClass: 'border-profit/30 bg-profit/10 text-profit', desc: 'One Piece / Naruto', solid: true },
+          { key: 4, title: 'Sub 4', data: totals.sub4, badge: 'Submitted', badgeClass: 'border-accent/30 bg-accent/10 text-accent-light', desc: 'Mixed', solid: false },
+          { key: 5, title: 'Sub 5', data: totals.sub5, badge: 'Submitted', badgeClass: 'border-accent/30 bg-accent/10 text-accent-light', desc: 'Chinese Pokemon', solid: false },
         ].map((sub) => {
           // If nothing has sold yet, show projected profit from market values.
           // Once sales start coming in, switch to realized P/L.
@@ -576,31 +613,31 @@ export default function GradingPage() {
             <div
               key={sub.key}
               onClick={() => setOpenSim(openSim === sub.key ? null : sub.key)}
-              className={`bg-surface rounded-xl border p-5 cursor-pointer transition-colors hover:border-accent/50 ${
-                sub.solid ? 'border-border' : 'border-border border-dashed'
-              } ${openSim === sub.key ? 'ring-1 ring-accent' : ''}`}
+              className={`panel panel-hover p-5 cursor-pointer ${
+                sub.solid ? '' : 'border-dashed'
+              } ${openSim === sub.key ? 'ring-1 ring-accent/70 border-accent/50' : ''}`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-sm font-semibold text-text-primary">{sub.title}</h3>
-                <span className={`text-xs px-2 py-0.5 rounded ${sub.badgeClass}`}>{sub.badge}</span>
+              <div className="flex items-center justify-between mb-1.5">
+                <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">{sub.title}</h3>
+                <span className={`rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider ${sub.badgeClass}`}>{sub.badge}</span>
               </div>
-              <p className="text-xs text-text-secondary mb-3">
+              <p className="font-mono text-[10px] text-text-secondary mb-3">
                 {sub.data.cards} cards{sub.desc ? ` · ${sub.desc}` : ''} · {formatCurrency(sub.data.invested)} invested
               </p>
               <div className="flex items-baseline gap-2">
-                <span className={`text-2xl font-bold ${pl >= 0 ? 'text-profit' : 'text-loss'}`}>
+                <span className={`font-display text-2xl font-medium tracking-tight tabular-nums ${pl >= 0 ? 'text-profit' : 'text-loss'}`}>
                   {formatCurrency(pl)}
                 </span>
-                <span className={`text-sm ${pl >= 0 ? 'text-profit' : 'text-loss'}`}>
+                <span className={`font-mono text-xs ${pl >= 0 ? 'text-profit' : 'text-loss'}`}>
                   {formatPercent(roi)} ROI
                 </span>
               </div>
-              <p className="text-xs text-text-secondary mt-1">
+              <p className="font-mono text-[10px] text-text-secondary mt-1.5">
                 {hasSales
                   ? `${sub.data.soldCount}/${sub.data.cards} sold · ${formatCurrency(sub.data.soldRevenue)} revenue`
                   : `projected · 0/${sub.data.cards} sold`}
                 {' · '}
-                <span className="text-accent">click to simulate</span>
+                <span className="text-accent">simulate</span>
               </p>
             </div>
           );
@@ -682,41 +719,41 @@ export default function GradingPage() {
 
       {/* Actual Results Banner */}
       {actualStats.totalGraded > 0 && (
-        <div className="bg-surface rounded-xl border border-border p-5 mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <CheckCircle size={18} className="text-profit" />
-            <h3 className="text-sm font-semibold text-text-primary">
+        <div className="panel gold-hairline p-5 mb-8 rise rise-3">
+          <div className="flex items-center gap-2 mb-5">
+            <CheckCircle size={16} className="text-profit" />
+            <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
               Grading Results — {actualStats.totalGraded} of {totals.totalCards} Cards Returned
             </h3>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
             <div>
-              <div className="text-xs text-text-secondary mb-1">PSA 10s</div>
-              <div className="text-lg font-bold text-profit">{actualStats.total10s}</div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">PSA 10s</div>
+              <div className="font-display text-xl font-medium tabular-nums text-profit">{actualStats.total10s}</div>
             </div>
             <div>
-              <div className="text-xs text-text-secondary mb-1">PSA 9s</div>
-              <div className="text-lg font-bold text-accent-light">{actualStats.total9s}</div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">PSA 9s</div>
+              <div className="font-display text-xl font-medium tabular-nums text-accent-light">{actualStats.total9s}</div>
             </div>
             <div>
-              <div className="text-xs text-text-secondary mb-1">Sub-9s</div>
-              <div className="text-lg font-bold text-loss">{actualStats.totalSub9s}</div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">Sub-9s</div>
+              <div className="font-display text-xl font-medium tabular-nums text-loss">{actualStats.totalSub9s}</div>
             </div>
             <div>
-              <div className="text-xs text-text-secondary mb-1">PSA 10 Rate</div>
-              <div className="text-lg font-bold text-text-primary">{formatPercent(psa10Rate)}</div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">PSA 10 Rate</div>
+              <div className="font-display text-xl font-medium tabular-nums text-text-primary">{formatPercent(psa10Rate)}</div>
             </div>
             <div>
-              <div className="text-xs text-text-secondary mb-1">Actual Revenue</div>
-              <div className="text-lg font-bold text-text-primary">{formatCurrency(actualStats.actualRevenue)}</div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">Actual Revenue</div>
+              <div className="font-display text-xl font-medium tabular-nums text-text-primary">{formatCurrency(actualStats.actualRevenue)}</div>
             </div>
             <div>
-              <div className="text-xs text-text-secondary mb-1">Shipping Fees</div>
-              <div className="text-lg font-bold text-loss">{formatCurrency(SUB1_SHIPPING + SUB2_SHIPPING)}</div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">Shipping Fees</div>
+              <div className="font-display text-xl font-medium tabular-nums text-loss">{formatCurrency(SUB1_SHIPPING + SUB2_SHIPPING)}</div>
             </div>
             <div>
-              <div className="text-xs text-text-secondary mb-1">Actual Profit</div>
-              <div className={`text-lg font-bold ${actualStats.actualProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">Actual Profit</div>
+              <div className={`font-display text-xl font-medium tabular-nums ${actualStats.actualProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
                 {formatCurrency(actualStats.actualProfit)}
               </div>
             </div>
@@ -724,15 +761,15 @@ export default function GradingPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8 rise rise-4">
         <ChartCard title="ROI Distribution" subtitle="Cards by ROI range">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={roiDistribution}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-              <XAxis dataKey="range" tick={{ fill: '#a1a1aa', fontSize: 11 }} />
-              <YAxis tick={{ fill: '#a1a1aa', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
+              <XAxis dataKey="range" tick={{ fill: '#a3937e', fontSize: 11 }} />
+              <YAxis tick={{ fill: '#a3937e', fontSize: 12 }} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" name="Cards" fill="#6366f1" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" name="Cards" fill="#d4a24e" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -740,13 +777,13 @@ export default function GradingPage() {
         <ChartCard title="Expected Grade Split" subtitle="Multi-copy submissions">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={gradeDistribution}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-              <XAxis dataKey="name" tick={{ fill: '#a1a1aa', fontSize: 10 }} />
-              <YAxis tick={{ fill: '#a1a1aa', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
+              <XAxis dataKey="name" tick={{ fill: '#a3937e', fontSize: 10 }} />
+              <YAxis tick={{ fill: '#a3937e', fontSize: 12 }} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="PSA 10" stackId="a" fill="#22c55e" />
-              <Bar dataKey="PSA 9" stackId="a" fill="#6366f1" />
-              <Bar dataKey="Sub-9" stackId="a" fill="#ef4444" />
+              <Bar dataKey="PSA 10" stackId="a" fill="#46d39a" />
+              <Bar dataKey="PSA 9" stackId="a" fill="#d4a24e" />
+              <Bar dataKey="Sub-9" stackId="a" fill="#e5575f" />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -774,19 +811,19 @@ export default function GradingPage() {
         </ChartCard>
       </div>
 
-      <div className="bg-surface rounded-xl border border-border p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-text-primary">All Grading Submissions</h3>
+      <div className="panel p-5 rise rise-5">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">All Grading Submissions</h3>
           {isAdmin && (
             <button
               onClick={addGradingCard}
-              className="px-3 py-1.5 bg-accent text-white text-xs font-medium rounded-lg hover:bg-accent/80 transition-colors"
+              className="rounded-lg bg-accent px-3 py-1.5 font-mono text-[10px] font-medium uppercase tracking-wider text-background transition-colors hover:bg-accent-light"
             >
               + Add Card
             </button>
           )}
         </div>
-        <DataTable data={sellableCards} columns={columns} categories={categories} />
+        <DataTable data={sellableCards} columns={columns} categories={categories} csvName="grading-portfolio" />
       </div>
     </div>
   );

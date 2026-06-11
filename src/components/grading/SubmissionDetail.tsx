@@ -198,24 +198,24 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
   const projectedProfit = projectedRevenue - totalInvest - shippingCost;
 
   return (
-    <div className="bg-surface rounded-xl border border-accent/30 p-5 mb-8">
+    <div className="panel gold-hairline ring-1 ring-accent/25 p-5 mb-8 rise">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
-          <p className="text-xs text-text-secondary mt-0.5">
+          <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-accent-light">{title}</h3>
+          <p className="font-mono text-[10px] text-text-secondary mt-1">
             {totalSoldQty}/{totalQty} sold · {formatCurrency(totalInvest)} invested
             {shippingCost > 0 && ` · ${formatCurrency(shippingCost)} shipping`}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex gap-0.5 bg-background border border-border rounded p-0.5">
+          <div className="flex gap-0.5 bg-background border border-border rounded-lg p-0.5 font-mono text-[10px] uppercase tracking-wider">
             <button
               onClick={() => setMode('sales')}
-              className={`px-2 py-0.5 text-xs rounded transition-colors ${mode === 'sales' ? 'bg-accent text-white' : 'text-text-secondary hover:text-text-primary'}`}
+              className={`px-2.5 py-1 rounded-md transition-colors ${mode === 'sales' ? 'bg-accent text-background font-medium' : 'text-text-secondary hover:text-text-primary'}`}
             >Sales</button>
             <button
               onClick={() => setMode('pricing')}
-              className={`px-2 py-0.5 text-xs rounded transition-colors ${mode === 'pricing' ? 'bg-accent text-white' : 'text-text-secondary hover:text-text-primary'}`}
+              className={`px-2.5 py-1 rounded-md transition-colors ${mode === 'pricing' ? 'bg-accent text-background font-medium' : 'text-text-secondary hover:text-text-primary'}`}
             >Pricing</button>
           </div>
           {mode === 'sales' && (
@@ -276,7 +276,7 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
           const projCardProfit = (projRevPerCard - investPerCard) * subQty;
 
           return (
-            <div key={card.id} className="border border-border/50 rounded-lg p-3">
+            <div key={card.id} className="rounded-lg border border-border/60 bg-background/40 p-3 transition-colors hover:border-border-bright">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="text-sm font-medium text-text-primary">{card.name}</div>
@@ -352,7 +352,7 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
                               {grade}{count > 1 ? ` (×${count})` : ''}
                             </span>
                             <span className="text-text-secondary">Mkt: {formatCurrency(market)}</span>
-                            <span className="text-amber-400 font-medium">Don't sell below {formatCurrency(minSell)}</span>
+                            <span className="text-accent-light font-medium">Don't sell below {formatCurrency(minSell)}</span>
                             <span className="text-profit text-[10px]">(+{formatCurrency(profit)} profit)</span>
                           </div>
                         );

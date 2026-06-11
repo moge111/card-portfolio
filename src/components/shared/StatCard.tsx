@@ -1,4 +1,4 @@
-import { type LucideIcon } from 'lucide-react';
+import { Info, type LucideIcon } from 'lucide-react';
 
 interface StatCardProps {
   title: string;
@@ -6,21 +6,29 @@ interface StatCardProps {
   subtitle?: string;
   icon: LucideIcon;
   trend?: 'up' | 'down' | 'neutral';
+  info?: string;
 }
 
-export default function StatCard({ title, value, subtitle, icon: Icon, trend }: StatCardProps) {
-  const trendColor = trend === 'up' ? 'text-profit' : trend === 'down' ? 'text-loss' : 'text-text-secondary';
+export default function StatCard({ title, value, subtitle, icon: Icon, trend, info }: StatCardProps) {
+  const trendColor = trend === 'up' ? 'text-profit' : trend === 'down' ? 'text-loss' : 'text-text-primary';
 
   return (
-    <div className="bg-surface rounded-xl border border-border p-5 hover:border-accent/30 transition-colors">
-      <div className="flex items-start justify-between mb-3">
-        <span className="text-text-secondary text-sm font-medium">{title}</span>
-        <div className="p-2 rounded-lg bg-accent/10">
-          <Icon size={18} className="text-accent" />
-        </div>
+    <div className="panel panel-hover gold-hairline group p-5">
+      <div className="flex items-start justify-between mb-4">
+        <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-text-secondary">
+          {title}
+          {info && (
+            <span title={info} className="cursor-help">
+              <Info size={11} className="text-text-secondary/50 transition-colors hover:text-accent" />
+            </span>
+          )}
+        </span>
+        <Icon size={16} className="text-accent/50 transition-colors group-hover:text-accent" />
       </div>
-      <div className={`text-2xl font-bold ${trendColor}`}>{value}</div>
-      {subtitle && <div className="text-xs text-text-secondary mt-1">{subtitle}</div>}
+      <div className={`font-display text-[1.75rem] font-medium leading-none tracking-tight tabular-nums ${trendColor}`}>
+        {value}
+      </div>
+      {subtitle && <div className="mt-2 font-mono text-[10px] text-text-secondary/80">{subtitle}</div>}
     </div>
   );
 }

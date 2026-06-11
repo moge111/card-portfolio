@@ -1,11 +1,13 @@
 import { useMemo } from 'react';
-import { DollarSign, TrendingUp, PieChart as PieIcon, BarChart3, CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { DollarSign, TrendingUp, PieChart as PieIcon, BarChart3, CheckCircle, CreditCard, Package, Layers, ArrowUpRight } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import StatCard from '../shared/StatCard';
 import ChartCard from '../shared/ChartCard';
+import CategoryBadge from '../shared/CategoryBadge';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
@@ -13,10 +15,10 @@ import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-surface border border-border rounded-lg px-3 py-2 text-xs shadow-lg">
+    <div className="rounded-lg border border-border-bright bg-background/95 px-3 py-2 font-mono text-xs shadow-2xl backdrop-blur">
       <p className="text-text-primary font-medium mb-1">{label || payload[0]?.name}</p>
       {payload.map((entry: any, i: number) => (
-        <p key={i} style={{ color: entry.color }} className="text-text-secondary">
+        <p key={i} style={{ color: entry.color }}>
           {entry.name}: {typeof entry.value === 'number' && entry.value > 1 ? formatCurrency(entry.value) : entry.value}
         </p>
       ))}
@@ -84,6 +86,8 @@ export default function OverviewPage() {
       singlesInvested, singlesMarket, singlesProfit,
       totalInvested, totalProfit, holdingsValue,
       realizedProfit, totalSoldCount, totalSoldRevenue,
+      sealedMarket, gradingValue: unsoldGradingValue + totalSoldRevenue,
+      totalReceivedCards,
     };
   }, [gradingPortfolio, sealedCollection, singlesCollection]);
 
@@ -124,44 +128,136 @@ export default function OverviewPage() {
     })).sort((a, b) => b.invested - a.invested);
   }, [gradingPortfolio, sealedCollection, singlesCollection]);
 
-  const top10 = useMemo(() => {
+  const performers = useMemo(() => {
     const all = [
-      ...gradingPortfolio.filter((c) => !c.isKeeper).map((c) => ({ name: c.name, profit: c.profit, category: c.category })),
-      ...sealedCollection.map((p) => ({ name: p.name, profit: p.profit, category: p.category })),
-      ...singlesCollection.map((s) => ({ name: s.name, profit: s.profit, category: s.category })),
+      ...gradingPortfolio.filter((c) => !c.isKeeper).map((c) => ({ name: c.name, profit: c.profit, invested: c.totalInvestment, category: c.category, source: 'Grading' })),
+      ...sealedCollection.map((p) => ({ name: p.name, profit: p.profit, invested: p.totalCost, category: p.category, source: 'Sealed' })),
+      ...singlesCollection.map((s) => ({ name: s.name, profit: s.profit, invested: s.totalCost, category: s.category, source: 'Singles' })),
     ];
-    return all.sort((a, b) => b.profit - a.profit).slice(0, 10);
+    const sorted = [...all].sort((a, b) => b.profit - a.profit);
+    return {
+      top: sorted.slice(0, 8),
+      bottom: sorted.filter((i) => i.profit < 0).sort((a, b) => a.profit - b.profit).slice(0, 8),
+      maxProfit: Math.max(...sorted.map((i) => i.profit), 1),
+      minProfit: Math.min(...sorted.map((i) => i.profit), -1),
+    };
   }, [gradingPortfolio, sealedCollection, singlesCollection]);
 
   return (
     <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-text-primary">Portfolio Overview</h2>
-        <p className="text-text-secondary text-sm mt-1">Combined grading and sealed portfolio performance</p>
+      <div className="mb-10 rise">
+        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">The Vault · Combined Ledger</div>
+        <h2 className="font-display text-4xl font-medium tracking-tight text-text-primary">
+          Portfolio <span className="italic text-accent-light">Overview</span>
+        </h2>
+        <p className="text-text-secondary text-sm mt-2">Grading, sealed and singles performance in one view</p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        <StatCard title="Holdings Value" value={formatCurrency(stats.holdingsValue)} subtitle="Unsold cards + sealed" icon={DollarSign} trend="up" />
-        <StatCard title="Total Invested" value={formatCurrency(stats.totalInvested)} icon={PieIcon} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 rise rise-1">
+        <StatCard
+          title="Holdings Value"
+          value={formatCurrency(stats.holdingsValue)}
+          subtitle="Unsold cards + sealed"
+          icon={DollarSign}
+          trend="up"
+          info="What everything you still hold is worth today: unsold graded cards (after 13.25% eBay fee), expected value of cards still at PSA, plus sealed and singles at market value."
+        />
+        <StatCard
+          title="Total Invested"
+          value={formatCurrency(stats.totalInvested)}
+          icon={PieIcon}
+          info="Every dollar put in: card costs, grading fees, sealed and singles purchases."
+        />
         <StatCard
           title="Realized Profit"
           value={formatCurrency(stats.realizedProfit)}
           subtitle={`${stats.totalSoldCount} sold · ${formatCurrency(stats.totalSoldRevenue)} revenue`}
           icon={CheckCircle}
           trend={stats.realizedProfit >= 0 ? 'up' : 'down'}
+          info="Locked-in profit from actual sales: net sale proceeds minus the cost basis of the sold cards and their share of PSA shipping."
         />
-        <StatCard title="Total Profit" value={formatCurrency(stats.totalProfit)} subtitle="Realized + unrealized" icon={TrendingUp} trend={stats.totalProfit >= 0 ? 'up' : 'down'} />
+        <StatCard
+          title="Total Profit"
+          value={formatCurrency(stats.totalProfit)}
+          subtitle="Realized + unrealized"
+          icon={TrendingUp}
+          trend={stats.totalProfit >= 0 ? 'up' : 'down'}
+          info="Realized sales profit plus paper gains on everything still held, after all fees and shipping."
+        />
         <StatCard
           title="Overall ROI"
           value={formatPercent((stats.totalProfit / stats.totalInvested) * 100)}
           icon={BarChart3}
           trend="up"
+          info="Total profit divided by total invested, across the whole portfolio."
         />
       </div>
 
+      {/* Segment breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8 rise rise-2">
+        {[
+          {
+            name: 'PSA Grading', to: '/grading', icon: CreditCard,
+            invested: stats.gradingInvested, value: stats.gradingValue, profit: stats.gradingProfit,
+            note: `${stats.totalSoldCount}/${stats.totalReceivedCards} returned cards sold`,
+            progress: stats.totalReceivedCards > 0 ? stats.totalSoldCount / stats.totalReceivedCards : 0,
+          },
+          {
+            name: 'Sealed', to: '/sealed', icon: Package,
+            invested: stats.sealedInvested, value: stats.sealedMarket, profit: stats.sealedProfit,
+            note: 'held long — unrealized', progress: null,
+          },
+          {
+            name: 'Singles', to: '/singles', icon: Layers,
+            invested: stats.singlesInvested, value: stats.singlesMarket, profit: stats.singlesProfit,
+            note: 'keepers & raw cards', progress: null,
+          },
+        ].map((seg) => {
+          const roi = seg.invested > 0 ? (seg.profit / seg.invested) * 100 : 0;
+          return (
+            <Link key={seg.to} to={seg.to} className="panel panel-hover group p-5 block">
+              <div className="flex items-center justify-between mb-4">
+                <span className="flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
+                  <seg.icon size={14} className="text-accent" /> {seg.name}
+                </span>
+                <ArrowUpRight size={14} className="text-text-secondary/40 transition-all group-hover:text-accent group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <div className="font-mono text-[9px] uppercase tracking-wider text-text-secondary mb-1">Invested</div>
+                  <div className="font-display text-lg font-medium tabular-nums text-text-primary">{formatCurrency(seg.invested)}</div>
+                </div>
+                <div>
+                  <div className="font-mono text-[9px] uppercase tracking-wider text-text-secondary mb-1">Value</div>
+                  <div className="font-display text-lg font-medium tabular-nums text-text-primary">{formatCurrency(seg.value)}</div>
+                </div>
+                <div>
+                  <div className="font-mono text-[9px] uppercase tracking-wider text-text-secondary mb-1">Profit</div>
+                  <div className={`font-display text-lg font-medium tabular-nums ${seg.profit >= 0 ? 'text-profit' : 'text-loss'}`}>
+                    {formatCurrency(seg.profit)}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 flex items-center justify-between">
+                <span className="font-mono text-[10px] text-text-secondary">{seg.note}</span>
+                <span className={`font-mono text-[10px] font-medium ${seg.profit >= 0 ? 'text-profit' : 'text-loss'}`}>{formatPercent(roi)} ROI</span>
+              </div>
+              {seg.progress !== null && (
+                <div className="mt-2 h-1 overflow-hidden rounded-full bg-border">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-accent to-profit"
+                    style={{ width: `${Math.min(100, seg.progress * 100)}%` }}
+                  />
+                </div>
+              )}
+            </Link>
+          );
+        })}
+      </div>
+
       {/* Row 2: Investment Split + Profit Comparison */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 rise rise-3">
         <ChartCard title="Investment Split" subtitle="Grading vs Sealed allocation">
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
@@ -187,28 +283,28 @@ export default function OverviewPage() {
         <ChartCard title="Profit Comparison" subtitle="Expected profit by portfolio type">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={profitComparisonData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-              <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} tick={{ fill: '#a1a1aa', fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" tick={{ fill: '#a1a1aa', fontSize: 12 }} width={90} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
+              <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} tick={{ fill: '#a3937e', fontSize: 12 }} />
+              <YAxis type="category" dataKey="name" tick={{ fill: '#a3937e', fontSize: 12 }} width={90} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="profit" fill="#6366f1" radius={[0, 6, 6, 0]} name="Profit" />
+              <Bar dataKey="profit" fill="#d4a24e" radius={[0, 6, 6, 0]} name="Profit" />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>
 
       {/* Row 3: Category Investment + Category ROI */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 rise rise-4">
         <ChartCard title="Investment by Category">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={categoryData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-              <XAxis dataKey="name" tick={{ fill: '#a1a1aa', fontSize: 12 }} />
-              <YAxis tickFormatter={(v) => '$' + (v / 1000).toFixed(0) + 'k'} tick={{ fill: '#a1a1aa', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
+              <XAxis dataKey="name" tick={{ fill: '#a3937e', fontSize: 12 }} />
+              <YAxis tickFormatter={(v) => '$' + (v / 1000).toFixed(0) + 'k'} tick={{ fill: '#a3937e', fontSize: 12 }} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="invested" name="Invested" radius={[6, 6, 0, 0]}>
                 {categoryData.map((entry) => (
-                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || '#6366f1'} />
+                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || '#d4a24e'} />
                 ))}
               </Bar>
             </BarChart>
@@ -218,13 +314,13 @@ export default function OverviewPage() {
         <ChartCard title="ROI by Category">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={categoryData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-              <XAxis dataKey="name" tick={{ fill: '#a1a1aa', fontSize: 12 }} />
-              <YAxis tickFormatter={(v) => v + '%'} tick={{ fill: '#a1a1aa', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
+              <XAxis dataKey="name" tick={{ fill: '#a3937e', fontSize: 12 }} />
+              <YAxis tickFormatter={(v) => v + '%'} tick={{ fill: '#a3937e', fontSize: 12 }} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="roi" name="ROI %" radius={[6, 6, 0, 0]}>
                 {categoryData.map((entry) => (
-                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || '#6366f1'} />
+                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || '#d4a24e'} />
                 ))}
               </Bar>
             </BarChart>
@@ -232,27 +328,70 @@ export default function OverviewPage() {
         </ChartCard>
       </div>
 
-      {/* Row 4: Top 10 */}
-      <ChartCard title="Top 10 Most Profitable Items" subtitle="Across both portfolios">
-        <ResponsiveContainer width="100%" height={360}>
-          <BarChart data={top10} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-            <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} tick={{ fill: '#a1a1aa', fontSize: 12 }} />
-            <YAxis
-              type="category"
-              dataKey="name"
-              width={220}
-              tick={{ fill: '#a1a1aa', fontSize: 11 }}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="profit" name="Profit" radius={[0, 6, 6, 0]}>
-              {top10.map((entry) => (
-                <Cell key={entry.name} fill={CATEGORY_COLORS[entry.category] || '#6366f1'} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
+      {/* Row 4: Best & worst performers */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 rise rise-5">
+        <ChartCard title="Top Performers" subtitle="By expected profit">
+          <div className="space-y-1">
+            {performers.top.map((item, i) => {
+              const roi = item.invested > 0 ? (item.profit / item.invested) * 100 : 0;
+              return (
+                <div key={`${item.source}-${item.name}`} className="relative flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-surface-hover">
+                  <div
+                    className="absolute inset-y-1 left-0 rounded-md bg-profit/[0.07]"
+                    style={{ width: `${Math.max(2, (item.profit / performers.maxProfit) * 100)}%` }}
+                  />
+                  <span className="relative w-5 font-mono text-[10px] text-text-secondary/60 tabular-nums">{i + 1}</span>
+                  <div className="relative min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-text-primary">{item.name}</div>
+                    <div className="mt-0.5 flex items-center gap-2">
+                      <CategoryBadge category={item.category} />
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-text-secondary/60">{item.source}</span>
+                    </div>
+                  </div>
+                  <div className="relative text-right">
+                    <div className="font-mono text-sm font-medium tabular-nums text-profit">{formatCurrency(item.profit)}</div>
+                    <div className="font-mono text-[10px] tabular-nums text-text-secondary">{formatPercent(roi)} ROI</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </ChartCard>
+
+        <ChartCard title="Needs Attention" subtitle="Items currently underwater">
+          {performers.bottom.length === 0 ? (
+            <div className="py-12 text-center font-mono text-xs text-text-secondary">
+              Nothing underwater — every item is in profit.
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {performers.bottom.map((item, i) => {
+                const roi = item.invested > 0 ? (item.profit / item.invested) * 100 : 0;
+                return (
+                  <div key={`${item.source}-${item.name}`} className="relative flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-surface-hover">
+                    <div
+                      className="absolute inset-y-1 left-0 rounded-md bg-loss/[0.07]"
+                      style={{ width: `${Math.max(2, (item.profit / performers.minProfit) * 100)}%` }}
+                    />
+                    <span className="relative w-5 font-mono text-[10px] text-text-secondary/60 tabular-nums">{i + 1}</span>
+                    <div className="relative min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-text-primary">{item.name}</div>
+                      <div className="mt-0.5 flex items-center gap-2">
+                        <CategoryBadge category={item.category} />
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-text-secondary/60">{item.source}</span>
+                      </div>
+                    </div>
+                    <div className="relative text-right">
+                      <div className="font-mono text-sm font-medium tabular-nums text-loss">{formatCurrency(item.profit)}</div>
+                      <div className="font-mono text-[10px] tabular-nums text-text-secondary">{formatPercent(roi)} ROI</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </ChartCard>
+      </div>
     </div>
   );
 }

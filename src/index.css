@@ -1,47 +1,147 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #0f0f14;
-  --color-surface: #1a1a24;
-  --color-surface-hover: #22222e;
-  --color-border: #2a2a3a;
-  --color-text-primary: #e4e4e7;
-  --color-text-secondary: #a1a1aa;
-  --color-accent: #6366f1;
-  --color-accent-light: #818cf8;
-  --color-profit: #22c55e;
-  --color-loss: #ef4444;
+  /* The Vault — warm near-black, champagne gold, holo foil */
+  --color-bg: #0b0908;
+  --color-background: #070505;
+  --color-surface: #14100e;
+  --color-surface-hover: #1d1713;
+  --color-border: #2a2119;
+  --color-border-bright: #443524;
+  --color-text-primary: #ede4d6;
+  --color-text-secondary: #a3937e;
+  --color-accent: #d4a24e;
+  --color-accent-light: #ecc887;
+  --color-profit: #46d39a;
+  --color-loss: #e5575f;
   --color-pokemon: #facc15;
   --color-onepiece: #ef4444;
   --color-mtg: #a855f7;
   --color-naruto: #f97316;
+
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
 }
 
 body {
   margin: 0;
   background-color: var(--color-bg);
+  background-image:
+    radial-gradient(ellipse 70% 45% at 18% -8%, rgba(212, 162, 78, 0.09), transparent 60%),
+    radial-gradient(ellipse 55% 40% at 85% 0%, rgba(120, 80, 170, 0.06), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 50% 110%, rgba(70, 211, 154, 0.04), transparent 60%);
+  background-attachment: fixed;
   color: var(--color-text-primary);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Film grain over everything — gives the dark surfaces a physical, printed feel */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 #root {
   min-height: 100vh;
 }
 
-/* Scrollbar styling */
+::selection {
+  background: rgba(212, 162, 78, 0.3);
+  color: #fff7e8;
+}
+
+/* ---------- The Vault utilities ---------- */
+
+/* Holographic foil — reserved for the brand mark and rare moments */
+.holo-text {
+  background: linear-gradient(
+    100deg,
+    #ecc887 0%,
+    #fff3d6 22%,
+    #d4a24e 40%,
+    #b0e8d2 62%,
+    #c9b3f0 80%,
+    #ecc887 100%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: foil-sheen 9s linear infinite;
+}
+
+@keyframes foil-sheen {
+  to { background-position: -250% 0; }
+}
+
+/* Panel — the standard card surface */
+.panel {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(236, 200, 135, 0.04), transparent 40%),
+    var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 1px 0 rgba(255, 244, 214, 0.04) inset, 0 12px 32px -16px rgba(0, 0, 0, 0.7);
+}
+
+.panel-hover {
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+.panel-hover:hover {
+  border-color: rgba(212, 162, 78, 0.4);
+  box-shadow: 0 1px 0 rgba(255, 244, 214, 0.06) inset, 0 16px 40px -16px rgba(0, 0, 0, 0.8);
+}
+
+/* Gold hairline along a panel's top edge */
+.gold-hairline::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 162, 78, 0.55), transparent);
+}
+
+/* Page-load choreography */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rise { animation: rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.rise-1 { animation-delay: 0.05s; }
+.rise-2 { animation-delay: 0.12s; }
+.rise-3 { animation-delay: 0.19s; }
+.rise-4 { animation-delay: 0.26s; }
+.rise-5 { animation-delay: 0.33s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+  .holo-text { animation: none; }
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-bg);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
+  background: #2a2119;
+  border-radius: 4px;
+  border: 2px solid var(--color-bg);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-secondary);
+  background: #443524;
 }

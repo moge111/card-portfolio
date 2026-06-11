@@ -53,7 +53,7 @@ export default function EditableCell({ value, onSave, format, type = 'number', c
           if (e.key === 'Enter') commit();
           if (e.key === 'Escape') setEditing(false);
         }}
-        className={`${inputWidth} bg-background border border-accent rounded px-1.5 py-0.5 text-xs text-text-primary outline-none focus:ring-1 focus:ring-accent`}
+        className={`${inputWidth} bg-background border border-accent/70 rounded px-1.5 py-0.5 text-xs text-text-primary outline-none focus:ring-1 focus:ring-accent/50`}
       />
     );
   }
@@ -67,7 +67,7 @@ export default function EditableCell({ value, onSave, format, type = 'number', c
   return (
     <span
       onClick={startEdit}
-      className={`cursor-pointer border-b border-dashed border-text-secondary/30 hover:border-accent hover:text-accent transition-colors ${className}`}
+      className={`cursor-pointer border-b border-dashed border-text-secondary/30 hover:border-accent hover:text-accent-light transition-colors ${className}`}
       title="Click to edit"
     >
       {display}
@@ -102,7 +102,7 @@ export function EditableSelect({ value, options, onSave }: EditableSelectProps) 
           setEditing(false);
         }}
         onBlur={() => setEditing(false)}
-        className="bg-background border border-accent rounded px-1 py-0.5 text-xs text-text-primary outline-none"
+        className="bg-background border border-accent/70 rounded px-1 py-0.5 text-xs text-text-primary outline-none"
       >
         {options.map((opt) => (
           <option key={opt} value={opt}>{opt}</option>
@@ -114,7 +114,7 @@ export function EditableSelect({ value, options, onSave }: EditableSelectProps) 
   return (
     <span
       onClick={() => setEditing(true)}
-      className="cursor-pointer border-b border-dashed border-text-secondary/30 hover:border-accent hover:text-accent transition-colors"
+      className="cursor-pointer border-b border-dashed border-text-secondary/30 hover:border-accent hover:text-accent-light transition-colors"
       title="Click to edit"
     >
       {value}

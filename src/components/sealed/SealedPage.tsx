@@ -18,7 +18,7 @@ import type { SealedProduct } from '../../types/portfolio';
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-surface border border-border rounded-lg px-3 py-2 text-xs shadow-lg">
+    <div className="rounded-lg border border-border-bright bg-background/95 px-3 py-2 font-mono text-xs shadow-2xl backdrop-blur">
       <p className="text-text-primary font-medium mb-1">{label || payload[0]?.name}</p>
       {payload.map((entry: any, i: number) => (
         <p key={i} style={{ color: entry.color }}>
@@ -39,6 +39,7 @@ export default function SealedPage() {
       {
         accessorKey: 'name',
         header: 'Product',
+        footer: () => <span className="font-mono text-[10px] uppercase tracking-[0.18em]">Totals</span>,
         cell: ({ row }) => (
           <div className="flex flex-col gap-1">
             <EditableCell
@@ -46,7 +47,7 @@ export default function SealedPage() {
               onSave={(v) => updateSealedProduct(row.original.id, 'name', v)}
               type="text"
               inputWidth="w-40"
-              className="text-text-primary font-medium text-sm"
+              className="font-body text-text-primary font-medium text-sm"
             />
             <EditableSelect
               value={row.original.category}
@@ -65,6 +66,7 @@ export default function SealedPage() {
             onSave={(v) => updateSealedProduct(row.original.id, 'qty', v)}
           />
         ),
+        footer: ({ table }) => table.getFilteredRowModel().rows.reduce((s, r) => s + r.original.qty, 0),
       },
       {
         accessorKey: 'costPerUnit',
@@ -92,11 +94,13 @@ export default function SealedPage() {
         accessorKey: 'totalCost',
         header: 'Total Cost',
         cell: ({ getValue }) => formatCurrency(getValue()),
+        footer: ({ table }) => formatCurrency(table.getFilteredRowModel().rows.reduce((s, r) => s + r.original.totalCost, 0)),
       },
       {
         accessorKey: 'totalMarketValue',
         header: 'Market Value',
         cell: ({ getValue }) => <span className="text-text-primary font-medium">{formatCurrency(getValue())}</span>,
+        footer: ({ table }) => formatCurrency(table.getFilteredRowModel().rows.reduce((s, r) => s + r.original.totalMarketValue, 0)),
       },
       {
         accessorKey: 'profit',
@@ -104,6 +108,10 @@ export default function SealedPage() {
         cell: ({ getValue }) => {
           const v = getValue() as number;
           return <span className={v >= 0 ? 'text-profit' : 'text-loss'}>{formatCurrency(v)}</span>;
+        },
+        footer: ({ table }) => {
+          const total = table.getFilteredRowModel().rows.reduce((s, r) => s + r.original.profit, 0);
+          return <span className={total >= 0 ? 'text-profit' : 'text-loss'}>{formatCurrency(total)}</span>;
         },
       },
       {
@@ -177,27 +185,30 @@ export default function SealedPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-text-primary">Sealed Collection</h2>
-        <p className="text-text-secondary text-sm mt-1">20 products, {totals.totalUnits} total units held</p>
+      <div className="mb-10 rise">
+        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">The Vault · Unopened</div>
+        <h2 className="font-display text-4xl font-medium tracking-tight text-text-primary">
+          Sealed <span className="italic text-accent-light">Collection</span>
+        </h2>
+        <p className="text-text-secondary text-sm mt-2">{sealedCollection.length} products, {totals.totalUnits} total units held</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 rise rise-1">
         <StatCard title="Total Units" value={String(totals.totalUnits)} icon={Package} />
         <StatCard title="Total Invested" value={formatCurrency(totals.invested)} icon={DollarSign} />
         <StatCard title="Unrealized Profit" value={formatCurrency(totals.profit)} icon={TrendingUp} trend={totals.profit >= 0 ? 'up' : 'down'} />
         <StatCard title="Portfolio ROI" value={formatPercent(totals.roi)} icon={Target} trend="up" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8 rise rise-2">
         <ChartCard title="ROI Distribution" subtitle="Products by ROI range">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={roiDistribution}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-              <XAxis dataKey="range" tick={{ fill: '#a1a1aa', fontSize: 11 }} />
-              <YAxis tick={{ fill: '#a1a1aa', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
+              <XAxis dataKey="range" tick={{ fill: '#a3937e', fontSize: 11 }} />
+              <YAxis tick={{ fill: '#a3937e', fontSize: 12 }} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" name="Products" fill="#6366f1" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" name="Products" fill="#d4a24e" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -227,30 +238,30 @@ export default function SealedPage() {
         <ChartCard title="Top Market Gainers" subtitle="Cost vs Market Value">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={costVsMarket.slice(0, 5)}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-              <XAxis dataKey="name" tick={{ fill: '#a1a1aa', fontSize: 9 }} />
-              <YAxis tickFormatter={(v) => '$' + (v / 1000).toFixed(0) + 'k'} tick={{ fill: '#a1a1aa', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2119" />
+              <XAxis dataKey="name" tick={{ fill: '#a3937e', fontSize: 9 }} />
+              <YAxis tickFormatter={(v) => '$' + (v / 1000).toFixed(0) + 'k'} tick={{ fill: '#a3937e', fontSize: 12 }} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="cost" name="Cost" fill="#6366f1" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="market" name="Market" fill="#22c55e" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="cost" name="Cost" fill="#d4a24e" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="market" name="Market" fill="#46d39a" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>
 
-      <div className="bg-surface rounded-xl border border-border p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-text-primary">All Sealed Products</h3>
+      <div className="panel p-5 rise rise-3">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">All Sealed Products</h3>
           {isAdmin && (
             <button
               onClick={addSealedProduct}
-              className="px-3 py-1.5 bg-accent text-white text-xs font-medium rounded-lg hover:bg-accent/80 transition-colors"
+              className="rounded-lg bg-accent px-3 py-1.5 font-mono text-[10px] font-medium uppercase tracking-wider text-background transition-colors hover:bg-accent-light"
             >
               + Add Product
             </button>
           )}
         </div>
-        <DataTable data={sealedCollection} columns={columns} categories={categories} />
+        <DataTable data={sealedCollection} columns={columns} categories={categories} csvName="sealed-collection" />
       </div>
     </div>
   );
