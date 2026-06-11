@@ -11,6 +11,8 @@ import CategoryBadge from '../shared/CategoryBadge';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
+import { FLAIR_HERO } from '../../constants/flair';
+import { triggerFlyBy } from '../shared/FlyBy';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -155,10 +157,10 @@ export default function OverviewPage() {
         </div>
         <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
           Portfolio <span className="holo-text italic">Overview</span>
-          <span className="ml-4 align-middle text-2xl">
-            <span className="floaty">⚡</span>
-            <span className="floaty ml-1.5" style={{ animationDelay: '-1.1s' }}>🏴‍☠️</span>
-            <span className="floaty ml-1.5" style={{ animationDelay: '-2.2s' }}>🍥</span>
+          <span className="ml-5 inline-flex items-end gap-1 align-middle">
+            <img src={FLAIR_HERO.pikachu} alt="Pikachu" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('Pokemon')} className="floaty h-12 w-12 cursor-pointer object-contain drop-shadow-[0_0_12px_rgba(250,204,21,0.45)]" />
+            <img src={FLAIR_HERO.luffy} alt="Luffy" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('One Piece')} className="floaty h-12 w-12 cursor-pointer object-contain drop-shadow-[0_0_12px_rgba(239,68,68,0.45)]" style={{ animationDelay: '-1.1s' }} />
+            <img src={FLAIR_HERO.naruto} alt="Naruto" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('Naruto')} className="floaty h-12 w-12 cursor-pointer object-contain drop-shadow-[0_0_12px_rgba(251,146,60,0.45)]" style={{ animationDelay: '-2.2s' }} />
           </span>
         </h2>
         <p className="text-text-secondary text-sm mt-2">Grading, sealed and singles performance in one view</p>
@@ -399,9 +401,9 @@ export default function OverviewPage() {
 
         <ChartCard title="Needs Attention" subtitle="Items currently underwater">
           {performers.bottom.length === 0 ? (
-            <div className="py-12 text-center font-mono text-xs text-text-secondary">
-              <span className="floaty mb-3 block text-3xl">🎉</span>
-              Nothing underwater — every item is in profit.
+            <div className="py-10 text-center font-mono text-xs text-text-secondary">
+              <img src={FLAIR_HERO.snorlax} alt="Snorlax relaxing" className="floaty mx-auto mb-3 h-20 w-20 object-contain opacity-90" />
+              Nothing underwater — every item is in profit. Snorlax-level chill.
             </div>
           ) : (
             <div className="space-y-1">

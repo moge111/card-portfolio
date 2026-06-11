@@ -3,6 +3,7 @@ import { LayoutDashboard, CreditCard, Package, Layers, Menu, X, Download, Upload
 import { useState } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { useAdminToggle } from '../../context/AdminContext';
+import { triggerFlyBy } from '../shared/FlyBy';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Overview' },
@@ -93,7 +94,7 @@ export default function Sidebar() {
       >
         <div className="logo-area px-6 pt-7 pb-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <svg viewBox="0 0 40 40" className="pokeball-logo h-10 w-10 drop-shadow-[0_0_14px_rgba(239,68,68,0.5)]" aria-hidden>
+            <svg viewBox="0 0 40 40" onClick={() => triggerFlyBy('Pokemon')} className="pokeball-logo h-10 w-10 cursor-pointer drop-shadow-[0_0_14px_rgba(239,68,68,0.5)]" aria-hidden>
               <circle cx="20" cy="20" r="18.5" fill="#171c2b" stroke="#364060" strokeWidth="1" />
               <path d="M1.5 20 a18.5 18.5 0 0 1 37 0 Z" fill="#ef4444" />
               <rect x="1.8" y="18.4" width="36.4" height="3.2" fill="#05070d" />

@@ -14,6 +14,8 @@ import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
 import SubmissionDetail from './SubmissionDetail';
+import { FLAIR_HERO } from '../../constants/flair';
+import { triggerFlyBy } from '../shared/FlyBy';
 import type { GradingCard } from '../../types/portfolio';
 
 const EBAY_FEE = 0.1325;
@@ -555,7 +557,7 @@ export default function GradingPage() {
         </div>
         <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
           PSA <span className="holo-text italic">Grading</span>
-          <span className="floaty ml-4 align-middle text-2xl">💎</span>
+          <img src={FLAIR_HERO.charizard} alt="Charizard" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('Pokemon')} className="floaty ml-5 inline-block h-14 w-14 cursor-pointer object-contain align-middle drop-shadow-[0_0_14px_rgba(239,68,68,0.45)]" />
         </h2>
         <p className="text-text-secondary text-sm mt-2">{sellableCards.length} card types, {totals.totalCards} total cards submitted</p>
       </div>

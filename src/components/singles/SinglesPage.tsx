@@ -7,6 +7,8 @@ import EditableCell, { EditableSelect } from '../shared/EditableCell';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
+import { FLAIR_HERO } from '../../constants/flair';
+import { triggerFlyBy } from '../shared/FlyBy';
 import type { Single } from '../../types/portfolio';
 
 export default function SinglesPage() {
@@ -137,8 +139,10 @@ export default function SinglesPage() {
         </div>
         <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
           The <span className="holo-text italic">Singles</span>
-          <span className="floaty ml-4 align-middle text-2xl">🍥</span>
-          <span className="floaty ml-1.5 align-middle text-2xl" style={{ animationDelay: '-1.6s' }}>⚡</span>
+          <span className="ml-5 inline-flex items-end gap-1 align-middle">
+            <img src={FLAIR_HERO.naruto} alt="Naruto" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('Naruto')} className="floaty h-13 w-13 cursor-pointer object-contain drop-shadow-[0_0_12px_rgba(251,146,60,0.45)]" />
+            <img src={FLAIR_HERO.eevee} alt="Eevee" title="Psst — hover me" onMouseEnter={() => triggerFlyBy('Pokemon')} className="floaty h-13 w-13 cursor-pointer object-contain drop-shadow-[0_0_12px_rgba(250,204,21,0.45)]" style={{ animationDelay: '-1.6s' }} />
+          </span>
         </h2>
         <p className="text-text-secondary text-sm mt-2">Raw cards and keepers — not for sale</p>
       </div>
@@ -162,7 +166,7 @@ export default function SinglesPage() {
         </div>
         {singlesCollection.length === 0 ? (
           <div className="text-center py-12">
-            <span className="floaty mb-3 block text-4xl">🎒</span>
+            <img src={FLAIR_HERO.eevee} alt="Eevee" className="floaty mx-auto mb-3 h-20 w-20 object-contain" />
             <p className="text-text-secondary text-sm">Your bag is empty. Click "+ Add Card" to start tracking your raw cards.</p>
           </div>
         ) : (
