@@ -1,13 +1,14 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import { gradingPortfolio as defaultGrading, sealedCollection as defaultSealed, singlesCollection as defaultSingles } from '../data';
+import { gradingPortfolio as defaultGrading, sealedCollection as defaultSealed, singlesCollection as defaultSingles, defaultSubmissionMaps, type SubmissionMaps } from '../data';
 import { recalcGradingCard, recalcSealedProduct, recalcSingle } from '../utils/calculations';
 import type { GradingCard, SealedProduct, Single, Category } from '../types/portfolio';
 
 const STORAGE_KEY_GRADING = 'portfolio-grading';
 const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
+const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 19; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 22; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -34,6 +35,37 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
     if (storedVersion < 5) {
       for (const card of stored) {
         card.soldPrices = card.soldPrices.map((p) => +(p - 2).toFixed(2));
+      }
+    }
+
+    // v21: card 67 (One Piece Dodgers Luffy) shipped with 0 grade rates, which
+    // projected a phantom loss. Give it a conservative PSA 9 floor so it doesn't
+    // read as a loss — but only if the user hasn't set their own rates yet.
+    if (storedVersion < 21) {
+      for (const card of stored) {
+        if (card.id === 67 && card.psa10Rate === 0 && card.psa9Rate === 0 && card.sub9Rate === 0) {
+          card.psa9Rate = 1;
+          Object.assign(card, recalcGradingCard(card));
+        }
+      }
+    }
+
+    // v22: cards 65 (Meowth) and 66 (Ponyta) had qty lower than their Sub 5
+    // submission-map counts (3 vs 7 and 9 vs 11), understating cost/revenue.
+    // Sync qty up to the map counts, preserving the user's per-card grading
+    // rate and all other edited fields (values, rates, costPerCard).
+    if (storedVersion < 22) {
+      const targetQty: Record<number, number> = { 65: 7, 66: 11 };
+      for (const card of stored) {
+        const qty = targetQty[card.id];
+        if (qty && card.qty < qty) {
+          const gradingPerCard = card.qty > 0 ? card.gradingCost / card.qty : 70;
+          card.qty = qty;
+          card.totalCost = +(qty * card.costPerCard).toFixed(2);
+          card.gradingCost = +(qty * gradingPerCard).toFixed(2);
+          card.totalInvestment = +(card.totalCost + card.gradingCost).toFixed(2);
+          Object.assign(card, recalcGradingCard(card));
+        }
       }
     }
 
@@ -86,10 +118,48 @@ function loadFromStorage<T>(key: string, fallback: T[]): T[] {
   }
 }
 
+function loadSubmissionMaps(fallback: SubmissionMaps, storedVersion: number): SubmissionMaps {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_SUBMISSIONS);
+    if (!raw) return fallback;
+    const stored: SubmissionMaps = JSON.parse(raw);
+    if (storedVersion >= CURRENT_DATA_VERSION) return stored;
+
+    let changed = false;
+
+    // v22: one-time split of the 40-card Sub 5 into Sub 5A (key 5) and
+    // Sub 5B (key 6), 20 cards each, per the maps in defaultSubmissionMaps.
+    if (storedVersion < 22) {
+      stored[5] = { ...fallback[5] };
+      stored[6] = { ...fallback[6] };
+      changed = true;
+    }
+
+    // On a version bump, merge in any new default sub→card assignments without
+    // overwriting the user's edited quantities. Only cardIds entirely absent
+    // from a sub are added (mirrors the grading-card append behavior).
+    for (const [sub, cards] of Object.entries(fallback)) {
+      if (!stored[+sub]) stored[+sub] = {};
+      for (const [cardId, qty] of Object.entries(cards)) {
+        if (!(cardId in stored[+sub])) {
+          stored[+sub][+cardId] = qty;
+          changed = true;
+        }
+      }
+    }
+    if (changed) localStorage.setItem(STORAGE_KEY_SUBMISSIONS, JSON.stringify(stored));
+    return stored;
+  } catch {
+    return fallback;
+  }
+}
+
 interface PortfolioContextType {
   gradingPortfolio: GradingCard[];
   sealedCollection: SealedProduct[];
   singlesCollection: Single[];
+  submissionMaps: SubmissionMaps;
+  updateSubQty: (subNum: number, cardId: number, qty: number) => void;
   updateGradingCard: (id: number, field: keyof GradingCard, value: number | string) => void;
   updateSealedProduct: (id: number, field: keyof SealedProduct, value: number | string) => void;
   updateSingle: (id: number, field: keyof Single, value: number | string) => void;
@@ -118,6 +188,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [singles, setSingles] = useState<Single[]>(() =>
     loadSinglesWithMerge(defaultSingles, storedVersion),
   );
+  const [submissionMaps, setSubmissionMaps] = useState<SubmissionMaps>(() =>
+    loadSubmissionMaps(defaultSubmissionMaps, storedVersion),
+  );
   if (storedVersion < CURRENT_DATA_VERSION) {
     try {
       localStorage.setItem(STORAGE_KEY_VERSION, String(CURRENT_DATA_VERSION));
@@ -143,6 +216,18 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         return recalcGradingCard(updated);
       });
       localStorage.setItem(STORAGE_KEY_GRADING, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const updateSubQty = useCallback((subNum: number, cardId: number, qty: number) => {
+    setSubmissionMaps((prev) => {
+      const sub = { ...(prev[subNum] || {}) };
+      const rounded = Math.max(0, Math.round(qty));
+      if (rounded <= 0) delete sub[cardId];
+      else sub[cardId] = rounded;
+      const next = { ...prev, [subNum]: sub };
+      localStorage.setItem(STORAGE_KEY_SUBMISSIONS, JSON.stringify(next));
       return next;
     });
   }, []);
@@ -312,14 +397,17 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY_GRADING);
     localStorage.removeItem(STORAGE_KEY_SEALED);
     localStorage.removeItem(STORAGE_KEY_SINGLES);
+    localStorage.removeItem(STORAGE_KEY_SUBMISSIONS);
     setGrading(defaultGrading);
     setSealed(defaultSealed);
     setSingles(defaultSingles);
+    setSubmissionMaps(defaultSubmissionMaps);
   }, []);
 
   return (
     <PortfolioContext.Provider value={{
       gradingPortfolio: grading, sealedCollection: sealed, singlesCollection: singles,
+      submissionMaps, updateSubQty,
       updateGradingCard, updateSealedProduct, updateSingle,
       addGradingCard, addSealedProduct, addSingle,
       deleteGradingCard, deleteSealedProduct, deleteSingle,

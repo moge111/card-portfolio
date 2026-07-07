@@ -20,6 +20,7 @@ interface SubmissionDetailProps {
   onRemoveSale: (cardId: number, index: number) => void;
   onUpdateSale: (cardId: number, index: number, newPrice: number) => void;
   onUpdateCard: (cardId: number, field: keyof GradingCard, value: number | string) => void;
+  onUpdateSubQty: (cardId: number, qty: number) => void;
   defaultMode?: 'sales' | 'pricing';
 }
 
@@ -181,7 +182,7 @@ function EditableSaleChip({ price, onUpdate, onRemove }: { price: number; onUpda
   );
 }
 
-export default function SubmissionDetail({ title, cards, shippingCost, onClose, onAddSale, onRemoveSale, onUpdateSale, onUpdateCard, defaultMode = 'sales' }: SubmissionDetailProps) {
+export default function SubmissionDetail({ title, cards, shippingCost, onClose, onAddSale, onRemoveSale, onUpdateSale, onUpdateCard, onUpdateSubQty, defaultMode = 'sales' }: SubmissionDetailProps) {
   const [profitTarget, setProfitTarget] = useState(30);
   const [mode, setMode] = useState<'sales' | 'pricing'>(defaultMode);
   const totalInvest = cards.reduce((s, { card, subQty }) => s + (card.totalInvestment / card.qty) * subQty, 0);
@@ -196,6 +197,10 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
   // Projected total profit (expected at market values) for this sub
   const projectedRevenue = cards.reduce((s, { card, subQty }) => s + (card.qty > 0 ? (card.netRevenue / card.qty) * subQty : 0), 0);
   const projectedProfit = projectedRevenue - totalInvest - shippingCost;
+
+  // Best-case: every card comes back a PSA 10 (same fee convention as netRevenue)
+  const allTenRevenue = cards.reduce((s, { card, subQty }) => s + card.psa10Value * (1 - EBAY_FEE) * subQty, 0);
+  const allTenProfit = allTenRevenue - totalInvest - shippingCost;
 
   return (
     <div className="panel gold-hairline ring-1 ring-accent/25 p-5 mb-8 rise">
@@ -246,9 +251,14 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
           <span className="text-text-secondary">
             Enter buy cost (per card) + PSA 10/9 market values. Projected profit updates live.
           </span>
-          <span className={`font-semibold ${projectedProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
-            Projected profit if all sold: {formatCurrency(projectedProfit)}
-          </span>
+          <div className="flex items-center gap-4">
+            <span className={`font-semibold ${projectedProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
+              Projected profit if all sold: {formatCurrency(projectedProfit)}
+            </span>
+            <span className={`font-semibold ${allTenProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
+              If all PSA 10: {formatCurrency(allTenProfit)}
+            </span>
+          </div>
         </div>
       )}
 
@@ -281,7 +291,10 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
                 <div className="flex-1">
                   <div className="text-sm font-medium text-text-primary">{card.name}</div>
                   <div className="flex items-center gap-3 mt-1 text-xs text-text-secondary">
-                    <span>{subQty} card{subQty > 1 ? 's' : ''}</span>
+                    <span className="inline-flex items-center gap-1">
+                      <NumberInput value={subQty} onSave={(v) => onUpdateSubQty(card.id, v)} width="w-12" />
+                      card{subQty > 1 ? 's' : ''}
+                    </span>
                     <span>{formatCurrency(investPerCard)}/card invested</span>
                     <span>Total: {formatCurrency(totalCardInvest)}</span>
                     {isGraded && (

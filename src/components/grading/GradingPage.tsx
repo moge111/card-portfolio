@@ -181,35 +181,15 @@ function SalesCell({ card, onAdd, onRemove, onUpdate, isAdmin }: { card: Grading
   );
 }
 
-const SUB1_MAP: Record<number, number> = {
-  1: 4, 2: 2, 3: 2, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1,
-  9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1, 17: 1, 18: 1, 19: 1, 20: 1,
-};
-// Sub 2 originally had Shanks (id 24) and 3x McDonalds Pikachu (id 2) — both
-// moved to keepers in singles. Their grading cost still counts via keeperCost
-// added to totals.invested. McDonalds dropped from 3 → 2 (1 kept); Shanks removed.
-const SUB2_MAP: Record<number, number> = {
-  1: 4, 2: 2, 3: 1, 4: 2, 5: 1, 6: 1, 7: 1,
-  21: 1, 22: 1, 23: 1, 25: 1, 26: 1, 27: 1, 28: 1, 29: 1, 30: 1,
-};
-// id 31 split: 10 sellable + 1 keeper (id 36). id 34 (Naruto) is a whole keeper.
-// Keepers stay in the map so their grading cost still counts toward Sub 3.
-const SUB3_MAP: Record<number, number> = { 31: 10, 36: 1, 32: 1, 33: 10, 34: 1 };
+// Submission card maps (which cards + quantities per sub) live in PortfolioContext
+// so they're editable and persisted; see defaultSubmissionMaps in src/data/submissions.ts.
 const SUB3_SHIPPING = 0; // TBD — not yet invoiced
-
-// Sub 4 — Submission #14972306 (Value Bulk, submitted 5/28/26)
-const SUB4_MAP: Record<number, number> = {
-  37: 20, 38: 1, 39: 1, 40: 1, 41: 1, 42: 1, 43: 1, 44: 1, 45: 1, 46: 6,
-  47: 1, 48: 1, 49: 1, 50: 1, 51: 1, 52: 1, 53: 7, 54: 1, 55: 1, 56: 1,
-};
 const SUB4_SHIPPING = 112.07; // $19.99 inbound label + $20 Cabrella coverage + $72.08 insured return
-
-// Sub 5 — Chinese Pokemon submission; $70/card grading
-const SUB5_MAP: Record<number, number> = { 57: 1, 58: 5, 59: 1, 60: 1, 61: 3, 62: 3, 63: 7, 65: 3, 66: 2 };
-const SUB5_SHIPPING = 0; // TBD
+const SUB5_SHIPPING = 0; // TBD — Sub 5A
+const SUB6_SHIPPING = 0; // TBD — Sub 5B
 
 export default function GradingPage() {
-  const { gradingPortfolio, updateGradingCard, addGradingCard, deleteGradingCard, addSale, removeSale, updateSale } = usePortfolio();
+  const { gradingPortfolio, submissionMaps, updateSubQty, updateGradingCard, addGradingCard, deleteGradingCard, addSale, removeSale, updateSale } = usePortfolio();
   const isAdmin = useAdmin();
   const CATEGORIES = ['Pokemon', 'One Piece', 'MTG', 'Naruto'];
   const [openSim, setOpenSim] = useState<number | null>(null);
@@ -222,7 +202,7 @@ export default function GradingPage() {
   );
 
   const totalGradedCards = sellableCards.reduce((s, card) => s + card.gradedQty, 0);
-  const totalShipping = SUB1_SHIPPING + SUB2_SHIPPING + SUB3_SHIPPING + SUB4_SHIPPING + SUB5_SHIPPING;
+  const totalShipping = SUB1_SHIPPING + SUB2_SHIPPING + SUB3_SHIPPING + SUB4_SHIPPING + SUB5_SHIPPING + SUB6_SHIPPING;
   const shippingPerCard = totalGradedCards > 0 ? totalShipping / totalGradedCards : 0;
 
   const columns: ColumnDef<GradingCard, any>[] = useMemo(() => {
@@ -428,7 +408,7 @@ export default function GradingPage() {
       const expectedRevPerCard = c.netRevenue / c.qty;
       return s + actualRev + remainingQty * expectedRevPerCard;
     }, 0);
-    const blendedProfit = blendedRevenue - invested - SUB1_SHIPPING - SUB2_SHIPPING - SUB3_SHIPPING - SUB4_SHIPPING - SUB5_SHIPPING;
+    const blendedProfit = blendedRevenue - invested - SUB1_SHIPPING - SUB2_SHIPPING - SUB3_SHIPPING - SUB4_SHIPPING - SUB5_SHIPPING - SUB6_SHIPPING;
 
     // Original expected (no actuals)
     const expectedProfit = sellableCards.reduce((s, c) => s + c.profit, 0) - keeperCost;
@@ -474,11 +454,13 @@ export default function GradingPage() {
       return { invested: subInvested, profit: subRevenue - subInvested - shippingCost, cards, soldCount, soldProfit, soldRevenue, currentPL };
     };
 
-    const sub1 = calcActualSubStats(SUB1_MAP, null, SUB1_SHIPPING);
-    const sub2 = calcActualSubStats(SUB2_MAP, SUB1_MAP, SUB2_SHIPPING);
-    const sub3 = calcActualSubStats(SUB3_MAP, null, SUB3_SHIPPING);
-    const sub4 = calcActualSubStats(SUB4_MAP, null, SUB4_SHIPPING);
-    const sub5 = calcActualSubStats(SUB5_MAP, null, SUB5_SHIPPING);
+    const sub1 = calcActualSubStats(submissionMaps[1], null, SUB1_SHIPPING);
+    const sub2 = calcActualSubStats(submissionMaps[2], submissionMaps[1], SUB2_SHIPPING);
+    const sub3 = calcActualSubStats(submissionMaps[3], null, SUB3_SHIPPING);
+    const sub4 = calcActualSubStats(submissionMaps[4], null, SUB4_SHIPPING);
+    const sub5 = calcActualSubStats(submissionMaps[5], null, SUB5_SHIPPING);
+    // Sub 5B shares card ids with 5A — pass 5A as prior so sales aren't double-counted
+    const sub6 = calcActualSubStats(submissionMaps[6], submissionMaps[5], SUB6_SHIPPING);
 
     const totalSoldRevenue = sellableCards.reduce((s, c) => s + (c.soldPrices || []).reduce((a, p) => a + p, 0), 0);
     const totalSoldCount = sellableCards.reduce((s, c) => s + (c.soldPrices || []).length, 0);
@@ -488,9 +470,9 @@ export default function GradingPage() {
 
     return {
       totalCards, invested, blendedProfit, expectedProfit, roi: (blendedProfit / invested) * 100,
-      sub1, sub2, sub3, sub4, sub5, currentPL, totalSoldRevenue, totalSoldCount,
+      sub1, sub2, sub3, sub4, sub5, sub6, currentPL, totalSoldRevenue, totalSoldCount,
     };
-  }, [sellableCards, keeperCost]);
+  }, [sellableCards, keeperCost, submissionMaps]);
 
   const actualStats = useMemo(() => {
     const graded = sellableCards.filter((c) => c.gradedQty > 0);
@@ -504,7 +486,7 @@ export default function GradingPage() {
       const perCard = c.totalInvestment / c.qty;
       return s + perCard * c.gradedQty;
     }, 0);
-    const totalWithShipping = gradedInvestment + SUB1_SHIPPING + SUB2_SHIPPING + SUB3_SHIPPING + SUB4_SHIPPING + SUB5_SHIPPING + keeperCost;
+    const totalWithShipping = gradedInvestment + SUB1_SHIPPING + SUB2_SHIPPING + SUB3_SHIPPING + SUB4_SHIPPING + SUB5_SHIPPING + SUB6_SHIPPING + keeperCost;
     const actualProfit = actualRevenue - totalWithShipping;
     return { totalGraded, total10s, total9s, totalSub9s, actualRevenue, gradedInvestment, totalWithShipping, actualProfit };
   }, [sellableCards, keeperCost]);
@@ -567,7 +549,7 @@ export default function GradingPage() {
           title="Total Cards"
           value={String(totals.totalCards)}
           icon={CreditCard}
-          info="Total sellable cards across all five PSA submissions (keepers excluded)."
+          info="Total sellable cards across all PSA submissions (keepers excluded)."
         />
         <StatCard
           title="Total Invested"
@@ -601,13 +583,14 @@ export default function GradingPage() {
       </div>
 
       {/* Profit by Submission */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8 rise rise-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 rise rise-2">
         {[
           { key: 1, title: 'Sub 1', data: totals.sub1, badge: 'Graded', badgeClass: 'border-profit/30 bg-profit/10 text-profit', desc: '', solid: true },
           { key: 2, title: 'Sub 2', data: totals.sub2, badge: 'Graded', badgeClass: 'border-profit/30 bg-profit/10 text-profit', desc: 'Pokemon', solid: true },
           { key: 3, title: 'Sub 3', data: totals.sub3, badge: 'Graded', badgeClass: 'border-profit/30 bg-profit/10 text-profit', desc: 'One Piece / Naruto', solid: true },
           { key: 4, title: 'Sub 4', data: totals.sub4, badge: 'Submitted', badgeClass: 'pulse-soft border-accent/30 bg-accent/10 text-accent-light', desc: 'Mixed', solid: false },
-          { key: 5, title: 'Sub 5', data: totals.sub5, badge: 'Submitted', badgeClass: 'pulse-soft border-accent/30 bg-accent/10 text-accent-light', desc: 'Chinese Pokemon', solid: false },
+          { key: 5, title: 'Sub 5A', data: totals.sub5, badge: 'Submitted', badgeClass: 'pulse-soft border-accent/30 bg-accent/10 text-accent-light', desc: 'Chinese Pokemon', solid: false },
+          { key: 6, title: 'Sub 5B', data: totals.sub6, badge: 'Submitted', badgeClass: 'pulse-soft border-accent/30 bg-accent/10 text-accent-light', desc: 'Chinese Pokemon', solid: false },
         ].map((sub) => {
           // If nothing has sold yet, show projected profit from market values.
           // Once sales start coming in, switch to realized P/L.
@@ -653,71 +636,92 @@ export default function GradingPage() {
         <SubmissionDetail
           title="Sub 1 — Order 26141760"
           cards={sellableCards
-            .filter((c) => SUB1_MAP[c.id])
-            .map((c) => ({ card: c, subQty: SUB1_MAP[c.id] }))}
+            .filter((c) => submissionMaps[1][c.id])
+            .map((c) => ({ card: c, subQty: submissionMaps[1][c.id] }))}
           shippingCost={SUB1_SHIPPING}
           onClose={() => setOpenSim(null)}
           onAddSale={addSale}
           onRemoveSale={removeSale}
           onUpdateSale={updateSale}
           onUpdateCard={updateGradingCard}
+          onUpdateSubQty={(cardId, qty) => updateSubQty(1, cardId, qty)}
         />
       )}
       {openSim === 2 && (
         <SubmissionDetail
           title="Sub 2 — Order 26141834"
           cards={sellableCards
-            .filter((c) => SUB2_MAP[c.id])
-            .map((c) => ({ card: c, subQty: SUB2_MAP[c.id] }))}
+            .filter((c) => submissionMaps[2][c.id])
+            .map((c) => ({ card: c, subQty: submissionMaps[2][c.id] }))}
           shippingCost={SUB2_SHIPPING}
           onClose={() => setOpenSim(null)}
           onAddSale={addSale}
           onRemoveSale={removeSale}
           onUpdateSale={updateSale}
           onUpdateCard={updateGradingCard}
+          onUpdateSubQty={(cardId, qty) => updateSubQty(2, cardId, qty)}
         />
       )}
       {openSim === 3 && (
         <SubmissionDetail
           title="Sub 3 — Order 26541215"
           cards={sellableCards
-            .filter((c) => SUB3_MAP[c.id])
-            .map((c) => ({ card: c, subQty: SUB3_MAP[c.id] }))}
+            .filter((c) => submissionMaps[3][c.id])
+            .map((c) => ({ card: c, subQty: submissionMaps[3][c.id] }))}
           shippingCost={SUB3_SHIPPING}
           onClose={() => setOpenSim(null)}
           onAddSale={addSale}
           onRemoveSale={removeSale}
           onUpdateSale={updateSale}
           onUpdateCard={updateGradingCard}
+          onUpdateSubQty={(cardId, qty) => updateSubQty(3, cardId, qty)}
         />
       )}
       {openSim === 4 && (
         <SubmissionDetail
           title="Sub 4 — Submission #14972306"
           cards={sellableCards
-            .filter((c) => SUB4_MAP[c.id])
-            .map((c) => ({ card: c, subQty: SUB4_MAP[c.id] }))}
+            .filter((c) => submissionMaps[4][c.id])
+            .map((c) => ({ card: c, subQty: submissionMaps[4][c.id] }))}
           shippingCost={SUB4_SHIPPING}
           onClose={() => setOpenSim(null)}
           onAddSale={addSale}
           onRemoveSale={removeSale}
           onUpdateSale={updateSale}
           onUpdateCard={updateGradingCard}
+          onUpdateSubQty={(cardId, qty) => updateSubQty(4, cardId, qty)}
           defaultMode="pricing"
         />
       )}
       {openSim === 5 && (
         <SubmissionDetail
-          title="Sub 5 — Chinese Pokemon"
+          title="Sub 5A — Chinese Pokemon"
           cards={sellableCards
-            .filter((c) => SUB5_MAP[c.id])
-            .map((c) => ({ card: c, subQty: SUB5_MAP[c.id] }))}
+            .filter((c) => submissionMaps[5][c.id])
+            .map((c) => ({ card: c, subQty: submissionMaps[5][c.id] }))}
           shippingCost={SUB5_SHIPPING}
           onClose={() => setOpenSim(null)}
           onAddSale={addSale}
           onRemoveSale={removeSale}
           onUpdateSale={updateSale}
           onUpdateCard={updateGradingCard}
+          onUpdateSubQty={(cardId, qty) => updateSubQty(5, cardId, qty)}
+          defaultMode="pricing"
+        />
+      )}
+      {openSim === 6 && (
+        <SubmissionDetail
+          title="Sub 5B — Chinese Pokemon"
+          cards={sellableCards
+            .filter((c) => submissionMaps[6][c.id])
+            .map((c) => ({ card: c, subQty: submissionMaps[6][c.id] }))}
+          shippingCost={SUB6_SHIPPING}
+          onClose={() => setOpenSim(null)}
+          onAddSale={addSale}
+          onRemoveSale={removeSale}
+          onUpdateSale={updateSale}
+          onUpdateCard={updateGradingCard}
+          onUpdateSubQty={(cardId, qty) => updateSubQty(6, cardId, qty)}
           defaultMode="pricing"
         />
       )}
