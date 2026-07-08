@@ -8,7 +8,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 22; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 23; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -59,6 +59,24 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
       for (const card of stored) {
         const qty = targetQty[card.id];
         if (qty && card.qty < qty) {
+          const gradingPerCard = card.qty > 0 ? card.gradingCost / card.qty : 70;
+          card.qty = qty;
+          card.totalCost = +(qty * card.costPerCard).toFixed(2);
+          card.gradingCost = +(qty * gradingPerCard).toFixed(2);
+          card.totalInvestment = +(card.totalCost + card.gradingCost).toFixed(2);
+          Object.assign(card, recalcGradingCard(card));
+        }
+      }
+    }
+
+    // v23: 1 Gengar (58), 1 Meowth (65) and 1 Ponyta (66) were damaged and
+    // pulled from the batch. Scale each card down to the submitted qty,
+    // preserving the user's per-card grading rate and edited fields.
+    if (storedVersion < 23) {
+      const targetQty: Record<number, number> = { 58: 4, 65: 6, 66: 10 };
+      for (const card of stored) {
+        const qty = targetQty[card.id];
+        if (qty && card.qty > qty) {
           const gradingPerCard = card.qty > 0 ? card.gradingCost / card.qty : 70;
           card.qty = qty;
           card.totalCost = +(qty * card.costPerCard).toFixed(2);
@@ -129,7 +147,8 @@ function loadSubmissionMaps(fallback: SubmissionMaps, storedVersion: number): Su
 
     // v22: one-time split of the 40-card Sub 5 into Sub 5A (key 5) and
     // Sub 5B (key 6), 20 cards each, per the maps in defaultSubmissionMaps.
-    if (storedVersion < 22) {
+    // v23: 3 damaged cards pulled (1× id 58, 65, 66) — maps now 19/18.
+    if (storedVersion < 23) {
       stored[5] = { ...fallback[5] };
       stored[6] = { ...fallback[6] };
       changed = true;
