@@ -8,7 +8,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 23; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 24; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -148,7 +148,8 @@ function loadSubmissionMaps(fallback: SubmissionMaps, storedVersion: number): Su
     // v22: one-time split of the 40-card Sub 5 into Sub 5A (key 5) and
     // Sub 5B (key 6), 20 cards each, per the maps in defaultSubmissionMaps.
     // v23: 3 damaged cards pulled (1× id 58, 65, 66) — maps now 19/18.
-    if (storedVersion < 23) {
+    // v24: Gengars (58) evened out to 2 per sub — maps now 18/19.
+    if (storedVersion < 24) {
       stored[5] = { ...fallback[5] };
       stored[6] = { ...fallback[6] };
       changed = true;

@@ -27,9 +27,9 @@ export const defaultSubmissionMaps: SubmissionMaps = {
   // Multi-copy lots are split across both subs (grader-variance hedge) and the
   // big singles sit on opposite sides so each package carries similar value.
   // v23: 1 Gengar (58), 1 Meowth (65), 1 Ponyta (66) damaged — pulled from the
-  // batch, leaving 37 cards split 19/18.
+  // batch, leaving 37 cards. v24: Gengars evened out 2/2 → split 18/19.
   // Sub 5A — anchored by Pikachu Gengar AR (57)
-  5: { 57: 1, 58: 3, 61: 2, 62: 1, 63: 4, 65: 3, 66: 5 },
+  5: { 57: 1, 58: 2, 61: 2, 62: 1, 63: 4, 65: 3, 66: 5 },
   // Sub 5B — anchored by Pikachu Psyduck (59), Magearna (60), Dodgers Luffy (67)
-  6: { 58: 1, 59: 1, 60: 1, 61: 1, 62: 2, 63: 3, 65: 3, 66: 5, 67: 1 },
+  6: { 58: 2, 59: 1, 60: 1, 61: 1, 62: 2, 63: 3, 65: 3, 66: 5, 67: 1 },
 };
