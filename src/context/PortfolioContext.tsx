@@ -8,7 +8,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 26; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 27; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -88,6 +88,21 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
       }
     }
 
+    // v27: seller refunded $60 on the Meowth (65) order and all 7 copies go
+    // back into the batch — new avg cost $84.41/card, grading $70/card.
+    if (storedVersion < 27) {
+      for (const card of stored) {
+        if (card.id === 65 && card.qty < 7) {
+          card.qty = 7;
+          card.costPerCard = 84.41;
+          card.totalCost = +(7 * 84.41).toFixed(2);
+          card.gradingCost = 490;
+          card.totalInvestment = +(card.totalCost + card.gradingCost).toFixed(2);
+          Object.assign(card, recalcGradingCard(card));
+        }
+      }
+    }
+
     // For every other version bump: NEVER overwrite the user's stored card data.
     // Only append brand-new cards introduced in defaults so we don't lose user
     // edits to market values, rates, qty, costs, etc.
@@ -152,7 +167,8 @@ function loadSubmissionMaps(fallback: SubmissionMaps, storedVersion: number): Su
     // v24: Gengars (58) evened out to 2 per sub — maps now 18/19.
     // v25: print-line Meowth pulled from 5B — maps now 18/18.
     // v26: 2 more Gengars, 1 Ponyta, 1 Pikachu Group pulled — maps now 16/16.
-    if (storedVersion < 26) {
+    // v27: both Meowths back in after seller refund — maps now 17/17.
+    if (storedVersion < 27) {
       stored[5] = { ...fallback[5] };
       stored[6] = { ...fallback[6] };
       changed = true;
