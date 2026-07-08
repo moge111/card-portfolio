@@ -8,7 +8,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 25; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 26; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -69,12 +69,12 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
       }
     }
 
-    // v23: 1 Gengar (58), 1 Meowth (65) and 1 Ponyta (66) were damaged and
-    // pulled from the batch. v25: another Meowth pulled (print lines).
-    // Scale each card down to the submitted qty, preserving the user's
-    // per-card grading rate and edited fields.
-    if (storedVersion < 25) {
-      const targetQty: Record<number, number> = { 58: 4, 65: 5, 66: 10 };
+    // v23–v26: damaged/print-line cards pulled from the Sub 5 batch. Final
+    // totals not sent: 3× Gengar (58), 1× Pikachu Group (62), 2× Meowth (65),
+    // 2× Ponyta (66). Scale each card down to the submitted qty, preserving
+    // the user's per-card grading rate and edited fields.
+    if (storedVersion < 26) {
+      const targetQty: Record<number, number> = { 58: 2, 62: 2, 65: 5, 66: 9 };
       for (const card of stored) {
         const qty = targetQty[card.id];
         if (qty && card.qty > qty) {
@@ -151,7 +151,8 @@ function loadSubmissionMaps(fallback: SubmissionMaps, storedVersion: number): Su
     // v23: 3 damaged cards pulled (1× id 58, 65, 66) — maps now 19/18.
     // v24: Gengars (58) evened out to 2 per sub — maps now 18/19.
     // v25: print-line Meowth pulled from 5B — maps now 18/18.
-    if (storedVersion < 25) {
+    // v26: 2 more Gengars, 1 Ponyta, 1 Pikachu Group pulled — maps now 16/16.
+    if (storedVersion < 26) {
       stored[5] = { ...fallback[5] };
       stored[6] = { ...fallback[6] };
       changed = true;

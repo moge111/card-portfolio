@@ -26,11 +26,11 @@ export const defaultSubmissionMaps: SubmissionMaps = {
   // Subs 5A/5B — Chinese Pokemon, split from the original 40-card Sub 5.
   // Multi-copy lots are split across both subs (grader-variance hedge) and the
   // big singles sit on opposite sides so each package carries similar value.
-  // v23: 1 Gengar (58), 1 Meowth (65), 1 Ponyta (66) damaged — pulled from the
-  // batch, leaving 37 cards. v24: Gengars evened out 2/2 → split 18/19.
-  // v25: 1 more Meowth pulled (print lines, selling raw) → 36 cards, 18/18.
+  // v23–v26: damaged/print-line cards pulled from the original 40-card batch
+  // (final totals not sent: 3× Gengar 58, 2× Meowth 65, 2× Ponyta 66,
+  // 1× Pikachu Group 62 — selling raw) → 32 cards, split 16/16.
   // Sub 5A — anchored by Pikachu Gengar AR (57)
-  5: { 57: 1, 58: 2, 61: 2, 62: 1, 63: 4, 65: 3, 66: 5 },
+  5: { 57: 1, 58: 1, 61: 2, 62: 1, 63: 4, 65: 3, 66: 4 },
   // Sub 5B — anchored by Pikachu Psyduck (59), Magearna (60), Dodgers Luffy (67)
-  6: { 58: 2, 59: 1, 60: 1, 61: 1, 62: 2, 63: 3, 65: 2, 66: 5, 67: 1 },
+  6: { 58: 1, 59: 1, 60: 1, 61: 1, 62: 1, 63: 3, 65: 2, 66: 5, 67: 1 },
 };
