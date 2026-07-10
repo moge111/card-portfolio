@@ -29,9 +29,10 @@ export const defaultSubmissionMaps: SubmissionMaps = {
   // v23–v26: damaged/print-line cards pulled from the original 40-card batch
   // (3× Gengar 58, 2× Meowth 65, 2× Ponyta 66, 1× Pikachu Group 62).
   // v27: seller refunded $60 on the Meowths — both go back in ($84.41/card
-  // avg cost) → 34 cards, split 17/17.
-  // Sub 5A — anchored by Pikachu Gengar AR (57)
-  5: { 57: 1, 58: 1, 61: 2, 62: 1, 63: 4, 65: 4, 66: 4 },
+  // avg cost). v28: both Gengars actually shipped in 5A, and 2 Ponytas were
+  // never delivered (pulled from 5B) → 32 cards, split 18/14.
+  // Sub 5A — anchored by Pikachu Gengar AR (57); shipped as packed
+  5: { 57: 1, 58: 2, 61: 2, 62: 1, 63: 4, 65: 4, 66: 4 },
   // Sub 5B — anchored by Pikachu Psyduck (59), Magearna (60), Dodgers Luffy (67)
-  6: { 58: 1, 59: 1, 60: 1, 61: 1, 62: 1, 63: 3, 65: 3, 66: 5, 67: 1 },
+  6: { 59: 1, 60: 1, 61: 1, 62: 1, 63: 3, 65: 3, 66: 3, 67: 1 },
 };

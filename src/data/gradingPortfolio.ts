@@ -76,7 +76,8 @@ export const gradingPortfolio: GradingCard[] = [
   // the damaged + print-line copies) — $650.86 − $60 = $590.86 → $84.41/card.
   // Ponyta grades at the TCG Bulk $18.99/card rate (user-set), not $70.
   { id: 65, name: 'Gem Pack Vol.3 Meowth (CBB3C-02 07/07)', category: 'Pokemon', qty: 7, totalCost: 590.87, costPerCard: 84.41, gradingCost: 490, totalInvestment: 1080.87, psa10Value: 400, psa9Value: 98.96, psa10Rate: 0.77, psa9Rate: 0.20, sub9Rate: 0.03, expected10s: 5.4, expected9s: 1.4, expectedSub9s: 0.2, netRevenue: 2005.89, profit: 925.02, roi: 85.6, breakEven10Rate: 38.9, gradedQty: 0, actual10s: 0, actual9s: 0, actualSub9s: 0, soldPrices: [] },
-  { id: 66, name: 'Gem Vol.4 Ponyta (CBB4C 01/07 Holo)', category: 'Pokemon', qty: 9, totalCost: 2177.55, costPerCard: 241.95, gradingCost: 170.91, totalInvestment: 2348.46, psa10Value: 1800, psa9Value: 300, psa10Rate: 0.71, psa9Rate: 0.26, sub9Rate: 0.03, expected10s: 6.4, expected9s: 2.3, expectedSub9s: 0.3, netRevenue: 10643.64, profit: 8295.18, roi: 353.2, breakEven10Rate: 12.0, gradedQty: 0, actual10s: 0, actual9s: 0, actualSub9s: 0, soldPrices: [] },
+  // v28: 2 Ponytas never delivered — qty 7
+  { id: 66, name: 'Gem Vol.4 Ponyta (CBB4C 01/07 Holo)', category: 'Pokemon', qty: 7, totalCost: 1693.65, costPerCard: 241.95, gradingCost: 132.93, totalInvestment: 1826.58, psa10Value: 1800, psa9Value: 300, psa10Rate: 0.71, psa9Rate: 0.26, sub9Rate: 0.03, expected10s: 5.0, expected9s: 1.8, expectedSub9s: 0.2, netRevenue: 8278.39, profit: 6451.81, roi: 353.2, breakEven10Rate: 12.0, gradedQty: 0, actual10s: 0, actual9s: 0, actualSub9s: 0, soldPrices: [] },
   // Released today — no PSA population yet. Rates default to a conservative PSA 9 floor
   // (assume it grades at least a 9, worth $800 > $653 cost) so it doesn't project a phantom
   // loss. Update psa10Rate/psa9Rate once real grading data exists.

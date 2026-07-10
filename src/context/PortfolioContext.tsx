@@ -8,7 +8,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 27; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 28; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -69,12 +69,14 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
       }
     }
 
-    // v23–v26: damaged/print-line cards pulled from the Sub 5 batch. Final
-    // totals not sent: 3× Gengar (58), 1× Pikachu Group (62), 2× Meowth (65),
-    // 2× Ponyta (66). Scale each card down to the submitted qty, preserving
-    // the user's per-card grading rate and edited fields.
-    if (storedVersion < 26) {
-      const targetQty: Record<number, number> = { 58: 2, 62: 2, 65: 5, 66: 9 };
+    // v23–v26: damaged/print-line cards pulled from the Sub 5 batch (3× Gengar
+    // 58, 1× Pikachu Group 62, 2× Ponyta 66). Scale each card down to the
+    // submitted qty, preserving the user's per-card grading rate and edited
+    // fields. Meowth (65) is handled solely by the v27 block below — keep it
+    // out of this map or it would re-shrink the restored copies.
+    // v28: 2 more Ponytas never delivered — 66 drops to 7.
+    if (storedVersion < 28) {
+      const targetQty: Record<number, number> = { 58: 2, 62: 2, 66: 7 };
       for (const card of stored) {
         const qty = targetQty[card.id];
         if (qty && card.qty > qty) {
@@ -168,7 +170,8 @@ function loadSubmissionMaps(fallback: SubmissionMaps, storedVersion: number): Su
     // v25: print-line Meowth pulled from 5B — maps now 18/18.
     // v26: 2 more Gengars, 1 Ponyta, 1 Pikachu Group pulled — maps now 16/16.
     // v27: both Meowths back in after seller refund — maps now 17/17.
-    if (storedVersion < 27) {
+    // v28: both Gengars shipped in 5A; 2 undelivered Ponytas out of 5B — 18/14.
+    if (storedVersion < 28) {
       stored[5] = { ...fallback[5] };
       stored[6] = { ...fallback[6] };
       changed = true;
