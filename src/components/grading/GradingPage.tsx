@@ -187,6 +187,7 @@ const SUB3_SHIPPING = 0; // TBD — not yet invoiced
 const SUB4_SHIPPING = 112.07; // $19.99 inbound label + $20 Cabrella coverage + $72.08 insured return
 const SUB5_SHIPPING = 0; // TBD — Sub 5A
 const SUB6_SHIPPING = 0; // TBD — Sub 5B
+const SUB7_SHIPPING = 0; // TBD — Sub 6, not shipped yet
 
 export default function GradingPage() {
   const { gradingPortfolio, submissionMaps, updateSubQty, updateGradingCard, addGradingCard, deleteGradingCard, addSale, removeSale, updateSale } = usePortfolio();
@@ -408,7 +409,7 @@ export default function GradingPage() {
       const expectedRevPerCard = c.netRevenue / c.qty;
       return s + actualRev + remainingQty * expectedRevPerCard;
     }, 0);
-    const blendedProfit = blendedRevenue - invested - SUB1_SHIPPING - SUB2_SHIPPING - SUB3_SHIPPING - SUB4_SHIPPING - SUB5_SHIPPING - SUB6_SHIPPING;
+    const blendedProfit = blendedRevenue - invested - SUB1_SHIPPING - SUB2_SHIPPING - SUB3_SHIPPING - SUB4_SHIPPING - SUB5_SHIPPING - SUB6_SHIPPING - SUB7_SHIPPING;
 
     // Original expected (no actuals)
     const expectedProfit = sellableCards.reduce((s, c) => s + c.profit, 0) - keeperCost;
@@ -461,6 +462,7 @@ export default function GradingPage() {
     const sub5 = calcActualSubStats(submissionMaps[5], null, SUB5_SHIPPING);
     // Sub 5B shares card ids with 5A — pass 5A as prior so sales aren't double-counted
     const sub6 = calcActualSubStats(submissionMaps[6], submissionMaps[5], SUB6_SHIPPING);
+    const sub7 = calcActualSubStats(submissionMaps[7] ?? {}, null, SUB7_SHIPPING);
 
     const totalSoldRevenue = sellableCards.reduce((s, c) => s + (c.soldPrices || []).reduce((a, p) => a + p, 0), 0);
     const totalSoldCount = sellableCards.reduce((s, c) => s + (c.soldPrices || []).length, 0);
@@ -470,7 +472,7 @@ export default function GradingPage() {
 
     return {
       totalCards, invested, blendedProfit, expectedProfit, roi: (blendedProfit / invested) * 100,
-      sub1, sub2, sub3, sub4, sub5, sub6, currentPL, totalSoldRevenue, totalSoldCount,
+      sub1, sub2, sub3, sub4, sub5, sub6, sub7, currentPL, totalSoldRevenue, totalSoldCount,
     };
   }, [sellableCards, keeperCost, submissionMaps]);
 
@@ -591,6 +593,7 @@ export default function GradingPage() {
           { key: 4, title: 'Sub 4', data: totals.sub4, badge: 'Submitted', badgeClass: 'pulse-soft border-accent/30 bg-accent/10 text-accent-light', desc: 'Mixed', solid: false },
           { key: 5, title: 'Sub 5A', data: totals.sub5, badge: 'Submitted', badgeClass: 'pulse-soft border-accent/30 bg-accent/10 text-accent-light', desc: 'Chinese Pokemon', solid: false },
           { key: 6, title: 'Sub 5B', data: totals.sub6, badge: 'Submitted', badgeClass: 'pulse-soft border-accent/30 bg-accent/10 text-accent-light', desc: 'Chinese Pokemon', solid: false },
+          { key: 7, title: 'Sub 6', data: totals.sub7, badge: 'Not Sent', badgeClass: 'border-text-secondary/30 bg-text-secondary/10 text-text-secondary', desc: 'High-value singles', solid: false },
         ].map((sub) => {
           // If nothing has sold yet, show projected profit from market values.
           // Once sales start coming in, switch to realized P/L.
@@ -722,6 +725,22 @@ export default function GradingPage() {
           onUpdateSale={updateSale}
           onUpdateCard={updateGradingCard}
           onUpdateSubQty={(cardId, qty) => updateSubQty(6, cardId, qty)}
+          defaultMode="pricing"
+        />
+      )}
+      {openSim === 7 && (
+        <SubmissionDetail
+          title="Sub 6 — High-value singles"
+          cards={sellableCards
+            .filter((c) => submissionMaps[7]?.[c.id])
+            .map((c) => ({ card: c, subQty: submissionMaps[7][c.id] }))}
+          shippingCost={SUB7_SHIPPING}
+          onClose={() => setOpenSim(null)}
+          onAddSale={addSale}
+          onRemoveSale={removeSale}
+          onUpdateSale={updateSale}
+          onUpdateCard={updateGradingCard}
+          onUpdateSubQty={(cardId, qty) => updateSubQty(7, cardId, qty)}
           defaultMode="pricing"
         />
       )}

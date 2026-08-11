@@ -38,7 +38,8 @@ export default function OverviewPage() {
     const SUB4_SHIPPING = 112.07; // $19.99 inbound + $20 Cabrella + $72.08 insured return
     const SUB5_SHIPPING = 0; // TBD — Sub 5A
     const SUB6_SHIPPING = 0; // TBD — Sub 5B
-    const TOTAL_SHIPPING = SUB1_SHIPPING + SUB2_SHIPPING + SUB3_SHIPPING + SUB4_SHIPPING + SUB5_SHIPPING + SUB6_SHIPPING;
+    const SUB7_SHIPPING = 0; // TBD — Sub 6, not shipped yet
+    const TOTAL_SHIPPING = SUB1_SHIPPING + SUB2_SHIPPING + SUB3_SHIPPING + SUB4_SHIPPING + SUB5_SHIPPING + SUB6_SHIPPING + SUB7_SHIPPING;
     const sellable = gradingPortfolio.filter((c) => !c.isKeeper);
     const gradingInvested = gradingPortfolio.reduce((s, c) => s + c.totalInvestment, 0);
     const sealedInvested = sealedCollection.reduce((s, c) => s + c.totalCost, 0);

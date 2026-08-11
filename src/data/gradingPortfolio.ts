@@ -82,4 +82,13 @@ export const gradingPortfolio: GradingCard[] = [
   // (assume it grades at least a 9, worth $800 > $653 cost) so it doesn't project a phantom
   // loss. Update psa10Rate/psa9Rate once real grading data exists.
   { id: 67, name: 'One Piece Night LA Dodgers Monkey D. Luffy Promo (Sealed)', category: 'One Piece', qty: 1, totalCost: 583, costPerCard: 583, gradingCost: 70, totalInvestment: 653, psa10Value: 2000, psa9Value: 800, psa10Rate: 0, psa9Rate: 1, sub9Rate: 0, expected10s: 0, expected9s: 1, expectedSub9s: 0, netRevenue: 694, profit: 41, roi: 6.3, breakEven10Rate: -2.4, gradedQty: 0, actual10s: 0, actual9s: 0, actualSub9s: 0, soldPrices: [] },
+  // Not yet assigned to a submission — $150/card grading tier.
+  // Rates come straight off the PSA pop report (115,956 graded): 49,705 tens,
+  // 54,503 nines, 11,748 sub-9. Unusually reliable because the sample is huge.
+  { id: 68, name: 'Pikachu w/ Grey Felt Hat (Van Gogh SVP 085)', category: 'Pokemon', qty: 1, totalCost: 1000, costPerCard: 1000, gradingCost: 150, totalInvestment: 1150, psa10Value: 3100, psa9Value: 1000, psa10Rate: 0.429, psa9Rate: 0.470, sub9Rate: 0.101, expected10s: 0.4, expected9s: 0.5, expectedSub9s: 0.1, netRevenue: 1649.03, profit: 499.03, roi: 43.4, breakEven10Rate: 24.3, gradedQty: 0, actual10s: 0, actual9s: 0, actualSub9s: 0, soldPrices: [] },
+  // No public comp exists for this exact parallel (/5, no PSA pop). psa10Value
+  // is an estimate anchored on the $1,504 raw buy at a ~2.3x graded multiple —
+  // NOT a sold comp. Rates are the Bowman Chrome refractor baseline (chipped
+  // chrome edges + centering), not card-specific. Both are the weak links here.
+  { id: 69, name: 'Pete Crow-Armstrong RC Red Refractor /5 (2024 Bowman Chrome Mega Box)', category: 'Sports', qty: 1, totalCost: 1504.48, costPerCard: 1504.48, gradingCost: 150, totalInvestment: 1654.48, psa10Value: 3500, psa9Value: 1900, psa10Rate: 0.40, psa9Rate: 0.42, sub9Rate: 0.18, expected10s: 0.4, expected9s: 0.4, expectedSub9s: 0.2, netRevenue: 2141.69, profit: 487.21, roi: 29.4, breakEven10Rate: 24.0, gradedQty: 0, actual10s: 0, actual9s: 0, actualSub9s: 0, soldPrices: [] },
 ];
