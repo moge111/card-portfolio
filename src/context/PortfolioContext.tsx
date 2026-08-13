@@ -8,7 +8,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 30; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 31; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -100,6 +100,21 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
           card.totalCost = +(7 * 84.41).toFixed(2);
           card.gradingCost = 490;
           card.totalInvestment = +(card.totalCost + card.gradingCost).toFixed(2);
+          Object.assign(card, recalcGradingCard(card));
+        }
+      }
+    }
+
+    // v31: reprice card 70 (Aaron Donald patch auto) for the un-retirement —
+    // he worked out at the Rams facility 8/7/26 with a decision expected within
+    // days. PSA 10 $1,100 → $1,520, PSA 9 $650 → $850 (both weighted ~65% that
+    // he returns). Grade rates are deliberately untouched. Guarded on the
+    // shipped v30 values so a hand-edit in the UI wins and a re-run is a no-op.
+    if (storedVersion < 31) {
+      for (const card of stored) {
+        if (card.id === 70 && card.psa10Value === 1100 && card.psa9Value === 650) {
+          card.psa10Value = 1520;
+          card.psa9Value = 850;
           Object.assign(card, recalcGradingCard(card));
         }
       }

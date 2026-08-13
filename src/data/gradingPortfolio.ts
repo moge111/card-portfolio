@@ -91,11 +91,12 @@ export const gradingPortfolio: GradingCard[] = [
   // NOT a sold comp. Rates are the Bowman Chrome refractor baseline (chipped
   // chrome edges + centering), not card-specific. Both are the weak links here.
   { id: 69, name: 'Pete Crow-Armstrong RC Red Refractor /5 (2024 Bowman Chrome Mega Box)', category: 'Sports', qty: 1, totalCost: 1504.48, costPerCard: 1504.48, gradingCost: 150, totalInvestment: 1654.48, psa10Value: 3500, psa9Value: 1900, psa10Rate: 0.40, psa9Rate: 0.42, sub9Rate: 0.18, expected10s: 0.4, expected9s: 0.4, expectedSub9s: 0.2, netRevenue: 2141.69, profit: 487.21, roi: 29.4, breakEven10Rate: 24.0, gradedQty: 0, actual10s: 0, actual9s: 0, actualSub9s: 0, soldPrices: [] },
-  // Projects NEGATIVE at these inputs — needs a 43.1% ten rate and thick patch
-  // autos on 2018 Panini stock don't get there (30% modeled). Veteran patch auto,
-  // not a rookie, so the graded premium over raw is thin (~1.7x) while a PSA 9
-  // lands at roughly what it cost. Kept in Sub 6 as instructed; revisit before
-  // it ships. Set identity unconfirmed — "Mega Patch Autographs"/MP-AD isn't in
-  // the 2018 Select checklists, so the values may be anchored to the wrong set.
-  { id: 70, name: 'Aaron Donald Green Prizm Patch Auto /5 (2018 Panini Select MP-AD)', category: 'Sports', qty: 1, totalCost: 657.50, costPerCard: 657.50, gradingCost: 150, totalInvestment: 807.50, psa10Value: 1100, psa9Value: 650, psa10Rate: 0.30, psa9Rate: 0.45, sub9Rate: 0.25, expected10s: 0.3, expected9s: 0.5, expectedSub9s: 0.3, netRevenue: 682.61, profit: -124.89, roi: -15.5, breakEven10Rate: 43.1, gradedQty: 0, actual10s: 0, actual9s: 0, actualSub9s: 0, soldPrices: [] },
+  // v31: repriced for the un-retirement. Donald worked out at the Rams facility
+  // 8/7/26 and a decision is expected within days (undecided as of 8/13). Values
+  // are probability-weighted at ~65% he returns: PSA 10 $1,800 if he plays vs
+  // $1,000 if he doesn't → $1,520. Grade rates are unchanged — player news moves
+  // price, not how the card grades. Still thin (+7.7%) and the set identity is
+  // unconfirmed ("Mega Patch Autographs"/MP-AD isn't in the 2018 Select
+  // checklists), so both value inputs may be anchored to the wrong release.
+  { id: 70, name: 'Aaron Donald Green Prizm Patch Auto /5 (2018 Panini Select MP-AD)', category: 'Sports', qty: 1, totalCost: 657.50, costPerCard: 657.50, gradingCost: 150, totalInvestment: 807.50, psa10Value: 1520, psa9Value: 850, psa10Rate: 0.30, psa9Rate: 0.45, sub9Rate: 0.25, expected10s: 0.3, expected9s: 0.5, expectedSub9s: 0.3, netRevenue: 869.99, profit: 62.49, roi: 7.7, breakEven10Rate: 25.3, gradedQty: 0, actual10s: 0, actual9s: 0, actualSub9s: 0, soldPrices: [] },
 ];
