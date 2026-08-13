@@ -37,5 +37,5 @@ export const defaultSubmissionMaps: SubmissionMaps = {
   6: { 59: 1, 60: 1, 61: 1, 62: 1, 63: 3, 65: 3, 66: 3, 67: 1 },
   // Sub 6 (map key 7 — keys 5/6 are Subs 5A/5B) — two high-value singles at the
   // $150/card tier. Not shipped yet.
-  7: { 68: 1, 69: 1 },
+  7: { 68: 1, 69: 1, 70: 1 },
 };
