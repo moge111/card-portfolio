@@ -8,7 +8,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 31; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 32; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -115,6 +115,21 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
         if (card.id === 70 && card.psa10Value === 1100 && card.psa9Value === 650) {
           card.psa10Value = 1520;
           card.psa9Value = 850;
+          Object.assign(card, recalcGradingCard(card));
+        }
+      }
+    }
+
+    // v32: card back confirms card 70 is a real 2018 Panini Select #MP-AD, 4/5.
+    // Set identity is no longer a risk, but the graded multiple is at the low
+    // end — sticker auto, "player-worn" not game-used, /5 already scarce without
+    // a slab. PSA 10 $1,520 → $1,450, PSA 9 $850 → $820. Guarded on the shipped
+    // v31 values so a hand-edit wins and a re-run is a no-op.
+    if (storedVersion < 32) {
+      for (const card of stored) {
+        if (card.id === 70 && card.psa10Value === 1520 && card.psa9Value === 850) {
+          card.psa10Value = 1450;
+          card.psa9Value = 820;
           Object.assign(card, recalcGradingCard(card));
         }
       }
