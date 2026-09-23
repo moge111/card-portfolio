@@ -7,8 +7,9 @@ import EditableCell, { EditableSelect } from '../shared/EditableCell';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
-import { FLAIR_HERO } from '../../constants/flair';
-import Peeker from '../shared/Peeker';
+import PageHeader from '../shared/PageHeader';
+import Slab from '../shared/Slab';
+import { primaryButton } from '../shared/buttons';
 import type { Single } from '../../types/portfolio';
 
 export default function SinglesPage() {
@@ -133,47 +134,28 @@ export default function SinglesPage() {
 
   return (
     <div>
-      <div className="mb-10 rise">
-        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
-          <span className="twinkle mr-1">✦</span>The Keepers · Not For Sale
-        </div>
-        <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
-          The <span className="holo-text italic">Singles</span>
-          <span className="ml-5 inline-flex items-end gap-1 align-middle">
-            <img src={FLAIR_HERO.naruto} alt="Naruto" className="floaty h-13 w-13 object-contain drop-shadow-[0_0_12px_rgba(251,146,60,0.45)]" />
-            <img src={FLAIR_HERO.eevee} alt="Eevee" className="floaty h-13 w-13 object-contain drop-shadow-[0_0_12px_rgba(250,204,21,0.45)]" style={{ animationDelay: '-1.6s' }} />
-          </span>
-        </h2>
-        <p className="text-text-secondary text-sm mt-2">Raw cards and keepers — not for sale</p>
-      </div>
+      <PageHeader
+        title="Singles"
+        detail="Raw cards and keepers · not for sale"
+        figure={{ value: formatPercent(totals.roi), caption: 'Unrealized ROI', tone: totals.roi >= 0 ? 'text-profit' : 'text-loss' }}
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 rise rise-1">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8 rise rise-1">
         <StatCard title="Total Cards" value={String(totals.totalCards)} icon={Layers} />
         <StatCard title="Total Invested" value={formatCurrency(totals.invested)} icon={DollarSign} />
         <StatCard title="Unrealized Profit" value={formatCurrency(totals.profit)} icon={TrendingUp} trend={totals.profit >= 0 ? 'up' : 'down'} />
         <StatCard title="Portfolio ROI" value={formatPercent(totals.roi)} icon={Target} trend={totals.roi >= 0 ? 'up' : 'down'} />
       </div>
 
-      <div className="panel p-5 rise rise-2">
-        <Peeker src={FLAIR_HERO.kakashi} className="right-14" size={42} alt="Kakashi peeking" />
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">All Singles</h3>
-          <button
-            onClick={addSingle}
-            className="rounded-lg bg-gradient-to-r from-accent to-holo px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-background transition-all hover:brightness-125 hover:shadow-[0_0_16px_-2px_rgba(56,189,248,0.6)]"
-          >
-            + Add Card
-          </button>
-        </div>
+      <Slab className="rise rise-2" title="All singles" actions={<button onClick={addSingle} className={primaryButton}>+ Add card</button>}>
         {singlesCollection.length === 0 ? (
           <div className="text-center py-12">
-            <img src={FLAIR_HERO.eevee} alt="Eevee" className="floaty mx-auto mb-3 h-20 w-20 object-contain" />
-            <p className="text-text-secondary text-sm">Your bag is empty. Click "+ Add Card" to start tracking your raw cards.</p>
+            <p className="text-text-secondary text-sm">No singles yet. Add a card to start tracking raw cards and keepers.</p>
           </div>
         ) : (
           <DataTable data={singlesCollection} columns={columns} categories={categories} csvName="singles" />
         )}
-      </div>
+      </Slab>
     </div>
   );
 }

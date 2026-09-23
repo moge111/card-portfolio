@@ -12,9 +12,12 @@ import {
 } from '../../utils/gradingMath';
 import { PSA_TIERS_VERIFIED } from '../../constants/psaTiers';
 import { VERDICT_STYLE } from '../../constants/gradingStyles';
-import { CHART_GRID, CHART_TICK } from '../../constants/theme';
+import { CHART_GRID, CHART_TICK, CHART_TICK_STYLE, SERIES } from '../../constants/theme';
+import PageHeader from '../shared/PageHeader';
+import Slab from '../shared/Slab';
 import { useDeskStats } from './useDeskStats';
-import { NumField, PageHeader, SelectField, TextField, primaryButton, secondaryButton } from './fields';
+import { NumField, SelectField, TextField } from './fields';
+import { primaryButton, secondaryButton } from '../shared/buttons';
 import type { Candidate } from '../../types/grading';
 import type { Category } from '../../types/portfolio';
 
@@ -145,7 +148,11 @@ export default function CalculatorPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Grading Desk · Buy & grade math" title="Should I" accent="Grade It?">
+      <PageHeader
+        title="Should I grade?"
+        detail="Grading desk · buy & grade math"
+        figure={{ value: formatCurrency(outcome.profit), caption: `${verdict.label} · expected`, tone: outcome.profit >= 0 ? 'text-profit' : 'text-loss' }}
+      >
         <button onClick={saveCandidate} className={primaryButton}>
           {candidate ? 'Save to candidate' : '+ Add to pre-grade queue'}
         </button>
@@ -153,7 +160,7 @@ export default function CalculatorPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
         {/* Inputs */}
-        <div className="panel p-5 lg:col-span-2 rise rise-1">
+        <Slab className="lg:col-span-2 rise rise-1" title="Card & comps">
           <div className="grid grid-cols-2 gap-3">
             <TextField label="Card" value={inputs.name} onChange={(v) => set('name', v)} placeholder="e.g. Umbreon VMAX Alt Art" />
             <SelectField label="Category" value={inputs.category} onChange={(v) => set('category', v)} options={CATEGORIES.map((v) => ({ value: v, label: v }))} />
@@ -198,17 +205,17 @@ export default function CalculatorPage() {
               : <span />}
             <NumField label="Days to sell" value={inputs.daysToSell} onChange={(v) => set('daysToSell', Math.max(0, Math.round(v)))} hint="After slabs arrive home" />
           </div>
-        </div>
+        </Slab>
 
         {/* Verdict */}
-        <div className="panel gold-hairline p-5 lg:col-span-3 rise rise-2">
+        <Slab className="lg:col-span-3 rise rise-2" title="Verdict">
           <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
             <div>
               <span className={`inline-block rounded-full border px-3 py-1 font-mono text-xs font-bold uppercase tracking-wider ${verdict.className}`}>{verdict.label}</span>
               <p className="mt-2 text-sm text-text-secondary">{verdict.blurb}</p>
             </div>
             <div className="text-right">
-              <div className={`font-display text-4xl font-medium tabular-nums ${outcome.profit >= 0 ? 'text-profit' : 'text-loss'}`}>{formatCurrency(outcome.profit)}</div>
+              <div className={`font-display text-5xl font-bold leading-none tabular-nums ${outcome.profit >= 0 ? 'text-profit' : 'text-loss'}`}>{formatCurrency(outcome.profit)}</div>
               <div className="font-mono text-[11px] text-text-secondary">expected profit · {formatPercent(outcome.roi)} ROI</div>
             </div>
           </div>
@@ -234,7 +241,7 @@ export default function CalculatorPage() {
             ].map((s) => (
               <div key={s.label}>
                 <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1">{s.label}</div>
-                <div className={`font-display text-lg tabular-nums ${s.neutral ? 'text-text-primary' : s.value >= 0 ? 'text-profit' : 'text-loss'}`}>
+                <div className={`font-display text-2xl font-bold tabular-nums ${s.neutral ? 'text-text-primary' : s.value >= 0 ? 'text-profit' : 'text-loss'}`}>
                   {formatCurrency(s.neutral ? -s.value : s.value)}
                 </div>
               </div>
@@ -253,23 +260,23 @@ export default function CalculatorPage() {
               <span className="text-loss">No open tier covers a {formatCurrency(inputs.psa10Value)} declared value — check PSA's premium tiers.</span>
             )}
           </div>
-        </div>
+        </Slab>
       </div>
 
       {/* Cashflow timeline */}
       {timeline && (
-        <div className="panel p-5 mb-6 rise rise-3">
-          <div className="flex items-baseline justify-between mb-4">
-            <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">Cash timeline</h3>
-            <span className="font-mono text-[10px] text-text-secondary">business days skip weekends, not holidays</span>
-          </div>
+        <Slab
+          className="mb-6 rise rise-3"
+          title="Cash timeline"
+          actions={<span className="font-mono text-[10px] text-text-secondary">business days skip weekends, not holidays</span>}
+        >
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
             <div className="lg:col-span-3 h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
-                  <XAxis dataKey="t" type="number" scale="time" domain={['dataMin', 'dataMax']} tickFormatter={(t) => formatShortDate(new Date(t))} tick={{ fill: CHART_TICK, fontSize: 11 }} />
-                  <YAxis tickFormatter={(v) => formatCurrency(v)} tick={{ fill: CHART_TICK, fontSize: 11 }} width={70} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
+                  <XAxis dataKey="t" type="number" scale="time" minTickGap={48} domain={['dataMin', 'dataMax']} tickFormatter={(t) => formatShortDate(new Date(t))} tick={CHART_TICK_STYLE} />
+                  <YAxis tickFormatter={(v) => formatCurrency(v)} tick={CHART_TICK_STYLE} width={70} />
                   <ReferenceLine y={0} stroke={CHART_TICK} strokeDasharray="4 4" />
                   <Tooltip
                     content={({ active, payload }) => {
@@ -283,7 +290,7 @@ export default function CalculatorPage() {
                       );
                     }}
                   />
-                  <Area type="stepAfter" dataKey="balance" stroke="#38bdf8" fill="#38bdf8" fillOpacity={0.15} strokeWidth={2} />
+                  <Area type="stepAfter" dataKey="balance" stroke={SERIES.blue} fill={SERIES.blue} fillOpacity={0.12} strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -304,18 +311,20 @@ export default function CalculatorPage() {
               ))}
             </ol>
           </div>
-        </div>
+        </Slab>
       )}
 
       {/* Tier comparison */}
-      <div className="panel p-5 mb-6 rise rise-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
-          <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">Every tier, side by side</h3>
+      <Slab
+        className="mb-6 rise rise-4"
+        title="Every tier, side by side"
+        actions={
           <span className="font-mono text-[10px] text-text-secondary">
-            {result.bestPerMonth && <>Best return on cash tied up: <span className="text-accent-light">{result.bestPerMonth.tier.name}</span> · </>}
+            {result.bestPerMonth && <>Best return on cash tied up: <span className="text-text-primary">{result.bestPerMonth.tier.name}</span> · </>}
             prices verified {formatDate(parseDate(PSA_TIERS_VERIFIED))}
           </span>
-        </div>
+        }
+      >
         <div className="overflow-x-auto">
           <table className="w-full font-mono text-[12px] tabular-nums">
             <thead>
@@ -389,7 +398,7 @@ export default function CalculatorPage() {
           {eligibleTiers(tiers, inputs.psa10Value).length === 0 && 'No open tier fits this declared value. '}
           Profit / month = expected profit ÷ months your cash is tied up — the faster tier wins when the fee gap is smaller than the time saved is worth.
         </p>
-      </div>
+      </Slab>
     </div>
   );
 }

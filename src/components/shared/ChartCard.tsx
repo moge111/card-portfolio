@@ -9,12 +9,12 @@ interface ChartCardProps {
 
 export default function ChartCard({ title, subtitle, children, className = '' }: ChartCardProps) {
   return (
-    <div className={`panel p-5 ${className}`}>
-      <div className="mb-5 flex items-baseline justify-between gap-3">
-        <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">{title}</h3>
-        {subtitle && <p className="font-mono text-[10px] text-text-secondary/80">{subtitle}</p>}
+    <div className={`panel p-1.5 ${className}`}>
+      <div className="slab-label flex items-baseline justify-between gap-3 px-2.5 py-1.5">
+        <h3 className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-primary">{title}</h3>
+        {subtitle && <p className="font-mono text-[10px] text-text-secondary">{subtitle}</p>}
       </div>
-      {children}
+      <div className="relative z-[1] p-3.5">{children}</div>
     </div>
   );
 }

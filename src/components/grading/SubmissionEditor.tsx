@@ -37,9 +37,9 @@ export default function SubmissionEditor({ sub, tiers, canDelete, onSave, onDele
   };
 
   return (
-    <div className="panel gold-hairline ring-1 ring-accent/25 p-5 mb-8 rise">
+    <div className="panel border-text-primary p-5 mb-8 rise">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-accent-light">Edit {sub.name}</h3>
+        <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-text-primary">Edit {sub.name}</h3>
         <button onClick={onClose} className="text-text-secondary hover:text-text-primary transition-colors"><X size={16} /></button>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -108,7 +108,7 @@ export default function SubmissionEditor({ sub, tiers, canDelete, onSave, onDele
         ) : <span />}
         <button
           onClick={save}
-          className="rounded-lg bg-gradient-to-r from-accent to-holo px-4 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-background hover:brightness-125"
+          className="rounded-md bg-text-primary px-3 py-1.5 font-mono text-[10px] font-medium uppercase tracking-wider text-bg transition-opacity hover:opacity-85"
         >
           Save
         </button>

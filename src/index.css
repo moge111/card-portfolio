@@ -1,53 +1,130 @@
 @import "tailwindcss";
 
-@theme {
-  /* Holo Night — ink navy, electric cyan, foil violet */
-  --color-bg: #090b14;
-  --color-background: #05070d;
-  --color-surface: #10141f;
-  --color-surface-hover: #171c2b;
-  --color-border: #222940;
-  --color-border-bright: #364060;
-  --color-text-primary: #e9edf8;
-  --color-text-secondary: #8d96b2;
-  --color-accent: #38bdf8;
-  --color-accent-light: #7dd3fc;
-  --color-holo: #a78bfa;
-  --color-profit: #34d399;
-  --color-loss: #fb7185;
-  --color-pokemon: #facc15;
-  --color-onepiece: #ef4444;
-  --color-mtg: #a855f7;
-  --color-naruto: #f97316;
+/* ---------- Slab — clear-case light, smoked-acrylic dark ----------
+   Raw values live on :root so dark mode can swap them; @theme maps them to
+   Tailwind utilities (bg-surface, text-profit, border-label, …). */
 
-  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
-  --font-body: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
+:root {
+  color-scheme: light;
+  --case: #dfe4e8;
+  --shell: #f7f9fa;
+  --shell-hover: #ffffff;
+  --field: #eef2f4;
+  --label-face: #ffffff;
+  --edge: #c5ccd2;
+  --edge-strong: #98a3ad;
+  --ink: #121417;
+  --ink-2: #5b6670;
+  --steel: #2c5f8e;
+  --steel-strong: #1d4a73;
+  --gain: #1f7a4c;
+  --loss: #b3261e;
+  --label-red: #c21f2b;
+  --gem: #9a7519;
+  --caution: #b45309;
+  --glare: rgba(255, 255, 255, 0.55);
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 10px 24px -16px rgba(20, 30, 40, 0.5);
+
+  /* Chart series — validated for CVD + contrast against --shell (dataviz checks) */
+  --series-blue: #2a78d6;
+  --series-gold: #eda100;
+  --series-orange: #eb6834;
+  --series-aqua: #1baf7a;
+  --series-violet: #4a3aa7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --case: #0f1215;
+    --shell: #181c20;
+    --shell-hover: #1f2429;
+    --field: #121518;
+    --label-face: #0b0d0f;
+    --edge: #2b3238;
+    --edge-strong: #434d56;
+    --ink: #e6eaed;
+    --ink-2: #8b96a0;
+    --steel: #7fb0de;
+    --steel-strong: #a9cbeb;
+    --gain: #4cc38a;
+    --loss: #f07167;
+    --label-red: #d6414b;
+    --gem: #d9b44a;
+    --caution: #f0a35e;
+    --glare: rgba(255, 255, 255, 0.04);
+    --shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 12px 28px -16px rgba(0, 0, 0, 0.8);
+    --series-blue: #3987e5;
+    --series-gold: #c98500;
+    --series-orange: #d95926;
+    --series-aqua: #199e70;
+    --series-violet: #9085e9;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --case: #0f1215;
+  --shell: #181c20;
+  --shell-hover: #1f2429;
+  --field: #121518;
+  --label-face: #0b0d0f;
+  --edge: #2b3238;
+  --edge-strong: #434d56;
+  --ink: #e6eaed;
+  --ink-2: #8b96a0;
+  --steel: #7fb0de;
+  --steel-strong: #a9cbeb;
+  --gain: #4cc38a;
+  --loss: #f07167;
+  --label-red: #d6414b;
+  --gem: #d9b44a;
+  --caution: #f0a35e;
+  --glare: rgba(255, 255, 255, 0.04);
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 12px 28px -16px rgba(0, 0, 0, 0.8);
+  --series-blue: #3987e5;
+  --series-gold: #c98500;
+  --series-orange: #d95926;
+  --series-aqua: #199e70;
+  --series-violet: #9085e9;
+}
+
+@theme {
+  --color-bg: var(--case);
+  --color-background: var(--field);
+  --color-surface: var(--shell);
+  --color-surface-hover: var(--shell-hover);
+  --color-label-face: var(--label-face);
+  --color-border: var(--edge);
+  --color-border-bright: var(--edge-strong);
+  --color-text-primary: var(--ink);
+  --color-text-secondary: var(--ink-2);
+  --color-accent: var(--steel);
+  --color-accent-light: var(--steel-strong);
+  --color-profit: var(--gain);
+  --color-loss: var(--loss);
+  --color-label: var(--label-red);
+  --color-gem: var(--gem);
+  --color-caution: var(--caution);
+
+  --color-series-blue: var(--series-blue);
+  --color-series-gold: var(--series-gold);
+  --color-series-orange: var(--series-orange);
+  --color-series-aqua: var(--series-aqua);
+  --color-series-violet: var(--series-violet);
+
+  --font-display: 'Saira Condensed', 'Arial Narrow', sans-serif;
+  --font-body: 'Barlow', system-ui, -apple-system, sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, 'SF Mono', monospace;
 }
 
 body {
   margin: 0;
-  background-color: var(--color-bg);
-  background-image:
-    radial-gradient(ellipse 70% 45% at 15% -8%, rgba(56, 189, 248, 0.1), transparent 60%),
-    radial-gradient(ellipse 55% 40% at 88% 0%, rgba(167, 139, 250, 0.09), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 50% 112%, rgba(244, 114, 182, 0.06), transparent 60%);
-  background-attachment: fixed;
-  color: var(--color-text-primary);
+  background: var(--case);
+  color: var(--ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Film grain over everything — gives the dark surfaces a physical, printed feel */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 #root {
@@ -55,11 +132,13 @@ body::after {
 }
 
 ::selection {
-  background: rgba(56, 189, 248, 0.35);
-  color: #f0faff;
+  background: color-mix(in srgb, var(--steel) 30%, transparent);
 }
 
-/* ---------- Holo Night utilities ---------- */
+:focus-visible {
+  outline: 2px solid var(--steel);
+  outline-offset: 2px;
+}
 
 /* Recharts clips pie labels at the SVG edge — let them overflow */
 .recharts-wrapper,
@@ -67,208 +146,76 @@ body::after {
   overflow: visible !important;
 }
 
-/* Holographic foil — brand mark, page titles, rare moments */
-.holo-text {
-  background: linear-gradient(
-    100deg,
-    #7dd3fc 0%,
-    #e9f6ff 18%,
-    #38bdf8 36%,
-    #a78bfa 54%,
-    #f472b6 72%,
-    #facc15 88%,
-    #7dd3fc 100%
-  );
-  background-size: 250% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: foil-sheen 7s linear infinite;
+@layer components {
+  /* ---------- Slab pieces ---------- */
+
+  /* The case: every panel is a clear slab with a glare across the acrylic */
+  .panel {
+    position: relative;
+    background: var(--shell);
+    border: 1px solid var(--edge);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(115deg, transparent 58%, var(--glare) 64%, transparent 71%);
+  }
+  /* Content sits above the glare */
+  .panel > :not(.absolute) {
+    position: relative;
+  }
+
+  .panel-hover {
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+  .panel-hover:hover {
+    border-color: var(--edge-strong);
+    transform: translateY(-2px);
+  }
+
+  /* The label: red-bordered strip at the top of a slab */
+  .slab-label {
+    position: relative;
+    z-index: 1;
+    background: var(--label-face);
+    border: 2px solid var(--label-red);
+    border-radius: 4px;
+  }
+
+  /* Barcode under a label's text */
+  .barcode {
+    height: 10px;
+    opacity: 0.8;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--ink) 0 1px, transparent 1px 3px,
+      var(--ink) 3px 5px, transparent 5px 6px,
+      var(--ink) 6px 7px, transparent 7px 10px,
+      var(--ink) 10px 11px, transparent 11px 13px
+    );
+  }
 }
 
-@keyframes foil-sheen {
-  to { background-position: -250% 0; }
-}
-
-/* Panel — the standard card surface */
-.panel {
-  position: relative;
-  background:
-    linear-gradient(180deg, rgba(125, 211, 252, 0.05), transparent 40%),
-    var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  box-shadow: 0 1px 0 rgba(233, 246, 255, 0.05) inset, 0 12px 32px -16px rgba(0, 0, 0, 0.7);
-}
-
-.panel-hover {
-  overflow: hidden;
-  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
-}
-.panel-hover:hover {
-  border-color: rgba(56, 189, 248, 0.5);
-  transform: translateY(-3px);
-  box-shadow:
-    0 1px 0 rgba(233, 246, 255, 0.07) inset,
-    0 20px 44px -16px rgba(0, 0, 0, 0.85),
-    0 0 30px -8px rgba(56, 189, 248, 0.25);
-}
-
-/* Holo shine sweep across a panel on hover */
-.panel-hover::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 38%,
-    rgba(56, 189, 248, 0.08) 46%,
-    rgba(233, 246, 255, 0.14) 50%,
-    rgba(167, 139, 250, 0.08) 54%,
-    transparent 62%
-  );
-  background-size: 250% 100%;
-  background-position: 130% 0;
-}
-.panel-hover:hover::after {
-  opacity: 1;
-  animation: shine 0.9s ease;
-}
-@keyframes shine {
-  from { background-position: 130% 0; }
-  to { background-position: -60% 0; }
-}
-
-/* Cyan hairline along a panel's top edge */
-.gold-hairline::before {
-  content: '';
-  position: absolute;
-  top: -1px;
-  left: 10%;
-  right: 10%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.6), rgba(167, 139, 250, 0.5), transparent);
-}
-
-/* Page-load choreography — springy pop-in */
+/* Page-load — a short settle, no bounce */
 @keyframes rise {
-  from { opacity: 0; transform: translateY(18px) scale(0.985); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.rise { animation: rise 0.6s cubic-bezier(0.34, 1.45, 0.64, 1) both; }
-.rise-1 { animation-delay: 0.05s; }
-.rise-2 { animation-delay: 0.12s; }
-.rise-3 { animation-delay: 0.19s; }
-.rise-4 { animation-delay: 0.26s; }
-.rise-5 { animation-delay: 0.33s; }
-
-/* Drifting franchise-colored aurora orbs (behind everything) */
-.orb {
-  position: fixed;
-  z-index: -1;
-  border-radius: 9999px;
-  filter: blur(80px);
-  opacity: 0.2;
-  pointer-events: none;
-  animation: drift 22s ease-in-out infinite alternate;
-}
-@keyframes drift {
-  from { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(50px, -60px) scale(1.2); }
-  to { transform: translate(-40px, 40px) scale(0.92); }
-}
-
-/* Gentle bob for decorative bits (header emoji, logo) */
-@keyframes floaty {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50% { transform: translateY(-6px) rotate(3deg); }
-}
-.floaty {
-  display: inline-block;
-  animation: floaty 3.2s ease-in-out infinite;
-}
-
-/* Twinkling sparkle */
-@keyframes twinkle {
-  0%, 100% { opacity: 0.35; transform: scale(0.8) rotate(0deg); }
-  50% { opacity: 1; transform: scale(1.2) rotate(20deg); }
-}
-.twinkle {
-  display: inline-block;
-  animation: twinkle 2.2s ease-in-out infinite;
-}
-
-/* Icon wiggle when its card is hovered */
-@keyframes wiggle {
-  0%, 100% { transform: rotate(0); }
-  25% { transform: rotate(-12deg) scale(1.15); }
-  75% { transform: rotate(12deg) scale(1.15); }
-}
-.group:hover .wiggle {
-  animation: wiggle 0.45s ease-in-out;
-}
-
-/* Soft pulse for "in progress" badges */
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.55; }
-}
-.pulse-soft { animation: pulse-soft 2.4s ease-in-out infinite; }
-
-/* Animated candy stripes for progress bars */
-.stripes {
-  position: relative;
-  overflow: hidden;
-}
-.stripes::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -34px;
-  right: 0;
-  background: repeating-linear-gradient(
-    45deg,
-    rgba(255, 255, 255, 0.22) 0 6px,
-    transparent 6px 12px
-  );
-  animation: stripe-slide 0.9s linear infinite;
-}
-@keyframes stripe-slide {
-  to { transform: translateX(17px); }
-}
-
-/* Characters peeking over panel edges — slow shy bob */
-@keyframes peek-bob {
-  0%, 100% { transform: translateY(8px); }
-  50% { transform: translateY(0); }
-}
-.peeker-img {
-  animation: peek-bob 3.6s ease-in-out infinite;
-  filter: drop-shadow(0 -2px 10px rgba(0, 0, 0, 0.4));
-}
-
-/* Pokeball logo — bobs gently, spins when you hover the sidebar header */
-.pokeball-logo {
-  animation: floaty 4s ease-in-out infinite;
-  transition: transform 0.3s ease;
-}
-.logo-area:hover .pokeball-logo {
-  animation: pokespin 0.7s cubic-bezier(0.34, 1.3, 0.64, 1);
-}
-@keyframes pokespin {
-  from { transform: rotate(0); }
-  to { transform: rotate(360deg); }
-}
+.rise { animation: rise 0.4s ease-out both; }
+.rise-1 { animation-delay: 0.04s; }
+.rise-2 { animation-delay: 0.08s; }
+.rise-3 { animation-delay: 0.12s; }
+.rise-4 { animation-delay: 0.16s; }
+.rise-5 { animation-delay: 0.2s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .rise, .holo-text, .orb, .floaty, .twinkle, .pulse-soft,
-  .stripes::after, .pokeball-logo, .group:hover .wiggle,
-  .panel-hover:hover::after { animation: none; }
-  .peeker-img { animation: none; }
+  .rise { animation: none; }
+  .panel-hover:hover { transform: none; }
 }
 
 /* Scrollbar */
@@ -280,10 +227,10 @@ body::after {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #222940;
+  background: var(--edge);
   border-radius: 4px;
-  border: 2px solid var(--color-bg);
+  border: 2px solid var(--case);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #364060;
+  background: var(--edge-strong);
 }

@@ -12,10 +12,12 @@ import EditableCell, { EditableSelect } from '../shared/EditableCell';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
-import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
+import { BAR_RADIUS, CATEGORY_COLORS, CHART_GRID, CHART_TICK_STYLE, GRADE_COLORS, SERIES, byCategoryOrder } from '../../constants/theme';
 import SubmissionDetail from './SubmissionDetail';
-import { FLAIR_HERO } from '../../constants/flair';
-import Peeker from '../shared/Peeker';
+import PageHeader from '../shared/PageHeader';
+import Slab from '../shared/Slab';
+import { primaryButton } from '../shared/buttons';
+import ChartTooltip from '../shared/ChartTooltip';
 import type { GradingCard } from '../../types/portfolio';
 import { EBAY_FEE, SHIPPING_COST_PER_SALE } from '../../constants/fees';
 import { useGradingDesk } from '../../context/GradingDeskContext';
@@ -46,20 +48,6 @@ function calcActualProfit(c: GradingCard, shippingPerCard: number): number {
   const investmentPerCard = c.totalInvestment / c.qty;
   return revenue - (investmentPerCard + shippingPerCard) * c.gradedQty;
 }
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-lg border border-border-bright bg-background/95 px-3 py-2 font-mono text-xs shadow-2xl backdrop-blur">
-      <p className="text-text-primary font-medium mb-1">{label || payload[0]?.name}</p>
-      {payload.map((entry: any, i: number) => (
-        <p key={i} style={{ color: entry.color }}>
-          {entry.name}: {entry.value}
-        </p>
-      ))}
-    </div>
-  );
-};
 
 function SalesCell({ card, onAdd, onRemove, onUpdate, isAdmin }: { card: GradingCard; onAdd: (price: number) => void; onRemove: (index: number) => void; onUpdate: (index: number, newPrice: number) => void; isAdmin: boolean }) {
   const [adding, setAdding] = useState(false);
@@ -547,7 +535,7 @@ export default function GradingPage() {
     sellableCards.forEach((c) => {
       map[c.category] = (map[c.category] || 0) + c.profit;
     });
-    return Object.entries(map).map(([name, value]) => ({ name, value: Math.round(value) }));
+    return byCategoryOrder(Object.entries(map).map(([name, value]) => ({ name, value: Math.round(value) })));
   }, [sellableCards]);
 
   const categories = [...new Set(sellableCards.map((c) => c.category))];
@@ -558,18 +546,13 @@ export default function GradingPage() {
 
   return (
     <div>
-      <div className="mb-10 rise">
-        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
-          <span className="twinkle mr-1">✦</span>The Gem Hunt · PSA Submissions
-        </div>
-        <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
-          PSA <span className="holo-text italic">Grading</span>
-          <img src={FLAIR_HERO.charizard} alt="Charizard" className="floaty ml-5 inline-block h-14 w-14 object-contain align-middle drop-shadow-[0_0_14px_rgba(239,68,68,0.45)]" />
-        </h2>
-        <p className="text-text-secondary text-sm mt-2">{sellableCards.length} card types, {totals.totalCards} total cards submitted</p>
-      </div>
+      <PageHeader
+        title="PSA Grading"
+        detail={`${sellableCards.length} card types · ${totals.totalCards} cards submitted`}
+        figure={{ value: formatPercent(psa10Rate), caption: `10 rate · ${actualStats.totalGraded} returned`, tone: 'text-gem' }}
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8 rise rise-1">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-8 rise rise-1">
         <StatCard
           title="Total Cards"
           value={String(totals.totalCards)}
@@ -609,19 +592,17 @@ export default function GradingPage() {
 
       {/* Pipeline: what's at PSA right now and when it's coming back */}
       {pipeline.active.length > 0 && (
-        <div className="panel px-5 py-3 mb-4 flex flex-wrap items-center gap-x-6 gap-y-1 font-mono text-[11px] rise rise-2">
-          <span className="uppercase tracking-[0.18em] text-text-secondary">Pipeline</span>
-          <span className="text-text-primary">{pipeline.cards} cards out across {pipeline.active.length} subs</span>
-          <span className={pipeline.projectedProfit >= 0 ? 'text-profit' : 'text-loss'}>
-            {formatCurrency(pipeline.projectedProfit)} projected profit
-          </span>
+        <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-md bg-text-primary px-4 py-2.5 font-mono text-[11px] text-bg rise rise-2">
+          <span className="text-[10px] uppercase tracking-[0.14em]">Pipeline</span>
+          <span>{pipeline.cards} cards out across {pipeline.active.length} subs</span>
+          <span>{pipeline.projectedProfit >= 0 ? '+' : ''}{formatCurrency(pipeline.projectedProfit)} projected profit</span>
           {pipeline.next && (
-            <span className="text-accent-light">
+            <span>
               Next back: {pipeline.next.sub.name} ~{formatShortDate(pipeline.next.eta!.gradesBack)}
             </span>
           )}
           {pipeline.missingEta.length > 0 && (
-            <span className="text-text-secondary/70">No ETA: {pipeline.missingEta.join(', ')}</span>
+            <span className="opacity-70">No ETA: {pipeline.missingEta.join(', ')}</span>
           )}
         </div>
       )}
@@ -643,7 +624,7 @@ export default function GradingPage() {
         {isAdmin && (
           <button
             onClick={() => setEditingSub(addSubmission())}
-            className="panel border-dashed p-5 flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-text-secondary hover:text-accent-light hover:border-accent/50 transition-colors"
+            className="rounded-[10px] border border-dashed border-border-bright p-5 flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-text-secondary hover:text-text-primary hover:border-text-primary transition-colors"
           >
             <Plus size={14} /> New submission
           </button>
@@ -688,42 +669,41 @@ export default function GradingPage() {
 
       {/* Actual Results Banner */}
       {actualStats.totalGraded > 0 && (
-        <div className="panel gold-hairline p-5 mb-8 rise rise-3">
-          <Peeker src={FLAIR_HERO.mewtwo} className="right-12" size={44} alt="Mewtwo peeking" />
-          <div className="flex items-center gap-2 mb-5">
-            <CheckCircle size={16} className="text-profit" />
-            <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
-              Grading Results — {actualStats.totalGraded} of {totals.totalCards} Cards Returned
+        <div className="panel p-1.5 mb-8 rise rise-3">
+          <div className="slab-label flex items-center gap-2 px-2.5 py-1.5">
+            <CheckCircle size={13} className="text-profit" />
+            <h3 className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-primary">
+              Grading results · {actualStats.totalGraded} of {totals.totalCards} cards returned
             </h3>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 px-3 pt-4 pb-3">
             <div>
               <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">PSA 10s</div>
-              <div className="font-display text-xl font-medium tabular-nums text-profit">{actualStats.total10s}</div>
+              <div className="font-display text-2xl font-bold tabular-nums text-gem">{actualStats.total10s}</div>
             </div>
             <div>
               <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">PSA 9s</div>
-              <div className="font-display text-xl font-medium tabular-nums text-accent-light">{actualStats.total9s}</div>
+              <div className="font-display text-2xl font-bold tabular-nums text-text-primary">{actualStats.total9s}</div>
             </div>
             <div>
               <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">Sub-9s</div>
-              <div className="font-display text-xl font-medium tabular-nums text-loss">{actualStats.totalSub9s}</div>
+              <div className="font-display text-2xl font-bold tabular-nums text-loss">{actualStats.totalSub9s}</div>
             </div>
             <div>
               <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">PSA 10 Rate</div>
-              <div className="font-display text-xl font-medium tabular-nums text-text-primary">{formatPercent(psa10Rate)}</div>
+              <div className="font-display text-2xl font-bold tabular-nums text-text-primary">{formatPercent(psa10Rate)}</div>
             </div>
             <div>
               <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">Actual Revenue</div>
-              <div className="font-display text-xl font-medium tabular-nums text-text-primary">{formatCurrency(actualStats.actualRevenue)}</div>
+              <div className="font-display text-2xl font-bold tabular-nums text-text-primary">{formatCurrency(actualStats.actualRevenue)}</div>
             </div>
             <div>
               <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">Shipping Fees</div>
-              <div className="font-display text-xl font-medium tabular-nums text-loss">{formatCurrency(returnedShipping)}</div>
+              <div className="font-display text-2xl font-bold tabular-nums text-loss">{formatCurrency(returnedShipping)}</div>
             </div>
             <div>
               <div className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1.5">Actual Profit</div>
-              <div className={`font-display text-xl font-medium tabular-nums ${actualStats.actualProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
+              <div className={`font-display text-2xl font-bold tabular-nums ${actualStats.actualProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
                 {formatCurrency(actualStats.actualProfit)}
               </div>
             </div>
@@ -735,11 +715,11 @@ export default function GradingPage() {
         <ChartCard title="ROI Distribution" subtitle="Cards by ROI range">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={roiDistribution}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
-              <XAxis dataKey="range" tick={{ fill: '#8d96b2', fontSize: 11 }} />
-              <YAxis tick={{ fill: '#8d96b2', fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" name="Cards" fill="#38bdf8" radius={[6, 6, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
+              <XAxis dataKey="range" tick={CHART_TICK_STYLE} />
+              <YAxis tick={CHART_TICK_STYLE} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.35 }} />
+              <Bar dataKey="count" name="Cards" fill={SERIES.blue} radius={BAR_RADIUS} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -747,13 +727,14 @@ export default function GradingPage() {
         <ChartCard title="Expected Grade Split" subtitle="Multi-copy submissions">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={gradeDistribution}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
-              <XAxis dataKey="name" tick={{ fill: '#8d96b2', fontSize: 10 }} />
-              <YAxis tick={{ fill: '#8d96b2', fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="PSA 10" stackId="a" fill="#34d399" />
-              <Bar dataKey="PSA 9" stackId="a" fill="#38bdf8" />
-              <Bar dataKey="Sub-9" stackId="a" fill="#fb7185" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
+              <XAxis dataKey="name" tick={CHART_TICK_STYLE} />
+              <YAxis tick={CHART_TICK_STYLE} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.35 }} />
+              <Legend iconType="square" iconSize={8} formatter={(name: string) => <span className="font-mono text-[11px] text-text-secondary">{name}</span>} />
+              <Bar dataKey="PSA 10" stackId="a" fill={GRADE_COLORS.psa10} stroke="var(--color-surface)" strokeWidth={2} />
+              <Bar dataKey="PSA 9" stackId="a" fill={GRADE_COLORS.psa9} stroke="var(--color-surface)" strokeWidth={2} />
+              <Bar dataKey="Sub-9" stackId="a" fill={GRADE_COLORS.sub9} stroke="var(--color-surface)" strokeWidth={2} radius={BAR_RADIUS} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -768,20 +749,21 @@ export default function GradingPage() {
                 innerRadius={48}
                 outerRadius={75}
                 dataKey="value"
-                strokeWidth={0}
+                stroke="var(--color-surface)"
+                strokeWidth={2}
               >
                 {categoryProfit.map((entry) => (
-                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || CHART_COLORS[0]} />
+                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] ?? SERIES.blue} />
                 ))}
               </Pie>
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.35 }} />
               <Legend
                 verticalAlign="bottom"
                 iconType="circle"
                 iconSize={7}
                 formatter={(name: string) => {
                   const entry = categoryProfit.find((e) => e.name === name);
-                  return <span style={{ color: '#8d96b2', fontSize: 11 }}>{name} · {formatCurrency(entry?.value ?? 0)}</span>;
+                  return <span className="font-mono text-[11px] text-text-secondary">{name} · {formatCurrency(entry?.value ?? 0)}</span>;
                 }}
               />
             </PieChart>
@@ -789,21 +771,15 @@ export default function GradingPage() {
         </ChartCard>
       </div>
 
-      <div className="panel p-5 rise rise-5">
-        <Peeker src={FLAIR_HERO.pikachu} className="left-12" size={38} alt="Pikachu peeking" />
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">All Grading Submissions</h3>
-          {isAdmin && (
-            <button
-              onClick={addGradingCard}
-              className="rounded-lg bg-gradient-to-r from-accent to-holo px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-background transition-all hover:brightness-125 hover:shadow-[0_0_16px_-2px_rgba(56,189,248,0.6)]"
-            >
-              + Add Card
-            </button>
-          )}
-        </div>
+      <Slab
+        className="rise rise-5"
+        title="All grading submissions"
+        actions={isAdmin && (
+          <button onClick={addGradingCard} className={primaryButton}>+ Add card</button>
+        )}
+      >
         <DataTable data={sellableCards} columns={columns} categories={categories} csvName="grading-portfolio" />
-      </div>
+      </Slab>
     </div>
   );
 }

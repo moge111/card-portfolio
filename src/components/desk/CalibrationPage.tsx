@@ -3,8 +3,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { usePortfolio } from '../../context/PortfolioContext';
 import { formatPercent } from '../../utils/formatters';
 import { CALIBRATION_BUCKETS, calibrationFor, calibrationRow, gradedCards, type CalibrationRow } from '../../utils/gradingMath';
-import { CHART_GRID, CHART_TICK } from '../../constants/theme';
-import { PageHeader } from './fields';
+import { BAR_RADIUS, CHART_GRID, CHART_TICK_STYLE, SERIES } from '../../constants/theme';
+import PageHeader from '../shared/PageHeader';
+import Slab from '../shared/Slab';
+import StatCard from '../shared/StatCard';
 
 const rate = (count: number, graded: number) => (graded > 0 ? (count / graded) * 100 : 0);
 
@@ -64,7 +66,11 @@ export default function CalibrationPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Grading Desk · How your calls hold up" title="Grader" accent="Calibration" />
+      <PageHeader
+        title="Calibration"
+        detail="Grading desk · how your 10-rate estimates hold up"
+        figure={factor ? { value: `×${factor.toFixed(2)}`, caption: 'Track-record factor', tone: factor >= 1 ? 'text-profit' : 'text-loss' } : undefined}
+      />
 
       {overall.graded === 0 ? (
         <div className="panel p-10 text-center text-text-secondary">No graded cards yet — this fills in as subs come back.</div>
@@ -82,49 +88,41 @@ export default function CalibrationPage() {
                 tone: factor && factor >= 1 ? 'text-profit' : 'text-loss',
               },
             ].map((k) => (
-              <div key={k.label} className="panel gold-hairline p-5">
-                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-secondary mb-3">{k.label}</div>
-                <div className={`font-display text-[1.75rem] leading-none tabular-nums ${k.tone ?? 'text-text-primary'}`}>{k.value}</div>
-                <div className="mt-2 font-mono text-[10px] text-text-secondary/80">{k.sub}</div>
-              </div>
+              <StatCard key={k.label} title={k.label} value={k.value} subtitle={k.sub} tone={k.tone} />
             ))}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
-            <div className="panel p-5 lg:col-span-3 rise rise-2">
-              <div className="flex items-baseline justify-between mb-5">
-                <h3 className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-primary">Estimated vs actual, by how confident you were</h3>
-              </div>
+            <Slab className="lg:col-span-3 rise rise-2" title="Estimated vs actual, by how confident you were">
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={data.buckets}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
-                  <XAxis dataKey="label" tick={{ fill: CHART_TICK, fontSize: 11 }} />
-                  <YAxis unit="%" domain={[0, 100]} tick={{ fill: CHART_TICK, fontSize: 11 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
+                  <XAxis dataKey="label" tick={CHART_TICK_STYLE} />
+                  <YAxis unit="%" domain={[0, 100]} tick={CHART_TICK_STYLE} />
                   <Tooltip
                     content={({ active, payload, label }) => {
                       if (!active || !payload?.length) return null;
                       const b = payload[0].payload as CalibrationRow & { estimated: number; actual: number };
                       return (
-                        <div className="rounded-lg border border-border-bright bg-background/95 px-3 py-2 font-mono text-xs">
+                        <div className="rounded-md border border-border-bright bg-surface px-3 py-2 font-mono text-xs">
                           <p className="text-text-primary mb-1">Estimated {label} · {b.graded} cards</p>
-                          <p className="text-accent-light">Estimated: {b.estimated}%</p>
-                          <p className="text-profit">Actual: {b.actual}%</p>
+                          <p className="text-text-secondary">Estimated: <span className="text-text-primary">{b.estimated}%</span></p>
+                          <p className="text-text-secondary">Actual: <span className="text-text-primary">{b.actual}%</span></p>
                         </div>
                       );
                     }}
                   />
                   <Legend iconType="circle" iconSize={7} formatter={(v: string) => <span className="text-[11px] text-text-secondary">{v}</span>} />
-                  <Bar dataKey="estimated" name="Estimated 10 rate" fill="#38bdf8" radius={[5, 5, 0, 0]} />
-                  <Bar dataKey="actual" name="Actual 10 rate" fill="#34d399" radius={[5, 5, 0, 0]} />
+                  <Bar dataKey="estimated" name="Estimated 10 rate" fill={SERIES.blue} radius={BAR_RADIUS} />
+                  <Bar dataKey="actual" name="Actual 10 rate" fill={SERIES.gold} radius={BAR_RADIUS} />
                 </BarChart>
               </ResponsiveContainer>
               <p className="mt-3 font-mono text-[10px] text-text-secondary/80">
-                Well-calibrated estimates put the green bar level with the blue one in every group. Small groups swing hard — a single card can move them 50 points.
+                Well-calibrated estimates put the gold bar level with the blue one in every group. Small groups swing hard — a single card can move them 50 points.
               </p>
-            </div>
+            </Slab>
 
-            <div className="panel p-5 lg:col-span-2 rise rise-3">
-              <h3 className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-primary mb-4">By category</h3>
+            <Slab className="lg:col-span-2 rise rise-3" title="By category">
               <div className="overflow-x-auto">
                 <table className="w-full font-mono text-[12px] tabular-nums">
                   <thead><RowHead first="Category" /></thead>
@@ -152,11 +150,10 @@ export default function CalibrationPage() {
                   </>
                 )}
               </p>
-            </div>
+            </Slab>
           </div>
 
-          <div className="panel p-5 rise rise-4">
-            <h3 className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-primary mb-1">Every returned card</h3>
+          <Slab className="rise rise-4" title="Every returned card">
             <p className="font-mono text-[10px] text-text-secondary mb-4">Biggest misses first — look for what the disappointing ones have in common.</p>
             <div className="overflow-x-auto">
               <table className="w-full font-mono text-[12px] tabular-nums">
@@ -176,7 +173,7 @@ export default function CalibrationPage() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </Slab>
         </>
       )}
     </div>

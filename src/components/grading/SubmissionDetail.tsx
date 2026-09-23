@@ -202,10 +202,10 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
   const allTenProfit = allTenRevenue - totalInvest - shippingCost;
 
   return (
-    <div className="panel gold-hairline ring-1 ring-accent/25 p-5 mb-8 rise">
+    <div className="panel border-text-primary p-5 mb-8 rise">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-accent-light">{title}</h3>
+          <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-text-primary">{title}</h3>
           <p className="font-mono text-[10px] text-text-secondary mt-1">
             {totalSoldQty}/{totalQty} sold · {formatCurrency(totalInvest)} invested
             {shippingCost > 0 && ` · ${formatCurrency(shippingCost)} shipping`}
@@ -215,11 +215,11 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
           <div className="flex gap-0.5 bg-background border border-border rounded-lg p-0.5 font-mono text-[10px] uppercase tracking-wider">
             <button
               onClick={() => setMode('sales')}
-              className={`px-2.5 py-1 rounded-md transition-colors ${mode === 'sales' ? 'bg-gradient-to-r from-accent to-holo text-background font-bold' : 'text-text-secondary hover:text-text-primary'}`}
+              className={`px-2.5 py-1 rounded-md transition-colors ${mode === 'sales' ? 'bg-text-primary text-bg font-medium' : 'text-text-secondary hover:text-text-primary'}`}
             >Sales</button>
             <button
               onClick={() => setMode('pricing')}
-              className={`px-2.5 py-1 rounded-md transition-colors ${mode === 'pricing' ? 'bg-gradient-to-r from-accent to-holo text-background font-bold' : 'text-text-secondary hover:text-text-primary'}`}
+              className={`px-2.5 py-1 rounded-md transition-colors ${mode === 'pricing' ? 'bg-text-primary text-bg font-medium' : 'text-text-secondary hover:text-text-primary'}`}
             >Pricing</button>
           </div>
           {mode === 'sales' && (

@@ -80,24 +80,3 @@ export function SelectField<T extends string>({ label, value, options, onChange 
     </label>
   );
 }
-
-export function PageHeader({ eyebrow, title, accent, children }: { eyebrow: string; title: string; accent: string; children?: ReactNode }) {
-  return (
-    <div className="mb-8 rise flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
-          <span className="twinkle mr-1">✦</span>{eyebrow}
-        </div>
-        <h2 className="font-display text-4xl md:text-5xl font-medium tracking-tight text-text-primary">
-          {title} <span className="holo-text italic">{accent}</span>
-        </h2>
-      </div>
-      {children && <div className="flex flex-wrap gap-2">{children}</div>}
-    </div>
-  );
-}
-
-export const primaryButton =
-  'rounded-lg bg-gradient-to-r from-accent to-holo px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-background transition-all hover:brightness-125';
-export const secondaryButton =
-  'rounded-lg border border-border bg-background/60 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-text-secondary transition-colors hover:border-accent/40 hover:text-accent-light';

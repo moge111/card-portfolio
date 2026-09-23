@@ -12,23 +12,9 @@ import { usePortfolio } from '../../context/PortfolioContext';
 import { useGradingDesk } from '../../context/GradingDeskContext';
 import { EBAY_FEE } from '../../constants/fees';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
-import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
-import { FLAIR_HERO } from '../../constants/flair';
-import Peeker from '../shared/Peeker';
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-lg border border-border-bright bg-background/95 px-3 py-2 font-mono text-xs shadow-2xl backdrop-blur">
-      <p className="text-text-primary font-medium mb-1">{label || payload[0]?.name}</p>
-      {payload.map((entry: any, i: number) => (
-        <p key={i} style={{ color: entry.color }}>
-          {entry.name}: {typeof entry.value === 'number' && entry.value > 1 ? formatCurrency(entry.value) : entry.value}
-        </p>
-      ))}
-    </div>
-  );
-};
+import { BAR_RADIUS, CATEGORY_COLORS, CHART_COLORS, CHART_GRID, CHART_TICK_STYLE, SERIES } from '../../constants/theme';
+import PageHeader from '../shared/PageHeader';
+import ChartTooltip from '../shared/ChartTooltip';
 
 export default function OverviewPage() {
   const { gradingPortfolio, sealedCollection, singlesCollection } = usePortfolio();
@@ -148,23 +134,14 @@ export default function OverviewPage() {
 
   return (
     <div>
-      <div className="mb-10 rise">
-        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
-          <span className="twinkle mr-1">✦</span>Trainer HQ · Every Collection
-        </div>
-        <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
-          Portfolio <span className="holo-text italic">Overview</span>
-          <span className="ml-5 inline-flex items-end gap-1 align-middle">
-            <img src={FLAIR_HERO.pikachu} alt="Pikachu" className="floaty h-12 w-12 object-contain drop-shadow-[0_0_12px_rgba(250,204,21,0.45)]" />
-            <img src={FLAIR_HERO.luffy} alt="Luffy" className="floaty h-12 w-12 object-contain drop-shadow-[0_0_12px_rgba(239,68,68,0.45)]" style={{ animationDelay: '-1.1s' }} />
-            <img src={FLAIR_HERO.naruto} alt="Naruto" className="floaty h-12 w-12 object-contain drop-shadow-[0_0_12px_rgba(251,146,60,0.45)]" style={{ animationDelay: '-2.2s' }} />
-          </span>
-        </h2>
-        <p className="text-text-secondary text-sm mt-2">Grading, sealed and singles performance in one view</p>
-      </div>
+      <PageHeader
+        title="Overview"
+        detail="Every collection"
+        figure={{ value: formatCurrency(stats.totalProfit), caption: 'Total profit', tone: stats.totalProfit >= 0 ? 'text-profit' : 'text-loss' }}
+      />
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 rise rise-1">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 rise rise-1">
         <StatCard
           title="Holdings Value"
           value={formatCurrency(stats.holdingsValue)}
@@ -197,7 +174,7 @@ export default function OverviewPage() {
       </div>
 
       {/* Profit breakdown */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 rise rise-1">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 rise rise-1">
         <StatCard
           title="Realized Profit"
           value={formatCurrency(stats.realizedProfit)}
@@ -254,37 +231,37 @@ export default function OverviewPage() {
         ].map((seg) => {
           const roi = seg.invested > 0 ? (seg.profit / seg.invested) * 100 : 0;
           return (
-            <Link key={seg.to} to={seg.to} className="panel panel-hover group p-5 block">
-              <div className="flex items-center justify-between mb-4">
-                <span className="flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">
-                  <seg.icon size={14} className="wiggle text-accent" /> {seg.name}
+            <Link key={seg.to} to={seg.to} className="panel panel-hover group p-1.5 block">
+              <div className="slab-label flex items-center justify-between px-2.5 py-1.5">
+                <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-text-primary">
+                  <seg.icon size={13} className="text-text-secondary" /> {seg.name}
                 </span>
-                <ArrowUpRight size={14} className="text-text-secondary/40 transition-all group-hover:text-accent group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ArrowUpRight size={14} className="text-text-secondary transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-3 px-3 pt-3">
                 <div>
                   <div className="font-mono text-[9px] uppercase tracking-wider text-text-secondary mb-1">Invested</div>
-                  <div className="font-display text-lg font-medium tabular-nums text-text-primary">{formatCurrency(seg.invested)}</div>
+                  <div className="font-display text-2xl font-bold tabular-nums text-text-primary">{formatCurrency(seg.invested)}</div>
                 </div>
                 <div>
                   <div className="font-mono text-[9px] uppercase tracking-wider text-text-secondary mb-1">Value</div>
-                  <div className="font-display text-lg font-medium tabular-nums text-text-primary">{formatCurrency(seg.value)}</div>
+                  <div className="font-display text-2xl font-bold tabular-nums text-text-primary">{formatCurrency(seg.value)}</div>
                 </div>
                 <div>
                   <div className="font-mono text-[9px] uppercase tracking-wider text-text-secondary mb-1">Profit</div>
-                  <div className={`font-display text-lg font-medium tabular-nums ${seg.profit >= 0 ? 'text-profit' : 'text-loss'}`}>
+                  <div className={`font-display text-2xl font-bold tabular-nums ${seg.profit >= 0 ? 'text-profit' : 'text-loss'}`}>
                     {formatCurrency(seg.profit)}
                   </div>
                 </div>
               </div>
-              <div className="mt-4 flex items-center justify-between">
+              <div className="mt-4 flex items-center justify-between px-3 pb-2.5">
                 <span className="font-mono text-[10px] text-text-secondary">{seg.note}</span>
                 <span className={`font-mono text-[10px] font-medium ${seg.profit >= 0 ? 'text-profit' : 'text-loss'}`}>{formatPercent(roi)} ROI</span>
               </div>
               {seg.progress !== null && (
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border">
+                <div className="mx-3 mb-2.5 h-1.5 overflow-hidden rounded-full bg-border">
                   <div
-                    className="stripes h-full rounded-full bg-gradient-to-r from-accent to-profit"
+                    className="h-full rounded-full bg-text-primary"
                     style={{ width: `${Math.min(100, seg.progress * 100)}%` }}
                   />
                 </div>
@@ -297,7 +274,6 @@ export default function OverviewPage() {
       {/* Row 2: Investment Split + Profit Comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 rise rise-3">
         <ChartCard title="Investment Split" subtitle="Grading vs Sealed allocation">
-          <Peeker src={FLAIR_HERO.dragonite} className="right-10" size={42} alt="Dragonite peeking" />
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
@@ -307,27 +283,32 @@ export default function OverviewPage() {
                 innerRadius={60}
                 outerRadius={100}
                 dataKey="value"
-                strokeWidth={0}
-                label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                stroke="var(--color-surface)"
+                strokeWidth={2}
+                label={({ x, y, name, percent, textAnchor }) => (
+                  <text x={x} y={y} textAnchor={textAnchor} dominantBaseline="central" fill="var(--color-text-primary)" fontSize={12} fontFamily="var(--font-mono)">
+                    {name} {((percent ?? 0) * 100).toFixed(0)}%
+                  </text>
+                )}
+                labelLine={{ stroke: 'var(--color-border-bright)' }}
               >
                 {investmentSplitData.map((_, i) => (
                   <Cell key={i} fill={CHART_COLORS[i]} />
                 ))}
               </Pie>
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<ChartTooltip currency />} cursor={{ fill: 'var(--color-border)', opacity: 0.35 }} />
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
 
         <ChartCard title="Profit Comparison" subtitle="Expected profit by portfolio type">
-          <Peeker src={FLAIR_HERO.gengar} className="right-14" size={38} alt="Gengar peeking" />
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={profitComparisonData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
-              <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} tick={{ fill: '#8d96b2', fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" tick={{ fill: '#8d96b2', fontSize: 12 }} width={90} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="profit" fill="#38bdf8" radius={[0, 6, 6, 0]} name="Profit" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} horizontal={false} />
+              <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} tick={CHART_TICK_STYLE} />
+              <YAxis type="category" dataKey="name" tick={CHART_TICK_STYLE} width={90} />
+              <Tooltip content={<ChartTooltip currency />} cursor={{ fill: 'var(--color-border)', opacity: 0.35 }} />
+              <Bar dataKey="profit" fill={SERIES.blue} radius={[0, 4, 4, 0]} name="Profit" barSize={22} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -338,13 +319,13 @@ export default function OverviewPage() {
         <ChartCard title="Investment by Category">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={categoryData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
-              <XAxis dataKey="name" tick={{ fill: '#8d96b2', fontSize: 12 }} />
-              <YAxis tickFormatter={(v) => '$' + (v / 1000).toFixed(0) + 'k'} tick={{ fill: '#8d96b2', fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="invested" name="Invested" radius={[6, 6, 0, 0]}>
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
+              <XAxis dataKey="name" tick={CHART_TICK_STYLE} />
+              <YAxis tickFormatter={(v) => '$' + (v / 1000).toFixed(0) + 'k'} tick={CHART_TICK_STYLE} />
+              <Tooltip content={<ChartTooltip currency />} cursor={{ fill: 'var(--color-border)', opacity: 0.35 }} />
+              <Bar dataKey="invested" name="Invested" radius={BAR_RADIUS}>
                 {categoryData.map((entry) => (
-                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || '#38bdf8'} />
+                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] ?? SERIES.blue} />
                 ))}
               </Bar>
             </BarChart>
@@ -354,13 +335,13 @@ export default function OverviewPage() {
         <ChartCard title="ROI by Category">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={categoryData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
-              <XAxis dataKey="name" tick={{ fill: '#8d96b2', fontSize: 12 }} />
-              <YAxis tickFormatter={(v) => v + '%'} tick={{ fill: '#8d96b2', fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="roi" name="ROI %" radius={[6, 6, 0, 0]}>
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
+              <XAxis dataKey="name" tick={CHART_TICK_STYLE} />
+              <YAxis tickFormatter={(v) => v + '%'} tick={CHART_TICK_STYLE} />
+              <Tooltip content={<ChartTooltip currency />} cursor={{ fill: 'var(--color-border)', opacity: 0.35 }} />
+              <Bar dataKey="roi" name="ROI %" radius={BAR_RADIUS}>
                 {categoryData.map((entry) => (
-                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || '#38bdf8'} />
+                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] ?? SERIES.blue} />
                 ))}
               </Bar>
             </BarChart>
@@ -401,8 +382,7 @@ export default function OverviewPage() {
         <ChartCard title="Needs Attention" subtitle="Items currently underwater">
           {performers.bottom.length === 0 ? (
             <div className="py-10 text-center font-mono text-xs text-text-secondary">
-              <img src={FLAIR_HERO.snorlax} alt="Snorlax relaxing" className="floaty mx-auto mb-3 h-20 w-20 object-contain opacity-90" />
-              Nothing underwater — every item is in profit. Snorlax-level chill.
+              Nothing underwater — every item is in profit.
             </div>
           ) : (
             <div className="space-y-1">

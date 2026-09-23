@@ -6,7 +6,10 @@ import { usePortfolio } from '../../context/PortfolioContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { AXES, AXIS_CALLS, normalizeCall, suggestedTenRate } from '../../utils/gradingMath';
 import { useDeskStats, evaluateCandidate, type CandidateEvaluation } from './useDeskStats';
-import { NumField, PageHeader, SelectField, TextField, primaryButton, secondaryButton, labelClass } from './fields';
+import { NumField, SelectField, TextField, labelClass } from './fields';
+import { primaryButton, secondaryButton } from '../shared/buttons';
+import PageHeader from '../shared/PageHeader';
+import Slab from '../shared/Slab';
 import { VERDICT_STYLE } from '../../constants/gradingStyles';
 import type { AxisCall, Candidate, CandidateStage, GradeAxis } from '../../types/grading';
 import type { Category } from '../../types/portfolio';
@@ -25,9 +28,9 @@ const ALL_STAGES: { value: CandidateStage; label: string }[] = [
 const CATEGORIES: Category[] = ['Pokemon', 'One Piece', 'MTG', 'Naruto', 'Sports'];
 
 const CALL_STYLE: Record<AxisCall, string> = {
-  '10': 'bg-profit/15 text-profit border-profit/30',
+  '10': 'bg-gem/15 text-gem border-gem/40',
   '9-10': 'bg-accent/15 text-accent-light border-accent/30',
-  '9': 'bg-pokemon/15 text-pokemon border-pokemon/30',
+  '9': 'bg-caution/15 text-caution border-caution/30',
   '≤8': 'bg-loss/15 text-loss border-loss/30',
   '?': 'bg-text-secondary/10 text-text-secondary border-text-secondary/30',
 };
@@ -97,19 +100,20 @@ function CandidateCard({ c, ev, selected, onSelect, onMove }: {
   return (
     <div
       onClick={onSelect}
-      className={`rounded-xl border bg-background/50 p-3 cursor-pointer transition-colors hover:border-border-bright ${selected ? 'border-accent/60 ring-1 ring-accent/40' : 'border-border/70'}`}
+      className={`rounded-lg border bg-background p-1 cursor-pointer transition-colors hover:border-border-bright ${selected ? 'border-text-primary' : 'border-border'}`}
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="slab-label flex items-start justify-between gap-2 px-2 py-1.5">
         <div className="min-w-0">
-          <div className="text-sm font-medium text-text-primary leading-snug">{c.name}</div>
-          <div className="font-mono text-[10px] text-text-secondary mt-0.5">
+          <div className="font-display text-base font-bold uppercase leading-tight text-text-primary">{c.name}</div>
+          <div className="font-mono text-[10px] text-text-secondary">
             {c.qty > 1 && `${c.qty}× `}{formatCurrency(c.rawCost)} raw · 10 {formatCurrency(c.psa10Value)}
           </div>
         </div>
         {hasValues && (
-          <span className={`shrink-0 rounded-full border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider ${verdict.className}`}>{verdict.label}</span>
+          <span className={`shrink-0 text-right font-display text-sm font-extrabold uppercase leading-none ${verdict.textClass}`}>{verdict.label}</span>
         )}
       </div>
+      <div className="px-1.5 pb-1">
       <div className="mt-2"><CallChips calls={c.calls} /></div>
       <div className="mt-2 flex items-center justify-between font-mono text-[10px]">
         {hasValues ? (
@@ -120,9 +124,10 @@ function CandidateCard({ c, ev, selected, onSelect, onMove }: {
           <span className="text-text-secondary/70">Add PSA 10/9 values for EV</span>
         )}
         <span className="flex gap-0.5" onClick={(e) => e.stopPropagation()}>
-          <button disabled={stageIndex <= 0} onClick={() => onMove(-1)} className="p-0.5 text-text-secondary hover:text-accent-light disabled:opacity-20"><ChevronLeft size={13} /></button>
-          <button disabled={stageIndex >= BOARD_STAGES.length - 1} onClick={() => onMove(1)} className="p-0.5 text-text-secondary hover:text-accent-light disabled:opacity-20"><ChevronRight size={13} /></button>
+          <button disabled={stageIndex <= 0} onClick={() => onMove(-1)} aria-label="Move to previous stage" className="p-0.5 text-text-secondary hover:text-text-primary disabled:opacity-20"><ChevronLeft size={13} /></button>
+          <button disabled={stageIndex >= BOARD_STAGES.length - 1} onClick={() => onMove(1)} aria-label="Move to next stage" className="p-0.5 text-text-secondary hover:text-text-primary disabled:opacity-20"><ChevronRight size={13} /></button>
         </span>
+      </div>
       </div>
     </div>
   );
@@ -157,14 +162,16 @@ function CandidateEditor({ c, ev, onClose }: { c: Candidate; ev: CandidateEvalua
   };
 
   return (
-    <div className="panel gold-hairline ring-1 ring-accent/25 p-5 mb-6 rise">
-      <div className="flex items-center justify-between mb-4 gap-3">
-        <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-accent-light truncate">{c.name}</h3>
-        <div className="flex items-center gap-2 shrink-0">
+    <Slab
+      className="mb-6 rise"
+      title={c.name}
+      actions={
+        <>
           <Link to={`/calculator?candidate=${c.id}`} className={`${secondaryButton} inline-flex items-center gap-1.5`}><Calculator size={11} /> Calculator</Link>
-          <button onClick={onClose} className="text-text-secondary hover:text-text-primary"><X size={16} /></button>
-        </div>
-      </div>
+          <button onClick={onClose} aria-label="Close" className="text-text-secondary hover:text-text-primary"><X size={16} /></button>
+        </>
+      }
+    >
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -283,7 +290,7 @@ function CandidateEditor({ c, ev, onClose }: { c: Candidate; ev: CandidateEvalua
           </div>
         </div>
       </div>
-    </div>
+    </Slab>
   );
 }
 
@@ -332,17 +339,21 @@ export default function PregradePage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Grading Desk · Before you pay PSA" title="Pre-grade" accent="Queue">
+      <PageHeader
+        title="Pre-grade queue"
+        detail="Grading desk · before you pay PSA"
+        figure={{ value: String(candidates.length - done.length), caption: 'Cards in play' }}
+      >
         <button onClick={importFindings} className={`${secondaryButton} inline-flex items-center gap-1.5`}><FileUp size={11} /> Import /grade findings</button>
         <button onClick={() => select(addCandidate(blankCandidate()))} className={primaryButton}>+ Candidate</button>
       </PageHeader>
 
       {queued.length > 0 && (
-        <div className="panel px-5 py-3 mb-4 flex flex-wrap gap-x-6 gap-y-1 font-mono text-[11px] rise rise-1">
-          <span className="uppercase tracking-[0.18em] text-text-secondary">Next sub</span>
-          <span className="text-text-primary">{queued.reduce((s, c) => s + c.qty, 0)} cards queued</span>
-          <span className={queuedProfit >= 0 ? 'text-profit' : 'text-loss'}>{formatCurrency(queuedProfit)} expected profit</span>
-          {queued.some((c) => evaluations.get(c.id)!.verdict === 'pass') && <span className="text-loss">includes cards that don't pencil out</span>}
+        <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-md bg-text-primary px-4 py-2.5 font-mono text-[11px] text-bg rise rise-1">
+          <span className="text-[10px] uppercase tracking-[0.14em]">Next sub</span>
+          <span>{queued.reduce((s, c) => s + c.qty, 0)} cards queued</span>
+          <span>{queuedProfit >= 0 ? '+' : ''}{formatCurrency(queuedProfit)} expected profit</span>
+          {queued.some((c) => evaluations.get(c.id)!.verdict === 'pass') && <span>· includes cards that don't pencil out</span>}
         </div>
       )}
 
@@ -363,8 +374,8 @@ export default function PregradePage() {
             return (
               <div key={stage} className="panel p-3">
                 <div className="flex items-baseline justify-between px-1 mb-3">
-                  <h3 className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-primary">{label} <span className="text-text-secondary">{items.length}</span></h3>
-                  <span className="font-mono text-[9px] text-text-secondary/70">{hint}</span>
+                  <h3 className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-primary">{label} <span className="text-text-secondary">{items.length}</span></h3>
+                  <span className="font-mono text-[10px] text-text-secondary">{hint}</span>
                 </div>
                 <div className="space-y-2">
                   {items.map((c) => (
@@ -372,7 +383,7 @@ export default function PregradePage() {
                   ))}
                   <button
                     onClick={() => select(addCandidate(blankCandidate(stage)))}
-                    className="w-full rounded-xl border border-dashed border-border/70 py-2 font-mono text-[10px] uppercase tracking-wider text-text-secondary/70 hover:border-accent/40 hover:text-accent-light"
+                    className="w-full rounded-lg border border-dashed border-border py-2 font-mono text-[10px] uppercase tracking-wider text-text-secondary hover:border-border-bright hover:text-text-primary"
                   >
                     + Add
                   </button>
@@ -384,8 +395,7 @@ export default function PregradePage() {
       )}
 
       {done.length > 0 && (
-        <div className="panel p-5 rise rise-3">
-          <h3 className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-primary mb-3">Submitted & passed</h3>
+        <Slab className="rise rise-3" title="Submitted & passed">
           <div className="divide-y divide-border/40">
             {done.map((c) => (
               <button key={c.id} onClick={() => select(c.id)} className="w-full flex flex-wrap items-center gap-x-4 gap-y-1 py-2 text-left hover:bg-accent/[0.04]">
@@ -396,7 +406,7 @@ export default function PregradePage() {
               </button>
             ))}
           </div>
-        </div>
+        </Slab>
       )}
     </div>
   );

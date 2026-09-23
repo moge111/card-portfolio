@@ -12,24 +12,12 @@ import EditableCell, { EditableSelect } from '../shared/EditableCell';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
-import { CATEGORY_COLORS, CHART_COLORS } from '../../constants/theme';
-import { FLAIR_HERO } from '../../constants/flair';
-import Peeker from '../shared/Peeker';
+import { BAR_RADIUS, CATEGORY_COLORS, CHART_GRID, CHART_TICK_STYLE, SERIES, byCategoryOrder } from '../../constants/theme';
+import ChartTooltip from '../shared/ChartTooltip';
+import PageHeader from '../shared/PageHeader';
+import Slab from '../shared/Slab';
+import { primaryButton } from '../shared/buttons';
 import type { SealedProduct } from '../../types/portfolio';
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-lg border border-border-bright bg-background/95 px-3 py-2 font-mono text-xs shadow-2xl backdrop-blur">
-      <p className="text-text-primary font-medium mb-1">{label || payload[0]?.name}</p>
-      {payload.map((entry: any, i: number) => (
-        <p key={i} style={{ color: entry.color }}>
-          {entry.name}: {typeof entry.value === 'number' ? formatCurrency(entry.value) : entry.value}
-        </p>
-      ))}
-    </div>
-  );
-};
 
 export default function SealedPage() {
   const { sealedCollection, updateSealedProduct, addSealedProduct, deleteSealedProduct } = usePortfolio();
@@ -180,28 +168,20 @@ export default function SealedPage() {
     sealedCollection.forEach((p) => {
       map[p.category] = (map[p.category] || 0) + p.totalCost;
     });
-    return Object.entries(map).map(([name, value]) => ({ name, value }));
+    return byCategoryOrder(Object.entries(map).map(([name, value]) => ({ name, value })));
   }, [sealedCollection]);
 
   const categories = [...new Set(sealedCollection.map((p) => p.category))];
 
   return (
     <div>
-      <div className="mb-10 rise">
-        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
-          <span className="twinkle mr-1">✦</span>The Treasure Hold · Unopened
-        </div>
-        <h2 className="font-display text-5xl font-medium tracking-tight text-text-primary">
-          Sealed <span className="holo-text italic">Collection</span>
-          <span className="ml-5 inline-flex items-end gap-1 align-middle">
-            <img src={FLAIR_HERO.snorlax} alt="Snorlax" className="floaty h-13 w-13 object-contain drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]" />
-            <img src={FLAIR_HERO.chopper} alt="Chopper" className="floaty h-13 w-13 object-contain drop-shadow-[0_0_12px_rgba(244,114,182,0.45)]" style={{ animationDelay: '-1.6s' }} />
-          </span>
-        </h2>
-        <p className="text-text-secondary text-sm mt-2">{sealedCollection.length} products, {totals.totalUnits} total units held</p>
-      </div>
+      <PageHeader
+        title="Sealed"
+        detail={`${sealedCollection.length} products · ${totals.totalUnits} units held`}
+        figure={{ value: formatPercent(totals.roi), caption: 'Unrealized ROI', tone: totals.roi >= 0 ? 'text-profit' : 'text-loss' }}
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 rise rise-1">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8 rise rise-1">
         <StatCard title="Total Units" value={String(totals.totalUnits)} icon={Package} />
         <StatCard title="Total Invested" value={formatCurrency(totals.invested)} icon={DollarSign} />
         <StatCard title="Unrealized Profit" value={formatCurrency(totals.profit)} icon={TrendingUp} trend={totals.profit >= 0 ? 'up' : 'down'} />
@@ -212,11 +192,11 @@ export default function SealedPage() {
         <ChartCard title="ROI Distribution" subtitle="Products by ROI range">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={roiDistribution}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
-              <XAxis dataKey="range" tick={{ fill: '#8d96b2', fontSize: 11 }} />
-              <YAxis tick={{ fill: '#8d96b2', fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" name="Products" fill="#38bdf8" radius={[6, 6, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
+              <XAxis dataKey="range" tick={CHART_TICK_STYLE} />
+              <YAxis tick={CHART_TICK_STYLE} />
+              <Tooltip content={<ChartTooltip currency />} cursor={{ fill: 'var(--color-border)', opacity: 0.35 }} />
+              <Bar dataKey="count" name="Products" fill={SERIES.blue} radius={BAR_RADIUS} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -231,13 +211,14 @@ export default function SealedPage() {
                 innerRadius={48}
                 outerRadius={75}
                 dataKey="value"
-                strokeWidth={0}
+                stroke="var(--color-surface)"
+                strokeWidth={2}
               >
                 {categoryAllocation.map((entry) => (
-                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] || CHART_COLORS[0]} />
+                  <Cell key={entry.name} fill={CATEGORY_COLORS[entry.name] ?? SERIES.blue} />
                 ))}
               </Pie>
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<ChartTooltip currency />} cursor={{ fill: 'var(--color-border)', opacity: 0.35 }} />
               <Legend
                 verticalAlign="bottom"
                 iconType="circle"
@@ -246,7 +227,7 @@ export default function SealedPage() {
                   const total = categoryAllocation.reduce((s, e) => s + e.value, 0);
                   const entry = categoryAllocation.find((e) => e.name === name);
                   const pct = total > 0 && entry ? Math.round((entry.value / total) * 100) : 0;
-                  return <span style={{ color: '#8d96b2', fontSize: 11 }}>{name} · {pct}%</span>;
+                  return <span className="font-mono text-[11px] text-text-secondary">{name} · {pct}%</span>;
                 }}
               />
             </PieChart>
@@ -256,32 +237,21 @@ export default function SealedPage() {
         <ChartCard title="Top Market Gainers" subtitle="Cost vs Market Value">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={costVsMarket.slice(0, 5)}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#222940" />
-              <XAxis dataKey="name" tick={{ fill: '#8d96b2', fontSize: 9 }} />
-              <YAxis tickFormatter={(v) => '$' + (v / 1000).toFixed(0) + 'k'} tick={{ fill: '#8d96b2', fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="cost" name="Cost" fill="#38bdf8" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="market" name="Market" fill="#34d399" radius={[6, 6, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
+              <XAxis dataKey="name" tick={CHART_TICK_STYLE} />
+              <YAxis tickFormatter={(v) => '$' + (v / 1000).toFixed(0) + 'k'} tick={CHART_TICK_STYLE} />
+              <Tooltip content={<ChartTooltip currency />} cursor={{ fill: 'var(--color-border)', opacity: 0.35 }} />
+              <Bar dataKey="cost" name="Cost" fill={SERIES.blue} radius={BAR_RADIUS} />
+              <Bar dataKey="market" name="Market" fill={SERIES.gold} radius={BAR_RADIUS} />
+              <Legend iconType="square" iconSize={8} formatter={(name: string) => <span className="font-mono text-[11px] text-text-secondary">{name}</span>} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>
 
-      <div className="panel p-5 rise rise-3">
-        <Peeker src={FLAIR_HERO.chopper} className="right-14" size={42} alt="Chopper peeking" />
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-primary">All Sealed Products</h3>
-          {isAdmin && (
-            <button
-              onClick={addSealedProduct}
-              className="rounded-lg bg-gradient-to-r from-accent to-holo px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-background transition-all hover:brightness-125 hover:shadow-[0_0_16px_-2px_rgba(56,189,248,0.6)]"
-            >
-              + Add Product
-            </button>
-          )}
-        </div>
+      <Slab className="rise rise-3" title="All sealed products" actions={isAdmin && <button onClick={addSealedProduct} className={primaryButton}>+ Add product</button>}>
         <DataTable data={sealedCollection} columns={columns} categories={categories} csvName="sealed-collection" />
-      </div>
+      </Slab>
     </div>
   );
 }

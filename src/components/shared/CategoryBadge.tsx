@@ -1,14 +1,9 @@
-import { CATEGORY_COLORS } from '../../constants/theme';
+import { CATEGORY_DOT } from '../../constants/theme';
 
 export default function CategoryBadge({ category }: { category: string }) {
-  const color = CATEGORY_COLORS[category] || '#38bdf8';
   return (
-    <span
-     
-      className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider"
-      style={{ borderColor: color + '35', backgroundColor: color + '12', color }}
-    >
-      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }} />
+    <span className="inline-flex items-center gap-1.5 rounded-sm border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-text-secondary">
+      <span className={`h-1.5 w-1.5 rounded-full ${CATEGORY_DOT[category] ?? 'bg-series-blue'}`} />
       {category}
     </span>
   );
