@@ -28,6 +28,15 @@ function save(key: string, value: unknown) {
 // Stored subs win; any default sub the user doesn't have yet is appended.
 function loadSubmissionMeta(): Submission[] {
   const stored = load<Submission[]>(STORAGE_KEY_SUBMISSION_META, []);
+  // Turnaround corrections (Sept 2026). Guarded on the originally shipped values
+  // so hand edits in the UI win and a re-run is a no-op.
+  for (const sub of stored) {
+    if (sub.key === 4 && sub.turnaroundDays === 95) sub.turnaroundDays = 130;
+    if ((sub.key === 5 || sub.key === 6) && !sub.tier && !sub.turnaroundDays) {
+      sub.tier = 'Priority';
+      sub.turnaroundDays = 80;
+    }
+  }
   const keys = new Set(stored.map((s) => s.key));
   return [...stored, ...defaultSubmissionMeta.filter((s) => !keys.has(s.key))].sort((a, b) => a.key - b.key);
 }

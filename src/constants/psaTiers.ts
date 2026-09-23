@@ -2,12 +2,13 @@ import type { PsaTier } from '../types/grading';
 
 // PSA trading-card tiers. Open tiers verified on psacard.com 2026-09-23.
 // Value tiers are from PSA's Feb 2026 update and have been paused since —
-// kept here so they can be flipped back on when PSA reopens them.
+// kept here so they can be flipped back on when PSA reopens them. Value Bulk's
+// max is what Sub 4 actually experienced (~6 months), not PSA's published 95.
 // Editable in the app (Should I Grade? → PSA tiers); these are the defaults.
 export const PSA_TIERS_VERIFIED = '2026-09-23';
 
 export const defaultPsaTiers: PsaTier[] = [
-  { id: 'value-bulk', name: 'Value Bulk', feePerCard: 24.99, maxDeclaredValue: 500, turnaroundMin: 95, turnaroundMax: 95, paused: true, minCards: 20 },
+  { id: 'value-bulk', name: 'Value Bulk', feePerCard: 24.99, maxDeclaredValue: 500, turnaroundMin: 95, turnaroundMax: 130, paused: true, minCards: 20 },
   { id: 'value', name: 'Value', feePerCard: 32.99, maxDeclaredValue: 500, turnaroundMin: 75, turnaroundMax: 75, paused: true },
   { id: 'value-plus', name: 'Value Plus', feePerCard: 49.99, maxDeclaredValue: 1000, turnaroundMin: 45, turnaroundMax: 45, paused: true },
   { id: 'value-max', name: 'Value Max', feePerCard: 64.99, maxDeclaredValue: 2500, turnaroundMin: 35, turnaroundMax: 35, paused: true },
