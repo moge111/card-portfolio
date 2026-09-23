@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 33; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 34; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -142,6 +142,20 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
     if (storedVersion < 33) {
       for (let i = stored.length - 1; i >= 0; i--) {
         if (stored[i].id === 68) stored.splice(i, 1);
+      }
+    }
+
+    // v34: Subs 5A/5B went in on the ~$80 tier, not $70. Reprice every card
+    // still at exactly $70/card to $79.99. Ponyta (66) keeps its own $18.99
+    // rate; any card the user already hand-edited is left alone.
+    if (storedVersion < 34) {
+      const subFiveIds = new Set([57, 58, 59, 60, 61, 62, 63, 65, 67]);
+      for (const card of stored) {
+        if (!subFiveIds.has(card.id) || card.qty <= 0) continue;
+        if (Math.abs(card.gradingCost / card.qty - 70) > 0.005) continue;
+        card.gradingCost = +(card.qty * 79.99).toFixed(2);
+        card.totalInvestment = +(card.totalCost + card.gradingCost).toFixed(2);
+        Object.assign(card, recalcGradingCard(card));
       }
     }
 
