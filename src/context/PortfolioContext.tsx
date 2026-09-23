@@ -8,7 +8,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 32; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 33; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -135,6 +135,15 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
       }
     }
 
+    // v33: Van Gogh Pikachu (68) deleted from the portfolio at the user's
+    // request. The generic merge below only ever appends, so a removal needs
+    // its own pass. Card 68 is gone from defaults too, so it won't come back.
+    if (storedVersion < 33) {
+      for (let i = stored.length - 1; i >= 0; i--) {
+        if (stored[i].id === 68) stored.splice(i, 1);
+      }
+    }
+
     // For every other version bump: NEVER overwrite the user's stored card data.
     // Only append brand-new cards introduced in defaults so we don't lose user
     // edits to market values, rates, qty, costs, etc.
@@ -204,6 +213,12 @@ function loadSubmissionMaps(fallback: SubmissionMaps, storedVersion: number): Su
     if (storedVersion < 28) {
       stored[5] = { ...fallback[5] };
       stored[6] = { ...fallback[6] };
+      changed = true;
+    }
+
+    // v33: card 68 deleted from the portfolio — drop it from Sub 6 (key 7).
+    if (storedVersion < 33 && stored[7] && 68 in stored[7]) {
+      delete stored[7][68];
       changed = true;
     }
 
