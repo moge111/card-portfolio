@@ -32,6 +32,10 @@ function loadSubmissionMeta(): Submission[] {
   // so hand edits in the UI win and a re-run is a no-op.
   for (const sub of stored) {
     if (sub.key === 4 && sub.turnaroundDays === 95) sub.turnaroundDays = 130;
+    if (sub.key === 7 && sub.status === 'planned' && !sub.dateShipped) {
+      sub.status = 'shipped';
+      sub.tier = sub.tier ?? '$150/card';
+    }
     if ((sub.key === 5 || sub.key === 6) && !sub.tier && !sub.turnaroundDays) {
       sub.tier = 'Priority';
       sub.turnaroundDays = 80;

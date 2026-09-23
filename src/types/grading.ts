@@ -54,4 +54,6 @@ export interface Candidate {
   createdAt: string;
   submissionKey?: number;
   gradingCardId?: number;
+  // From a PSA cert lookup: population across every graded copy of this card
+  psa?: { certNumber: string; specId: number; graded: number; psa10: number; psa9: number; fetchedAt: string };
 }

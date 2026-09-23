@@ -13,5 +13,6 @@ export const defaultSubmissionMeta: Submission[] = [
   { key: 4, name: 'Sub 4', description: 'Mixed', orderNumber: '14972306', tier: 'Value Bulk', turnaroundDays: 130, shipping: 112.07, status: 'at-psa', dateShipped: '2026-05-28' },
   { key: 5, name: 'Sub 5A', description: 'Chinese Pokemon', tier: 'Priority', turnaroundDays: 80, shipping: 0, status: 'at-psa', dateShipped: '2026-07-10' },
   { key: 6, name: 'Sub 5B', description: 'Chinese Pokemon', tier: 'Priority', turnaroundDays: 80, shipping: 0, status: 'at-psa', dateShipped: '2026-07-10' },
-  { key: 7, name: 'Sub 6', description: 'High-value singles', shipping: 0, status: 'planned' },
+  // Sub 6 was sent at the $150/card tier (Sept 2026); ship date not recorded yet.
+  { key: 7, name: 'Sub 6', description: 'High-value singles', tier: '$150/card', shipping: 0, status: 'shipped' },
 ];

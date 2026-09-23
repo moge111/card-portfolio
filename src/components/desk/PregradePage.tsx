@@ -6,6 +6,7 @@ import { usePortfolio } from '../../context/PortfolioContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { AXES, AXIS_CALLS, normalizeCall, suggestedTenRate } from '../../utils/gradingMath';
 import { useDeskStats, evaluateCandidate, type CandidateEvaluation } from './useDeskStats';
+import PsaLookupBox from './PsaLookupBox';
 import { NumField, SelectField, TextField, labelClass } from './fields';
 import { primaryButton, secondaryButton } from '../shared/buttons';
 import PageHeader from '../shared/PageHeader';
@@ -209,6 +210,12 @@ function CandidateEditor({ c, ev, onClose }: { c: Candidate; ev: CandidateEvalua
 
         <div className="space-y-5">
           <div>
+            {c.psa && (
+              <div className="mb-4 rounded-md border border-border bg-background px-3 py-2 font-mono text-[11px] text-text-secondary">
+                <div className="text-text-primary">PSA pop · cert {c.psa.certNumber}</div>
+                {c.psa.graded.toLocaleString()} graded · <span className="text-gem">{c.psa.psa10.toLocaleString()} PSA 10</span> ({formatPercent((c.psa.psa10 / Math.max(1, c.psa.graded)) * 100)}) · {c.psa.psa9.toLocaleString()} PSA 9 ({formatPercent((c.psa.psa9 / Math.max(1, c.psa.graded)) * 100)})
+              </div>
+            )}
             <span className={labelClass}>Pre-grade calls</span>
             <div className="space-y-2">
               {AXES.map((axis) => (
@@ -356,6 +363,18 @@ export default function PregradePage() {
           {queued.some((c) => evaluations.get(c.id)!.verdict === 'pass') && <span>· includes cards that don't pencil out</span>}
         </div>
       )}
+
+      <PsaLookupBox
+        actionLabel="Look up & add"
+        onResult={(found) => select(addCandidate({
+          ...blankCandidate('watching'),
+          name: found.name,
+          category: found.category,
+          psa10Rate: +found.rate10.toFixed(3),
+          psa9Rate: +found.rate9.toFixed(3),
+          psa: { certNumber: found.certNumber, specId: found.specId, graded: found.graded, psa10: found.psa10, psa9: found.psa9, fetchedAt: found.fetchedAt },
+        }))}
+      />
 
       {selected && <CandidateEditor key={selected.id} c={selected} ev={evaluations.get(selected.id)!} onClose={() => select(null)} />}
 

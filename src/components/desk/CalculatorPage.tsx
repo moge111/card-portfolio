@@ -16,6 +16,7 @@ import { CHART_GRID, CHART_TICK, CHART_TICK_STYLE, SERIES } from '../../constant
 import PageHeader from '../shared/PageHeader';
 import Slab from '../shared/Slab';
 import { useDeskStats } from './useDeskStats';
+import PsaLookupBox from './PsaLookupBox';
 import { NumField, SelectField, TextField } from './fields';
 import { primaryButton, secondaryButton } from '../shared/buttons';
 import type { Candidate } from '../../types/grading';
@@ -77,6 +78,7 @@ export default function CalculatorPage() {
   const isAdmin = useAdmin();
   const candidate = candidates.find((c) => c.id === Number(params.get('candidate')));
   const [inputs, setInputs] = useState<CalcInputs>(() => inputsFrom(candidate, shippingPerCard));
+  const [psaPop, setPsaPop] = useState<Candidate['psa']>(candidate?.psa);
   const set = <K extends keyof CalcInputs>(field: K, value: CalcInputs[K]) => setInputs((prev) => ({ ...prev, [field]: value }));
 
   const calibration = calibrationFor(inputs.category);
@@ -132,6 +134,7 @@ export default function CalculatorPage() {
       psa10Rate: inputs.psa10Pct / 100,
       psa9Rate: inputs.psa9Pct / 100,
       calls: candidate?.calls ?? {},
+      psa: psaPop,
     };
     if (candidate) {
       updateCandidate(candidate.id, fields);
@@ -158,6 +161,20 @@ export default function CalculatorPage() {
         </button>
       </PageHeader>
 
+      <PsaLookupBox
+        actionLabel="Look up"
+        onResult={(found) => {
+          setInputs((prev) => ({
+            ...prev,
+            name: found.name,
+            category: found.category,
+            psa10Pct: +(found.rate10 * 100).toFixed(1),
+            psa9Pct: +(found.rate9 * 100).toFixed(1),
+          }));
+          setPsaPop({ certNumber: found.certNumber, specId: found.specId, graded: found.graded, psa10: found.psa10, psa9: found.psa9, fetchedAt: found.fetchedAt });
+        }}
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
         {/* Inputs */}
         <Slab className="lg:col-span-2 rise rise-1" title="Card & comps">
@@ -168,7 +185,7 @@ export default function CalculatorPage() {
             <NumField label="Copies" value={inputs.qty} onChange={(v) => set('qty', Math.max(1, Math.round(v)))} />
             <NumField label="PSA 10 value" prefix="$" value={inputs.psa10Value} onChange={(v) => set('psa10Value', v)} />
             <NumField label="PSA 9 value" prefix="$" value={inputs.psa9Value} onChange={(v) => set('psa9Value', v)} />
-            <NumField label="Your 10 rate" suffix="%" value={inputs.psa10Pct} onChange={(v) => set('psa10Pct', v)} />
+            <NumField label="Your 10 rate" suffix="%" value={inputs.psa10Pct} onChange={(v) => set('psa10Pct', v)} hint={psaPop ? `PSA pop: ${psaPop.psa10.toLocaleString()} of ${psaPop.graded.toLocaleString()} graded` : undefined} />
             <NumField label="Your 9 rate" suffix="%" value={inputs.psa9Pct} onChange={(v) => set('psa9Pct', v)} hint={`sub-9: ${formatPercent(Math.max(0, 100 - inputs.psa10Pct - inputs.psa9Pct))}`} />
             <NumField label="Sub-9 resale" prefix="$" value={inputs.sub9Value} onChange={(v) => set('sub9Value', v)} hint="What an 8-or-lower slab sells for" />
             <NumField label="Shipping / card" prefix="$" value={inputs.shippingPerCard} onChange={(v) => set('shippingPerCard', v)} hint={`Your subs average ${formatCurrency(shippingPerCard)}`} />
