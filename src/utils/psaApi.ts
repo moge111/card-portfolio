@@ -51,15 +51,20 @@ interface Cache {
 
 export function getPsaToken(): string {
   try {
-    return localStorage.getItem(TOKEN_KEY) ?? '';
+    return cleanPsaToken(localStorage.getItem(TOKEN_KEY) ?? '');
   } catch {
     return '';
   }
 }
 
+// Copying from PSA's page can bring along quotes, a "bearer " prefix or line breaks
+export function cleanPsaToken(raw: string): string {
+  return raw.replace(/^\s*["']?\s*(bearer\s+)?/i, '').replace(/["']\s*$/, '').replace(/\s+/g, '');
+}
+
 export function setPsaToken(token: string) {
   try {
-    if (token) localStorage.setItem(TOKEN_KEY, token.trim());
+    if (token) localStorage.setItem(TOKEN_KEY, cleanPsaToken(token));
     else localStorage.removeItem(TOKEN_KEY);
   } catch {
     // ignore storage errors
@@ -103,12 +108,15 @@ async function call<T>(path: string, token: string): Promise<T> {
   } catch {
     throw new PsaLookupError('Couldn’t reach PSA. Check your connection and try again.');
   }
-  if (response.status === 429) throw new PsaLookupError('PSA’s daily limit (100 lookups) is used up. It resets tomorrow.');
-  if (response.status === 401 || response.status === 403 || response.status === 500) {
-    throw new PsaLookupError('PSA rejected the API key. Check it under “PSA key”.');
-  }
   if (response.status === 204) throw new PsaLookupError('PSA returned nothing for that cert number.');
-  if (!response.ok) throw new PsaLookupError(`PSA returned an error (${response.status}).`);
+  if (!response.ok) {
+    const detail = (await response.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 160);
+    const suffix = ` [${response.status} on ${path.split('/').slice(0, 3).join('/')}${detail ? `: ${detail}` : ''}]`;
+    if (response.status === 429) throw new PsaLookupError('PSA’s daily limit (100 lookups) is used up. It resets tomorrow.' + suffix);
+    if (response.status === 401 || response.status === 403) throw new PsaLookupError('PSA rejected the API key. Re-paste it under “PSA key”.' + suffix);
+    if (response.status === 500) throw new PsaLookupError('PSA returned an error — usually a bad key, sometimes PSA’s own server.' + suffix);
+    throw new PsaLookupError('PSA returned an error.' + suffix);
+  }
   return response.json() as Promise<T>;
 }
 

@@ -21,7 +21,7 @@ export default function PsaLookupBox({ actionLabel, onResult }: PsaLookupBoxProp
 
   const saveKey = () => {
     setPsaToken(keyDraft);
-    setToken(keyDraft.trim());
+    setToken(getPsaToken());
     setKeyDraft('');
     setEditingKey(!keyDraft.trim());
   };
