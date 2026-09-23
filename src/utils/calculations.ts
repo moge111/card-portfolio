@@ -1,6 +1,6 @@
 import type { GradingCard, SealedProduct, Single } from '../types/portfolio';
 
-const EBAY_FEE = 0.1325;
+import { EBAY_FEE } from '../constants/fees';
 
 export function recalcGradingCard(c: GradingCard): GradingCard {
   const expected10s = +(c.qty * c.psa10Rate).toFixed(1);

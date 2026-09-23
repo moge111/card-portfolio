@@ -2,11 +2,12 @@ import { createContext, useContext, useState, useCallback, type ReactNode } from
 import { gradingPortfolio as defaultGrading, sealedCollection as defaultSealed, singlesCollection as defaultSingles, defaultSubmissionMaps, type SubmissionMaps } from '../data';
 import { recalcGradingCard, recalcSealedProduct, recalcSingle } from '../utils/calculations';
 import type { GradingCard, SealedProduct, Single, Category } from '../types/portfolio';
+import { toISODate, today } from '../utils/dates';
 
 const STORAGE_KEY_GRADING = 'portfolio-grading';
 const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
-const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
+export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
 const CURRENT_DATA_VERSION = 33; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
@@ -251,6 +252,7 @@ interface PortfolioContextType {
   updateSealedProduct: (id: number, field: keyof SealedProduct, value: number | string) => void;
   updateSingle: (id: number, field: keyof Single, value: number | string) => void;
   addGradingCard: () => void;
+  addGradingCardFrom: (fields: Partial<GradingCard>) => number;
   addSealedProduct: () => void;
   addSingle: () => void;
   deleteGradingCard: (id: number) => void;
@@ -295,9 +297,13 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           updated.totalCost = (value as number) * updated.qty;
           updated.totalInvestment = updated.totalCost + updated.gradingCost;
         }
+        if (field === 'gradingCost') {
+          updated.totalInvestment = updated.totalCost + (value as number);
+        }
         if (field === 'qty') {
+          const gradingPerCard = c.qty > 0 ? c.gradingCost / c.qty : 0;
           updated.totalCost = updated.costPerCard * (value as number);
-          updated.gradingCost = (value as number) * 18.99;
+          updated.gradingCost = +((value as number) * gradingPerCard).toFixed(2);
           updated.totalInvestment = updated.totalCost + updated.gradingCost;
         }
         return recalcGradingCard(updated);
@@ -333,9 +339,12 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
   const addSale = useCallback((cardId: number, price: number) => {
     setGrading((prev) => {
-      const next = prev.map((c) =>
-        c.id === cardId ? { ...c, soldPrices: [...c.soldPrices, price] } : c,
-      );
+      const next = prev.map((c) => {
+        if (c.id !== cardId) return c;
+        // Sales logged before dates existed stay undated (null)
+        const soldDates = c.soldPrices.map((_, i) => c.soldDates?.[i] ?? null);
+        return { ...c, soldPrices: [...c.soldPrices, price], soldDates: [...soldDates, toISODate(today())] };
+      });
       localStorage.setItem(STORAGE_KEY_GRADING, JSON.stringify(next));
       return next;
     });
@@ -346,7 +355,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       const next = prev.map((c) => {
         if (c.id !== cardId) return c;
         const soldPrices = c.soldPrices.filter((_, i) => i !== index);
-        return { ...c, soldPrices };
+        const soldDates = c.soldDates?.filter((_, i) => i !== index);
+        return { ...c, soldPrices, ...(soldDates && { soldDates }) };
       });
       localStorage.setItem(STORAGE_KEY_GRADING, JSON.stringify(next));
       return next;
@@ -413,6 +423,28 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       return next;
     });
   }, []);
+
+  const addGradingCardFrom = useCallback((fields: Partial<GradingCard>) => {
+    const id = grading.reduce((max, c) => Math.max(max, c.id), 0) + 1;
+    setGrading((prev) => {
+      const card: GradingCard = {
+        name: 'New Card', category: 'Pokemon', qty: 1,
+        totalCost: 0, costPerCard: 0, gradingCost: 0, totalInvestment: 0,
+        psa10Value: 0, psa9Value: 0, psa10Rate: 0, psa9Rate: 0, sub9Rate: 0,
+        expected10s: 0, expected9s: 0, expectedSub9s: 0,
+        netRevenue: 0, profit: 0, roi: 0, breakEven10Rate: 0,
+        gradedQty: 0, actual10s: 0, actual9s: 0, actualSub9s: 0, soldPrices: [],
+        ...fields,
+        id,
+      };
+      card.totalCost = +(card.qty * card.costPerCard).toFixed(2);
+      card.totalInvestment = +(card.totalCost + card.gradingCost).toFixed(2);
+      const next = [...prev, recalcGradingCard(card)];
+      localStorage.setItem(STORAGE_KEY_GRADING, JSON.stringify(next));
+      return next;
+    });
+    return id;
+  }, [grading]);
 
   const addSealedProduct = useCallback(() => {
     setSealed((prev) => {
@@ -496,7 +528,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       gradingPortfolio: grading, sealedCollection: sealed, singlesCollection: singles,
       submissionMaps, updateSubQty,
       updateGradingCard, updateSealedProduct, updateSingle,
-      addGradingCard, addSealedProduct, addSingle,
+      addGradingCard, addGradingCardFrom, addSealedProduct, addSingle,
       deleteGradingCard, deleteSealedProduct, deleteSingle,
       addSale, removeSale, updateSale,
       resetAll,

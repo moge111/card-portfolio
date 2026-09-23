@@ -2,9 +2,8 @@ import { useState, useRef } from 'react';
 import { X, Plus } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import type { GradingCard } from '../../types/portfolio';
+import { EBAY_FEE, SHIPPING_COST_PER_SALE } from '../../constants/fees';
 
-const EBAY_FEE = 0.1325;
-const SHIPPING_COST_PER_SALE = 2; // $5 charged - ~$7 FedEx avg = $2 out of pocket
 
 interface CardEntry {
   card: GradingCard;

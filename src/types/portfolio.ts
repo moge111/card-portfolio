@@ -28,6 +28,8 @@ export interface GradingCard {
   actualSub9s: number;
   // Actual sale tracking (net $ received per sale, after all platform fees)
   soldPrices: number[];
+  // Parallel to soldPrices — YYYY-MM-DD, null for sales logged before dates were tracked
+  soldDates?: (string | null)[];
   // Keeper cards: cost still counts but no sale is expected; tracked in Singles instead
   isKeeper?: boolean;
 }

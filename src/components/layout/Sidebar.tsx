@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CreditCard, Package, Layers, Menu, X, Download, Upload, PencilLine } from 'lucide-react';
+import { LayoutDashboard, CreditCard, Package, Layers, Menu, X, Download, Upload, PencilLine, ScanSearch, Calculator, Crosshair } from 'lucide-react';
 import { useState } from 'react';
 import { usePortfolio } from '../../context/PortfolioContext';
 import { useAdminToggle } from '../../context/AdminContext';
+import { useGradingDesk } from '../../context/GradingDeskContext';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Overview' },
@@ -11,7 +12,16 @@ const navItems = [
   { to: '/sealed', icon: Package, label: 'Sealed' },
 ];
 
-const BACKUP_KEYS = ['portfolio-grading', 'portfolio-singles', 'portfolio-sealed', 'portfolio-data-version'] as const;
+const deskItems = [
+  { to: '/pregrade', icon: ScanSearch, label: 'Pre-grade Queue' },
+  { to: '/calculator', icon: Calculator, label: 'Should I Grade?' },
+  { to: '/calibration', icon: Crosshair, label: 'Calibration' },
+];
+
+const BACKUP_KEYS = [
+  'portfolio-grading', 'portfolio-singles', 'portfolio-sealed', 'portfolio-submissions',
+  'portfolio-submission-meta', 'portfolio-candidates', 'portfolio-psa-tiers', 'portfolio-data-version',
+] as const;
 
 function exportBackup() {
   const data: Record<string, string | null> = {};
@@ -61,7 +71,9 @@ export default function Sidebar() {
   const { isAdmin, setAdmin } = useAdminToggle();
   const { gradingPortfolio, sealedCollection, singlesCollection } = usePortfolio();
   const itemCount = gradingPortfolio.length + sealedCollection.length + singlesCollection.length;
+  const { candidates } = useGradingDesk();
   const counts: Record<string, number> = {
+    '/pregrade': candidates.filter((c) => c.stage !== 'submitted' && c.stage !== 'passed').length,
     '/grading': gradingPortfolio.length,
     '/singles': singlesCollection.length,
     '/sealed': sealedCollection.length,
@@ -111,10 +123,12 @@ export default function Sidebar() {
         </div>
 
         <nav className="flex-1 px-3 py-5 space-y-1">
+          {[{ title: 'Collections', items: navItems }, { title: 'Grading Desk', items: deskItems }].map((section) => (
+            <div key={section.title} className="pb-4">
           <div className="px-4 pb-2 font-mono text-[9px] uppercase tracking-[0.3em] text-text-secondary/70">
-            Collections
+            {section.title}
           </div>
-          {navItems.map((item) => (
+          {section.items.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -145,6 +159,8 @@ export default function Sidebar() {
                 </>
               )}
             </NavLink>
+          ))}
+            </div>
           ))}
         </nav>
 
