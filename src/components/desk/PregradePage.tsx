@@ -101,7 +101,7 @@ function CandidateCard({ c, ev, selected, onSelect, onMove }: {
   return (
     <div
       onClick={onSelect}
-      className={`rounded-lg border bg-background p-1 cursor-pointer transition-colors hover:border-border-bright ${selected ? 'border-text-primary' : 'border-border'}`}
+      className={`rounded-lg border bg-background p-1 cursor-pointer transition-colors hover:border-border-bright ${selected ? 'border-label' : 'border-border'}`}
     >
       <div className="slab-label flex items-start justify-between gap-2 px-2 py-1.5">
         <div className="min-w-0">
@@ -356,7 +356,7 @@ export default function PregradePage() {
       </PageHeader>
 
       {queued.length > 0 && (
-        <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-md bg-text-primary px-4 py-2.5 font-mono text-[11px] text-bg rise rise-1">
+        <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-md border border-border border-l-4 border-l-label bg-selected px-4 py-2.5 font-mono text-[11px] text-on-selected rise rise-1">
           <span className="text-[10px] uppercase tracking-[0.14em]">Next sub</span>
           <span>{queued.reduce((s, c) => s + c.qty, 0)} cards queued</span>
           <span>{queuedProfit >= 0 ? '+' : ''}{formatCurrency(queuedProfit)} expected profit</span>

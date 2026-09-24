@@ -261,7 +261,7 @@ export default function OverviewPage() {
               {seg.progress !== null && (
                 <div className="mx-3 mb-2.5 h-1.5 overflow-hidden rounded-full bg-border">
                   <div
-                    className="h-full rounded-full bg-text-primary"
+                    className="h-full rounded-full bg-meter"
                     style={{ width: `${Math.min(100, seg.progress * 100)}%` }}
                   />
                 </div>

@@ -22,6 +22,11 @@
   --label-red: #c21f2b;
   --gem: #9a7519;
   --caution: #b45309;
+  --strong: #121417;
+  --on-strong: #ffffff;
+  --selected: #121417;
+  --on-selected: #ffffff;
+  --meter: #121417;
   --glare: rgba(255, 255, 255, 0.55);
   --shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 10px 24px -16px rgba(20, 30, 40, 0.5);
 
@@ -52,6 +57,11 @@
     --label-red: #d6414b;
     --gem: #d9b44a;
     --caution: #f0a35e;
+    --strong: #c8323d;
+    --on-strong: #ffffff;
+    --selected: #2a3139;
+    --on-selected: #e6eaed;
+    --meter: #7fb0de;
     --glare: rgba(255, 255, 255, 0.04);
     --shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 12px 28px -16px rgba(0, 0, 0, 0.8);
     --series-blue: #3987e5;
@@ -80,6 +90,11 @@
   --label-red: #d6414b;
   --gem: #d9b44a;
   --caution: #f0a35e;
+  --strong: #c8323d;
+  --on-strong: #ffffff;
+  --selected: #2a3139;
+  --on-selected: #e6eaed;
+  --meter: #7fb0de;
   --glare: rgba(255, 255, 255, 0.04);
   --shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 12px 28px -16px rgba(0, 0, 0, 0.8);
   --series-blue: #3987e5;
@@ -106,6 +121,11 @@
   --color-label: var(--label-red);
   --color-gem: var(--gem);
   --color-caution: var(--caution);
+  --color-strong: var(--strong);
+  --color-on-strong: var(--on-strong);
+  --color-selected: var(--selected);
+  --color-on-selected: var(--on-selected);
+  --color-meter: var(--meter);
 
   --color-series-blue: var(--series-blue);
   --color-series-gold: var(--series-gold);

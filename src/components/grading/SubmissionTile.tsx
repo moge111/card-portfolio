@@ -36,7 +36,7 @@ export default function SubmissionTile({ sub, stats, isOpen, isAdmin, feeShortfa
   return (
     <div
       onClick={onOpen}
-      className={`panel panel-hover p-1.5 cursor-pointer ${isOpen ? 'border-text-primary' : ''}`}
+      className={`panel panel-hover p-1.5 cursor-pointer ${isOpen ? 'border-label' : ''}`}
     >
       <div className="slab-label px-2.5 pt-1.5 pb-2">
         <div className="flex items-start justify-between gap-2">
@@ -83,7 +83,7 @@ export default function SubmissionTile({ sub, stats, isOpen, isAdmin, feeShortfa
           <div className="mt-3">
             <div className="h-1.5 rounded-full bg-border overflow-hidden">
               <div
-                className={`h-full rounded-full ${eta.progress >= 1 ? 'bg-profit' : 'bg-text-primary'}`}
+                className={`h-full rounded-full ${eta.progress >= 1 ? 'bg-profit' : 'bg-meter'}`}
                 style={{ width: `${Math.max(4, eta.progress * 100)}%` }}
               />
             </div>

@@ -126,17 +126,18 @@ export default function Sidebar() {
                   onClick={() => setMobileOpen(false)}
                   end={item.to === '/'}
                   className={({ isActive }) =>
-                    `flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive ? 'bg-text-primary text-bg' : 'text-text-primary hover:bg-surface-hover'
+                    `relative flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive ? 'bg-selected text-on-selected' : 'text-text-primary hover:bg-surface-hover'
                     }`
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      <item.icon size={15} className={isActive ? 'text-bg' : 'text-text-secondary'} />
+                      {isActive && <span aria-hidden className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-label" />}
+                      <item.icon size={15} className={isActive ? 'text-on-selected' : 'text-text-secondary'} />
                       <span className="flex-1">{item.label}</span>
                       {counts[item.to] !== undefined && (
-                        <span className={`font-mono text-[10px] tabular-nums ${isActive ? 'text-bg/70' : 'text-text-secondary'}`}>{counts[item.to]}</span>
+                        <span className={`font-mono text-[10px] tabular-nums ${isActive ? 'text-on-selected/70' : 'text-text-secondary'}`}>{counts[item.to]}</span>
                       )}
                     </>
                   )}
@@ -155,7 +156,7 @@ export default function Sidebar() {
                 aria-checked={preference === opt.value}
                 onClick={() => choose(opt.value)}
                 className={`flex-1 flex items-center justify-center gap-1 rounded py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
-                  preference === opt.value ? 'bg-text-primary text-bg' : 'text-text-secondary hover:text-text-primary'
+                  preference === opt.value ? 'bg-selected text-on-selected' : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 <opt.icon size={11} /> {opt.label}

@@ -592,7 +592,7 @@ export default function GradingPage() {
 
       {/* Pipeline: what's at PSA right now and when it's coming back */}
       {pipeline.active.length > 0 && (
-        <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-md bg-text-primary px-4 py-2.5 font-mono text-[11px] text-bg rise rise-2">
+        <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-md border border-border border-l-4 border-l-label bg-selected px-4 py-2.5 font-mono text-[11px] text-on-selected rise rise-2">
           <span className="text-[10px] uppercase tracking-[0.14em]">Pipeline</span>
           <span>{pipeline.cards} cards out across {pipeline.active.length} subs</span>
           <span>{pipeline.projectedProfit >= 0 ? '+' : ''}{formatCurrency(pipeline.projectedProfit)} projected profit</span>
@@ -624,7 +624,7 @@ export default function GradingPage() {
         {isAdmin && (
           <button
             onClick={() => setEditingSub(addSubmission())}
-            className="rounded-[10px] border border-dashed border-border-bright p-5 flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-text-secondary hover:text-text-primary hover:border-text-primary transition-colors"
+            className="rounded-[10px] border border-dashed border-border-bright p-5 flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-text-secondary hover:text-text-primary hover:border-label transition-colors"
           >
             <Plus size={14} /> New submission
           </button>
