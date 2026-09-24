@@ -1,15 +1,33 @@
 // The "Send to Card Portfolio" bookmark. `capture` runs on the page the user is
-// viewing (an eBay listing or a pop report), not inside the app, so it must be
-// self-contained — it's stringified into a javascript: URL. It only gathers raw
-// text and hands it to the app; all interpretation happens in parseImport so it
-// can improve without the user reinstalling the bookmark.
-function capture(appUrl: string) {
+// viewing (an eBay listing, an eBay search, or a pop report), not inside the app,
+// so it must be self-contained — it's stringified into a javascript: URL. It only
+// gathers raw text and hands it to the app; all interpretation happens in
+// importParse so it can improve without the user reinstalling the bookmark.
+export const BOOKMARKLET_VERSION = 2;
+
+function capture(appUrl: string, version: number) {
   const clean = (s: string | null | undefined) => (s || '').replace(/\s+/g, ' ').trim();
   const send = (data: Record<string, unknown>) => {
-    window.open(appUrl + '?import=' + encodeURIComponent(JSON.stringify(data)), 'card-portfolio');
+    window.open(appUrl + '?import=' + encodeURIComponent(JSON.stringify({ v: version, ...data })), 'card-portfolio');
   };
 
   if (/(^|\.)ebay\./.test(location.hostname)) {
+    // Search results (e.g. sold comps): one text blob per listing
+    if (/\/sch\//.test(location.pathname)) {
+      const seen: Element[] = [];
+      const items: string[] = [];
+      for (const link of Array.from(document.querySelectorAll('a[href*="/itm/"]'))) {
+        const box = link.closest('li') || link.parentElement;
+        if (!box || seen.indexOf(box) >= 0) continue;
+        seen.push(box);
+        const text = clean((box as HTMLElement).innerText);
+        if (text) items.push(text.slice(0, 400));
+        if (items.length >= 80) break;
+      }
+      send({ source: 'ebay-search', url: location.href, query: new URLSearchParams(location.search).get('_nkw') || '', items });
+      return;
+    }
+
     let price = '';
     for (const script of Array.from(document.querySelectorAll('script[type="application/ld+json"]'))) {
       try {
@@ -43,5 +61,5 @@ function capture(appUrl: string) {
 }
 
 export function bookmarkletHref(appUrl: string): string {
-  return 'javascript:' + encodeURIComponent(`(${capture.toString()})(${JSON.stringify(appUrl)})`);
+  return 'javascript:' + encodeURIComponent(`(${capture.toString()})(${JSON.stringify(appUrl)}, ${BOOKMARKLET_VERSION})`);
 }

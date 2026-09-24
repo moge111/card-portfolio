@@ -18,7 +18,7 @@ import Slab from '../shared/Slab';
 import { useDeskStats } from './useDeskStats';
 import PsaLookupBox from './PsaLookupBox';
 import BookmarkletPanel from './BookmarkletPanel';
-import { decodeCapture, guessCategoryFromText, parseEbay, parsePop, sameCard, type Capture } from '../../utils/importParse';
+import { compsLinks, decodeCapture, guessCategoryFromText, parseEbay, parsePop, parseSoldComps, sameCard, type Capture, type GradeComps } from '../../utils/importParse';
 import { NumField, SelectField, TextField } from './fields';
 import { primaryButton, secondaryButton } from '../shared/buttons';
 import type { Candidate } from '../../types/grading';
@@ -106,6 +106,43 @@ function applyCapture(inputs: CalcInputs, capture: Capture): { inputs: CalcInput
     };
   }
 
+  if (capture.source === 'ebay-search') {
+    const comps = parseSoldComps(capture);
+    if (!comps.psa10 && !comps.psa9) {
+      return {
+        inputs,
+        notice: { tone: 'warn', url: capture.url, text: `Didn’t find any PSA 10 or PSA 9 results on that page${comps.skipped ? ` (skipped ${comps.skipped} lots, other graders or unclear listings)` : ''}. Try the “PSA sold comps” link under Card & comps.` },
+      };
+    }
+    const describe = (label: string, g?: GradeComps) =>
+      g ? `${label} median ${formatCurrency(g.median)} (${g.count} ${comps.sold ? 'sales' : 'listings'}, ${formatCurrency(g.low)}–${formatCurrency(g.high)})` : `no ${label} results`;
+    return {
+      inputs: {
+        ...inputs,
+        psa10Value: comps.psa10?.median ?? inputs.psa10Value,
+        psa9Value: comps.psa9?.median ?? inputs.psa9Value,
+      },
+      notice: {
+        tone: comps.sold ? 'ok' : 'warn',
+        url: capture.url,
+        text: [
+          comps.sold ? 'From eBay sold comps:' : 'These are ACTIVE listings (asking prices), not sales — use the sold-comps link for real comps:',
+          `${describe('PSA 10', comps.psa10)} · ${describe('PSA 9', comps.psa9)}.`,
+          comps.skipped ? `Skipped ${comps.skipped} lots, other graders or unclear listings.` : '',
+          'Accepted best offers show the list price, so medians can run a little high.',
+        ].filter(Boolean).join(' '),
+      },
+    };
+  }
+
+  // The first version of the bookmark sent search pages as if they were listings
+  if (/\/sch\//.test(capture.url)) {
+    return {
+      inputs,
+      notice: { tone: 'warn', text: 'Your “Send to Card Portfolio” bookmark is an older version that can’t read search pages. Delete it and drag the new one from “One-click import” below.' },
+    };
+  }
+
   const listing = parseEbay(capture);
   // A listing for a different card starts over; one for the same card (raw + graded comps) combines
   const isNewCard = Boolean(inputs.name) && !sameCard(inputs.name, listing.title);
@@ -140,7 +177,7 @@ function applyCapture(inputs: CalcInputs, capture: Capture): { inputs: CalcInput
     notice: {
       tone: listing.price > 0 ? 'ok' : 'warn',
       url: listing.url,
-      text: `${parts.join(' · ')}. Next: open the card’s PSA pop report, select its row, and click the button again for the 10/9 rates.`,
+      text: `${parts.join(' · ')}. Next: open the comp links under Card & comps and click the bookmark on each — sold comps set the PSA 10/9 values, the pop report sets the rates.`,
     },
   };
 }
@@ -221,6 +258,7 @@ function CalculatorWorkspace({ importRaw, candidateId }: { importRaw: string | n
     setPsaMeta(undefined);
   };
 
+  const links = inputs.name ? compsLinks(inputs.name) : null;
   const popRates = inputs.popTotal > 0 ? { r10: pct(inputs.pop10, inputs.popTotal), r9: pct(inputs.pop9, inputs.popTotal) } : null;
 
   const calibration = calibrationFor(inputs.category);
@@ -359,6 +397,21 @@ function CalculatorWorkspace({ importRaw, candidateId }: { importRaw: string | n
           <div className="grid grid-cols-2 gap-3">
             <TextField label="Card" value={inputs.name} onChange={(v) => set('name', v)} placeholder="e.g. Umbreon VMAX Alt Art" />
             <SelectField label="Category" value={inputs.category} onChange={(v) => set('category', v)} options={CATEGORIES.map((v) => ({ value: v, label: v }))} />
+            {links && (
+              <div className="col-span-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px]">
+                <span className="text-text-secondary">Find comps:</span>
+                {[
+                  { href: links.psaSold, label: 'PSA sold comps' },
+                  { href: links.psa10Sold, label: 'PSA 10' },
+                  { href: links.psa9Sold, label: 'PSA 9' },
+                  { href: links.pop, label: 'PSA pop report' },
+                ].map((l) => (
+                  <a key={l.label} href={l.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-accent hover:underline">
+                    {l.label} <ExternalLink size={10} />
+                  </a>
+                ))}
+              </div>
+            )}
             <NumField label="Raw cost / card" prefix="$" value={inputs.rawCost} onChange={(v) => set('rawCost', v)} />
             <NumField label="Copies" value={inputs.qty} onChange={(v) => set('qty', Math.max(1, Math.round(v)))} />
             <NumField label="PSA 10 value" prefix="$" value={inputs.psa10Value} onChange={(v) => set('psa10Value', v)} />
