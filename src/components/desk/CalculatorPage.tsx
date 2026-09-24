@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { Calculator, RotateCcw } from 'lucide-react';
+import { Calculator, RotateCcw, X, ExternalLink } from 'lucide-react';
 import { useGradingDesk, type NewCandidate } from '../../context/GradingDeskContext';
 import { useAdmin } from '../../context/AdminContext';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
@@ -17,6 +17,8 @@ import PageHeader from '../shared/PageHeader';
 import Slab from '../shared/Slab';
 import { useDeskStats } from './useDeskStats';
 import PsaLookupBox from './PsaLookupBox';
+import BookmarkletPanel from './BookmarkletPanel';
+import { decodeCapture, guessCategoryFromText, parseEbay, parsePop, sameCard, type Capture } from '../../utils/importParse';
 import { NumField, SelectField, TextField } from './fields';
 import { primaryButton, secondaryButton } from '../shared/buttons';
 import type { Candidate } from '../../types/grading';
@@ -41,6 +43,106 @@ interface CalcInputs {
   daysToShip: number;
   daysToSell: number;
   useCalibration: boolean;
+  pop10: number;
+  pop9: number;
+  popTotal: number;
+  certNumber: string;
+  listingUrl: string;
+}
+
+interface Notice {
+  tone: 'ok' | 'warn';
+  text: string;
+  url?: string;
+}
+
+const DRAFT_KEY = 'portfolio-calc-draft';
+
+function loadDraft(): { inputs?: Partial<CalcInputs>; notice?: Notice } {
+  try {
+    return JSON.parse(localStorage.getItem(DRAFT_KEY) ?? '{}');
+  } catch {
+    return {};
+  }
+}
+
+function saveDraft(draft: { inputs: CalcInputs; notice?: Notice }) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+const pct = (count: number, total: number) => +((count / total) * 100).toFixed(1);
+
+// Card-specific fields; settings like shipping, tier and dates carry over between cards
+const BLANK_CARD: Partial<CalcInputs> = {
+  name: '', qty: 1, rawCost: 0, psa10Value: 0, psa9Value: 0, sub9Value: 0,
+  psa10Pct: 50, psa9Pct: 40, pop10: 0, pop9: 0, popTotal: 0, certNumber: '', listingUrl: '',
+};
+
+// Applies what the "Send to Card Portfolio" bookmark captured and explains what it filled in
+function applyCapture(inputs: CalcInputs, capture: Capture): { inputs: CalcInputs; notice: Notice } {
+  if (capture.source === 'pop') {
+    const counts = parsePop(capture);
+    if (!counts) {
+      return {
+        inputs,
+        notice: { tone: 'warn', url: capture.url, text: 'Couldn’t read the counts from that selection. Select just the card’s row (Auth through Total) and click the button again, or type the counts into PSA pop below.' },
+      };
+    }
+    return {
+      inputs: {
+        ...inputs,
+        pop10: counts.pop10, pop9: counts.pop9, popTotal: counts.total,
+        psa10Pct: pct(counts.pop10, counts.total), psa9Pct: pct(counts.pop9, counts.total),
+      },
+      notice: {
+        tone: 'ok',
+        url: capture.url,
+        text: `From the pop report: ${counts.pop10.toLocaleString()} PSA 10 · ${counts.pop9.toLocaleString()} PSA 9 · ${counts.total.toLocaleString()} total → rates set to ${pct(counts.pop10, counts.total)}% / ${pct(counts.pop9, counts.total)}%. Check these match the card’s row.`,
+      },
+    };
+  }
+
+  const listing = parseEbay(capture);
+  // A listing for a different card starts over; one for the same card (raw + graded comps) combines
+  const isNewCard = Boolean(inputs.name) && !sameCard(inputs.name, listing.title);
+  const start = isNewCard ? { ...inputs, ...BLANK_CARD } : inputs;
+  const next: CalcInputs = {
+    ...start,
+    name: listing.title || inputs.name,
+    category: guessCategoryFromText(listing.title) as Category,
+    certNumber: listing.cert || inputs.certNumber,
+    listingUrl: listing.url,
+  };
+  let placed = '';
+  if (listing.price > 0) {
+    if (listing.grade === '10') { next.psa10Value = listing.price; placed = 'PSA 10 value'; }
+    else if (listing.grade === '9') { next.psa9Value = listing.price; placed = 'PSA 9 value'; }
+    else if (!listing.grade) {
+      next.rawCost = listing.price;
+      if (!next.sub9Value) next.sub9Value = listing.price;
+      placed = 'raw cost';
+    }
+  }
+  const gradeLabel = listing.grade ? `${listing.grader || 'graded'} ${listing.grade}` : 'raw';
+  const parts = [
+    `${isNewCard ? 'New card. ' : ''}From eBay: ${gradeLabel} listing`,
+    listing.price > 0
+      ? placed ? `${formatCurrency(listing.price)} → ${placed} (asking price, not a sold comp)` : `${formatCurrency(listing.price)} (not used — only PSA 10, 9 and raw prices map to fields)`
+      : 'couldn’t find the price',
+    listing.cert && `cert ${listing.cert}`,
+  ].filter(Boolean);
+  return {
+    inputs: next,
+    notice: {
+      tone: listing.price > 0 ? 'ok' : 'warn',
+      url: listing.url,
+      text: `${parts.join(' · ')}. Next: open the card’s PSA pop report, select its row, and click the button again for the 10/9 rates.`,
+    },
+  };
 }
 
 function inputsFrom(c: Candidate | undefined, shippingPerCard: number): CalcInputs {
@@ -61,6 +163,11 @@ function inputsFrom(c: Candidate | undefined, shippingPerCard: number): CalcInpu
     daysToShip: DEFAULT_DAYS_TO_SHIP,
     daysToSell: DEFAULT_DAYS_TO_SELL,
     useCalibration: true,
+    pop10: c?.psa?.psa10 ?? 0,
+    pop9: c?.psa?.psa9 ?? 0,
+    popTotal: c?.psa?.graded ?? 0,
+    certNumber: c?.psa?.certNumber ?? '',
+    listingUrl: c?.link ?? '',
   };
 }
 
@@ -70,16 +177,51 @@ function formatBreakEven(rate: number): string {
   return formatPercent(rate * 100);
 }
 
+// Remounts per import/candidate so each one initializes cleanly from the saved draft
 export default function CalculatorPage() {
   const [params] = useSearchParams();
+  const importRaw = params.get('import');
+  const candidateId = Number(params.get('candidate')) || null;
+  return <CalculatorWorkspace key={importRaw ?? `candidate-${candidateId}`} importRaw={importRaw} candidateId={candidateId} />;
+}
+
+function CalculatorWorkspace({ importRaw, candidateId }: { importRaw: string | null; candidateId: number | null }) {
   const navigate = useNavigate();
   const { candidates, tiers, addCandidate, updateCandidate, updateTier, resetTiers } = useGradingDesk();
   const { calibrationFor, shippingPerCard } = useDeskStats();
   const isAdmin = useAdmin();
-  const candidate = candidates.find((c) => c.id === Number(params.get('candidate')));
-  const [inputs, setInputs] = useState<CalcInputs>(() => inputsFrom(candidate, shippingPerCard));
-  const [psaPop, setPsaPop] = useState<Candidate['psa']>(candidate?.psa);
+  const candidate = candidates.find((c) => c.id === candidateId);
+  const [initial] = useState(() => {
+    if (candidate) return { inputs: inputsFrom(candidate, shippingPerCard), notice: undefined };
+    const draft = loadDraft();
+    const base = { ...inputsFrom(undefined, shippingPerCard), ...draft.inputs };
+    const capture = decodeCapture(importRaw);
+    return capture ? applyCapture(base, capture) : { inputs: base, notice: draft.notice };
+  });
+  const [inputs, setInputs] = useState<CalcInputs>(initial.inputs);
+  const [notice, setNotice] = useState<Notice | undefined>(initial.notice);
+  const [psaMeta, setPsaMeta] = useState<{ specId: number; fetchedAt: string } | undefined>(
+    candidate?.psa ? { specId: candidate.psa.specId, fetchedAt: candidate.psa.fetchedAt } : undefined,
+  );
   const set = <K extends keyof CalcInputs>(field: K, value: CalcInputs[K]) => setInputs((prev) => ({ ...prev, [field]: value }));
+
+  // The standalone calculator keeps its work between visits and imports
+  useEffect(() => {
+    if (!candidate) saveDraft({ inputs, notice });
+  }, [candidate, inputs, notice]);
+
+  // Drop ?import= once applied so a reload doesn't re-apply it over later edits
+  useEffect(() => {
+    if (importRaw) navigate('/calculator', { replace: true });
+  }, [importRaw, navigate]);
+
+  const clearDraft = () => {
+    setInputs(inputsFrom(undefined, shippingPerCard));
+    setNotice(undefined);
+    setPsaMeta(undefined);
+  };
+
+  const popRates = inputs.popTotal > 0 ? { r10: pct(inputs.pop10, inputs.popTotal), r9: pct(inputs.pop9, inputs.popTotal) } : null;
 
   const calibration = calibrationFor(inputs.category);
   const result = useMemo(() => {
@@ -134,7 +276,17 @@ export default function CalculatorPage() {
       psa10Rate: inputs.psa10Pct / 100,
       psa9Rate: inputs.psa9Pct / 100,
       calls: candidate?.calls ?? {},
-      psa: psaPop,
+      link: inputs.listingUrl || candidate?.link,
+      psa: inputs.popTotal > 0
+        ? {
+            certNumber: inputs.certNumber,
+            specId: psaMeta?.specId ?? 0,
+            graded: inputs.popTotal,
+            psa10: inputs.pop10,
+            psa9: inputs.pop9,
+            fetchedAt: psaMeta?.fetchedAt ?? new Date().toISOString(),
+          }
+        : undefined,
     };
     if (candidate) {
       updateCandidate(candidate.id, fields);
@@ -156,10 +308,32 @@ export default function CalculatorPage() {
         detail="Grading desk · buy & grade math"
         figure={{ value: formatCurrency(outcome.profit), caption: `${verdict.label} · expected`, tone: outcome.profit >= 0 ? 'text-profit' : 'text-loss' }}
       >
+        {!candidate && <button onClick={clearDraft} className={secondaryButton}>Clear</button>}
         <button onClick={saveCandidate} className={primaryButton}>
           {candidate ? 'Save to candidate' : '+ Add to pre-grade queue'}
         </button>
       </PageHeader>
+
+      {notice && (
+        <div
+          role="status"
+          className={`mb-4 flex items-start gap-3 rounded-md border px-4 py-3 text-sm rise ${
+            notice.tone === 'ok' ? 'border-border-bright bg-surface text-text-primary' : 'border-caution/50 bg-caution/10 text-text-primary'
+          }`}
+        >
+          <p className="flex-1">
+            {notice.text}
+            {notice.url && (
+              <a href={notice.url} target="_blank" rel="noreferrer" className="ml-2 inline-flex items-center gap-1 font-mono text-[11px] text-accent underline">
+                source <ExternalLink size={10} />
+              </a>
+            )}
+          </p>
+          <button onClick={() => setNotice(undefined)} aria-label="Dismiss" className="text-text-secondary hover:text-text-primary"><X size={14} /></button>
+        </div>
+      )}
+
+      <BookmarkletPanel />
 
       <PsaLookupBox
         actionLabel="Look up"
@@ -170,8 +344,12 @@ export default function CalculatorPage() {
             category: found.category,
             psa10Pct: +(found.rate10 * 100).toFixed(1),
             psa9Pct: +(found.rate9 * 100).toFixed(1),
+            pop10: found.psa10,
+            pop9: found.psa9,
+            popTotal: found.graded,
+            certNumber: found.certNumber,
           }));
-          setPsaPop({ certNumber: found.certNumber, specId: found.specId, graded: found.graded, psa10: found.psa10, psa9: found.psa9, fetchedAt: found.fetchedAt });
+          setPsaMeta({ specId: found.specId, fetchedAt: found.fetchedAt });
         }}
       />
 
@@ -185,8 +363,28 @@ export default function CalculatorPage() {
             <NumField label="Copies" value={inputs.qty} onChange={(v) => set('qty', Math.max(1, Math.round(v)))} />
             <NumField label="PSA 10 value" prefix="$" value={inputs.psa10Value} onChange={(v) => set('psa10Value', v)} />
             <NumField label="PSA 9 value" prefix="$" value={inputs.psa9Value} onChange={(v) => set('psa9Value', v)} />
-            <NumField label="Your 10 rate" suffix="%" value={inputs.psa10Pct} onChange={(v) => set('psa10Pct', v)} hint={psaPop ? `PSA pop: ${psaPop.psa10.toLocaleString()} of ${psaPop.graded.toLocaleString()} graded` : undefined} />
+            <NumField label="Your 10 rate" suffix="%" value={inputs.psa10Pct} onChange={(v) => set('psa10Pct', v)} hint={popRates ? `PSA pop: ${popRates.r10}%` : undefined} />
             <NumField label="Your 9 rate" suffix="%" value={inputs.psa9Pct} onChange={(v) => set('psa9Pct', v)} hint={`sub-9: ${formatPercent(Math.max(0, 100 - inputs.psa10Pct - inputs.psa9Pct))}`} />
+            <div className="col-span-2 rounded-md border border-border p-2.5">
+              <div className="mb-2 flex items-baseline justify-between gap-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-text-secondary">
+                  PSA pop{inputs.certNumber && ` · cert ${inputs.certNumber}`}
+                </span>
+                {popRates && (Math.abs(popRates.r10 - inputs.psa10Pct) > 0.05 || Math.abs(popRates.r9 - inputs.psa9Pct) > 0.05) && (
+                  <button
+                    onClick={() => setInputs((prev) => ({ ...prev, psa10Pct: popRates.r10, psa9Pct: popRates.r9 }))}
+                    className="font-mono text-[10px] text-accent hover:underline"
+                  >
+                    Use pop rates ({popRates.r10}% / {popRates.r9}%)
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <NumField label="PSA 10s" value={inputs.pop10} onChange={(v) => set('pop10', Math.max(0, Math.round(v)))} />
+                <NumField label="PSA 9s" value={inputs.pop9} onChange={(v) => set('pop9', Math.max(0, Math.round(v)))} />
+                <NumField label="Total graded" value={inputs.popTotal} onChange={(v) => set('popTotal', Math.max(0, Math.round(v)))} />
+              </div>
+            </div>
             <NumField label="Sub-9 resale" prefix="$" value={inputs.sub9Value} onChange={(v) => set('sub9Value', v)} hint="What an 8-or-lower slab sells for" />
             <NumField label="Shipping / card" prefix="$" value={inputs.shippingPerCard} onChange={(v) => set('shippingPerCard', v)} hint={`Your subs average ${formatCurrency(shippingPerCard)}`} />
             <div className="col-span-2">

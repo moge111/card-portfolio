@@ -113,6 +113,9 @@ async function call<T>(path: string, token: string): Promise<T> {
     const detail = (await response.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 160);
     const suffix = ` [${response.status} on ${path.split('/').slice(0, 3).join('/')}${detail ? `: ${detail}` : ''}]`;
     if (response.status === 429) throw new PsaLookupError('PSA’s daily limit (100 lookups) is used up. It resets tomorrow.' + suffix);
+    if (/approved customers/i.test(detail)) {
+      throw new PsaLookupError('Your key works, but PSA hasn’t approved your account for API access yet. Email collectors-apis@collectors.com to request it — until then, use the one-click import button above.');
+    }
     if (response.status === 401 || response.status === 403) throw new PsaLookupError('PSA rejected the API key. Re-paste it under “PSA key”.' + suffix);
     if (response.status === 500) throw new PsaLookupError('PSA returned an error — usually a bad key, sometimes PSA’s own server.' + suffix);
     throw new PsaLookupError('PSA returned an error.' + suffix);
