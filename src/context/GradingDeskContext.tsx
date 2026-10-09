@@ -41,6 +41,9 @@ function loadSubmissionMeta(): Submission[] {
       sub.dateReturned = '2026-10-09';
       sub.orderNumber = sub.orderNumber ?? '27167007';
     }
+    // PSA billed $1,179.85 for 5B (receipt 1310-4486); per-card grading on file
+    // is $936.86, so the $242.99 gap goes on the sub.
+    if (sub.key === 6 && sub.shipping === 0) sub.shipping = 242.99;
     if ((sub.key === 5 || sub.key === 6) && !sub.tier && !sub.turnaroundDays) {
       sub.tier = 'Priority';
       sub.turnaroundDays = 80;
