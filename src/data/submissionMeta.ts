@@ -12,7 +12,7 @@ export const defaultSubmissionMeta: Submission[] = [
   { key: 3, name: 'Sub 3', description: 'One Piece / Naruto', orderNumber: '26541215', shipping: 0, status: 'returned', dateReturned: '2026-05-18' },
   { key: 4, name: 'Sub 4', description: 'Mixed', orderNumber: '14972306', tier: 'Value Bulk', turnaroundDays: 130, shipping: 112.07, status: 'at-psa', dateShipped: '2026-05-28' },
   { key: 5, name: 'Sub 5A', description: 'Chinese Pokemon', tier: 'Priority', turnaroundDays: 80, shipping: 0, status: 'at-psa', dateShipped: '2026-07-10' },
-  { key: 6, name: 'Sub 5B', description: 'Chinese Pokemon', tier: 'Priority', turnaroundDays: 80, shipping: 0, status: 'at-psa', dateShipped: '2026-07-10' },
+  { key: 6, name: 'Sub 5B', description: 'Chinese Pokemon', orderNumber: '27167007', tier: 'Priority', turnaroundDays: 80, shipping: 0, status: 'returned', dateShipped: '2026-07-10', dateReturned: '2026-10-09' },
   // Sub 6 was sent at the $150/card tier (Sept 2026); ship date not recorded yet.
   { key: 7, name: 'Sub 6', description: 'High-value singles', tier: '$150/card', shipping: 0, status: 'shipped' },
 ];

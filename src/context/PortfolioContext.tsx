@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 34; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 35; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -156,6 +156,26 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
         card.gradingCost = +(card.qty * 79.99).toFixed(2);
         card.totalInvestment = +(card.totalCost + card.gradingCost).toFixed(2);
         Object.assign(card, recalcGradingCard(card));
+      }
+    }
+
+    // v35: Sub 5B (order 27167007) came back — log its 14 results. 5A is still
+    // at PSA, so cards split across both subs are only partly graded. Umbreon
+    // (61) got N4 (questionable authenticity) and counts as sub-9. Guarded on
+    // gradedQty 0 so a hand-entry in the UI wins and a re-run is a no-op.
+    if (storedVersion < 35) {
+      const subFiveBResults: Record<number, [number, number, number]> = {
+        59: [0, 1, 0], 60: [0, 0, 1], 61: [0, 0, 1], 62: [0, 1, 0],
+        63: [2, 1, 0], 65: [1, 1, 1], 66: [2, 1, 0], 67: [0, 0, 1],
+      };
+      for (const card of stored) {
+        const result = subFiveBResults[card.id];
+        if (!result || card.gradedQty !== 0) continue;
+        const [tens, nines, sub9s] = result;
+        card.gradedQty = tens + nines + sub9s;
+        card.actual10s = tens;
+        card.actual9s = nines;
+        card.actualSub9s = sub9s;
       }
     }
 

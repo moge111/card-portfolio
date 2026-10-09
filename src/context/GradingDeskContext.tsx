@@ -36,6 +36,11 @@ function loadSubmissionMeta(): Submission[] {
       sub.status = 'shipped';
       sub.tier = sub.tier ?? '$150/card';
     }
+    if (sub.key === 6 && sub.status === 'at-psa' && !sub.dateReturned) {
+      sub.status = 'returned';
+      sub.dateReturned = '2026-10-09';
+      sub.orderNumber = sub.orderNumber ?? '27167007';
+    }
     if ((sub.key === 5 || sub.key === 6) && !sub.tier && !sub.turnaroundDays) {
       sub.tier = 'Priority';
       sub.turnaroundDays = 80;
