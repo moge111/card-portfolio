@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 35; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 36; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -176,6 +176,18 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
         card.actual10s = tens;
         card.actual9s = nines;
         card.actualSub9s = sub9s;
+      }
+    }
+
+    // v36: PSA's 5B bill shows Ponyta (66) was billed $79.99/card like the
+    // rest of Sub 5, not $18.99. Guarded on the old rate so a re-run is a no-op.
+    if (storedVersion < 36) {
+      for (const card of stored) {
+        if (card.id !== 66 || card.qty <= 0) continue;
+        if (Math.abs(card.gradingCost / card.qty - 18.99) > 0.005) continue;
+        card.gradingCost = +(card.qty * 79.99).toFixed(2);
+        card.totalInvestment = +(card.totalCost + card.gradingCost).toFixed(2);
+        Object.assign(card, recalcGradingCard(card));
       }
     }
 
