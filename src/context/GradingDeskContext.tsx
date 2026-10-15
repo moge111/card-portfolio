@@ -44,6 +44,14 @@ function loadSubmissionMeta(): Submission[] {
     // PSA billed $1,179.85 for 5B (receipt 1310-4486): 14 × $79.99 grading
     // plus $59.99 on top, which goes on the sub.
     if (sub.key === 6 && (sub.shipping === 0 || sub.shipping === 242.99)) sub.shipping = 59.99;
+    // Sub 5A (order 27174284) returned 2026-10-14: PSA billed $1,578.82 —
+    // $1,508.83 grading (on the cards) plus $69.99 shipping.
+    if (sub.key === 5 && sub.status === 'at-psa' && !sub.dateReturned) {
+      sub.status = 'returned';
+      sub.dateReturned = '2026-10-14';
+      sub.orderNumber = sub.orderNumber ?? '27174284';
+      if (sub.shipping === 0) sub.shipping = 69.99;
+    }
     if ((sub.key === 5 || sub.key === 6) && !sub.tier && !sub.turnaroundDays) {
       sub.tier = 'Priority';
       sub.turnaroundDays = 80;

@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 36; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 37; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -186,6 +186,37 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
         if (card.id !== 66 || card.qty <= 0) continue;
         if (Math.abs(card.gradingCost / card.qty - 18.99) > 0.005) continue;
         card.gradingCost = +(card.qty * 79.99).toFixed(2);
+        card.totalInvestment = +(card.totalCost + card.gradingCost).toFixed(2);
+        Object.assign(card, recalcGradingCard(card));
+      }
+    }
+
+    // v37: Sub 5A (order 27174284) came back — add its 18 results on top of
+    // 5B's. Umbreon (61) got N4 twice and counts as sub-9. PSA billed the 172
+    // Pikachu (57) $149 instead of $79.99. Guarded on the 5B-only gradedQty so
+    // a hand-entry in the UI wins and a re-run is a no-op.
+    if (storedVersion < 37) {
+      const subFiveAResults: Record<number, { before: number; result: [number, number, number] }> = {
+        57: { before: 0, result: [1, 0, 0] },
+        58: { before: 0, result: [0, 2, 0] },
+        61: { before: 1, result: [0, 0, 2] },
+        62: { before: 1, result: [1, 0, 0] },
+        63: { before: 3, result: [2, 2, 0] },
+        65: { before: 3, result: [4, 0, 0] },
+        66: { before: 3, result: [3, 1, 0] },
+      };
+      for (const card of stored) {
+        const entry = subFiveAResults[card.id];
+        if (!entry || card.gradedQty !== entry.before) continue;
+        const [tens, nines, sub9s] = entry.result;
+        card.gradedQty += tens + nines + sub9s;
+        card.actual10s += tens;
+        card.actual9s += nines;
+        card.actualSub9s += sub9s;
+      }
+      for (const card of stored) {
+        if (card.id !== 57 || Math.abs(card.gradingCost - 79.99) > 0.005) continue;
+        card.gradingCost = 149;
         card.totalInvestment = +(card.totalCost + card.gradingCost).toFixed(2);
         Object.assign(card, recalcGradingCard(card));
       }
