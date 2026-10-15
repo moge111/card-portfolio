@@ -36,6 +36,6 @@ export const defaultSubmissionMaps: SubmissionMaps = {
   // Sub 5B — anchored by Pikachu Psyduck (59), Magearna (60), Dodgers Luffy (67)
   6: { 59: 1, 60: 1, 61: 1, 62: 1, 63: 3, 65: 3, 66: 3, 67: 1 },
   // Sub 6 (map key 7 — keys 5/6 are Subs 5A/5B) — two high-value singles at the
-  // $150/card tier. Not shipped yet.
+  // $150/card tier. Returned 2026-10-15.
   7: { 69: 1, 70: 1 },
 };

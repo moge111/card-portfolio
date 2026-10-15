@@ -87,11 +87,12 @@ export const gradingPortfolio: GradingCard[] = [
   // loss. Update psa10Rate/psa9Rate once real grading data exists.
   { id: 67, name: 'One Piece Night LA Dodgers Monkey D. Luffy Promo (Sealed)', category: 'One Piece', qty: 1, totalCost: 583, costPerCard: 583, gradingCost: 79.99, totalInvestment: 662.99, psa10Value: 2000, psa9Value: 800, psa10Rate: 0, psa9Rate: 1, sub9Rate: 0, expected10s: 0, expected9s: 1, expectedSub9s: 0, netRevenue: 694, profit: 41, roi: 6.3, breakEven10Rate: -2.4, gradedQty: 1, actual10s: 0, actual9s: 0, actualSub9s: 1, soldPrices: [] },
   // Sub 6 — $150/card grading tier.
+  // v38: results back (order 27418326) — PCA PSA 10, Donald PSA 7.
   // No public comp exists for this exact parallel (/5, no PSA pop). psa10Value
   // is an estimate anchored on the $1,504 raw buy at a ~2.3x graded multiple —
   // NOT a sold comp. Rates are the Bowman Chrome refractor baseline (chipped
   // chrome edges + centering), not card-specific. Both are the weak links here.
-  { id: 69, name: 'Pete Crow-Armstrong RC Red Refractor /5 (2024 Bowman Chrome Mega Box)', category: 'Sports', qty: 1, totalCost: 1504.48, costPerCard: 1504.48, gradingCost: 150, totalInvestment: 1654.48, psa10Value: 3500, psa9Value: 1900, psa10Rate: 0.40, psa9Rate: 0.42, sub9Rate: 0.18, expected10s: 0.4, expected9s: 0.4, expectedSub9s: 0.2, netRevenue: 2141.69, profit: 487.21, roi: 29.4, breakEven10Rate: 24.0, gradedQty: 0, actual10s: 0, actual9s: 0, actualSub9s: 0, soldPrices: [] },
+  { id: 69, name: 'Pete Crow-Armstrong RC Red Refractor /5 (2024 Bowman Chrome Mega Box)', category: 'Sports', qty: 1, totalCost: 1504.48, costPerCard: 1504.48, gradingCost: 150, totalInvestment: 1654.48, psa10Value: 3500, psa9Value: 1900, psa10Rate: 0.40, psa9Rate: 0.42, sub9Rate: 0.18, expected10s: 0.4, expected9s: 0.4, expectedSub9s: 0.2, netRevenue: 2141.69, profit: 487.21, roi: 29.4, breakEven10Rate: 24.0, gradedQty: 1, actual10s: 1, actual9s: 0, actualSub9s: 0, soldPrices: [] },
   // v31: repriced for the un-retirement — Donald worked out at the Rams facility
   // 8/7/26, decision expected within days (undecided as of 8/13). Values are
   // weighted ~65% that he returns. Grade rates stay put: player news moves
@@ -103,5 +104,5 @@ export const gradingPortfolio: GradingCard[] = [
   // carries its scarcity without a slab. Raw ask on the same listing was $750,
   // so ~1.9x raw for a PSA 10. Black-bordered Prizm stock chips on the edges,
   // which is what keeps the 30% ten rate where it is — if anything it's generous.
-  { id: 70, name: 'Aaron Donald Green Prizm Patch Auto /5 (2018 Panini Select MP-AD)', category: 'Sports', qty: 1, totalCost: 657.50, costPerCard: 657.50, gradingCost: 150, totalInvestment: 807.50, psa10Value: 1450, psa9Value: 820, psa10Rate: 0.30, psa9Rate: 0.45, sub9Rate: 0.25, expected10s: 0.3, expected9s: 0.5, expectedSub9s: 0.3, netRevenue: 840.07, profit: 32.57, roi: 4.0, breakEven10Rate: 27.4, gradedQty: 0, actual10s: 0, actual9s: 0, actualSub9s: 0, soldPrices: [] },
+  { id: 70, name: 'Aaron Donald Green Prizm Patch Auto /5 (2018 Panini Select MP-AD)', category: 'Sports', qty: 1, totalCost: 657.50, costPerCard: 657.50, gradingCost: 150, totalInvestment: 807.50, psa10Value: 1450, psa9Value: 820, psa10Rate: 0.30, psa9Rate: 0.45, sub9Rate: 0.25, expected10s: 0.3, expected9s: 0.5, expectedSub9s: 0.3, netRevenue: 840.07, profit: 32.57, roi: 4.0, breakEven10Rate: 27.4, gradedQty: 1, actual10s: 0, actual9s: 0, actualSub9s: 1, soldPrices: [] },
 ];

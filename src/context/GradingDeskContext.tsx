@@ -52,6 +52,14 @@ function loadSubmissionMeta(): Submission[] {
       sub.orderNumber = sub.orderNumber ?? '27174284';
       if (sub.shipping === 0) sub.shipping = 69.99;
     }
+    // Sub 6 (order 27418326) returned 2026-10-15: PSA billed $332.99 (receipt
+    // 1619-1573) — 2 × $150 grading (on the cards) plus $32.99 shipping.
+    if (sub.key === 7 && (sub.status === 'planned' || sub.status === 'shipped' || sub.status === 'at-psa') && !sub.dateReturned) {
+      sub.status = 'returned';
+      sub.dateReturned = '2026-10-15';
+      sub.orderNumber = sub.orderNumber ?? '27418326';
+      if (sub.shipping === 0) sub.shipping = 32.99;
+    }
     if ((sub.key === 5 || sub.key === 6) && !sub.tier && !sub.turnaroundDays) {
       sub.tier = 'Priority';
       sub.turnaroundDays = 80;

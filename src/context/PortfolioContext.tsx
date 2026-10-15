@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 37; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 38; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -219,6 +219,24 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
         card.gradingCost = 149;
         card.totalInvestment = +(card.totalCost + card.gradingCost).toFixed(2);
         Object.assign(card, recalcGradingCard(card));
+      }
+    }
+
+    // v38: Sub 6 (order 27418326) came back — Pete Crow-Armstrong (69) PSA 10,
+    // Aaron Donald (70) PSA 7. Guarded on gradedQty 0 so a UI entry wins.
+    if (storedVersion < 38) {
+      const subSixResults: Record<number, [number, number, number]> = {
+        69: [1, 0, 0],
+        70: [0, 0, 1],
+      };
+      for (const card of stored) {
+        const result = subSixResults[card.id];
+        if (!result || card.gradedQty !== 0) continue;
+        const [tens, nines, sub9s] = result;
+        card.gradedQty = tens + nines + sub9s;
+        card.actual10s += tens;
+        card.actual9s += nines;
+        card.actualSub9s += sub9s;
       }
     }
 
