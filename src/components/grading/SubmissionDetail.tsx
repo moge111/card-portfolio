@@ -8,7 +8,12 @@ import { EBAY_FEE, SHIPPING_COST_PER_SALE } from '../../constants/fees';
 interface CardEntry {
   card: GradingCard;
   subQty: number;
+  // Copies of this card held by earlier subs — they claim its sales first
+  priorClaim: number;
 }
+
+// This sub's share of a card's sales, matching the submission tile's allocation
+const subSales = ({ card, subQty, priorClaim }: CardEntry) => (card.soldPrices || []).slice(priorClaim, priorClaim + subQty);
 
 interface SubmissionDetailProps {
   title: string;
@@ -185,12 +190,11 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
   const [profitTarget, setProfitTarget] = useState(30);
   const [mode, setMode] = useState<'sales' | 'pricing'>(defaultMode);
   const totalInvest = cards.reduce((s, { card, subQty }) => s + (card.totalInvestment / card.qty) * subQty, 0);
-  const totalSold = cards.reduce((s, { card }) => s + (card.soldPrices || []).reduce((a, p) => a + p, 0), 0);
-  const totalSoldQty = cards.reduce((s, { card }) => s + (card.soldPrices || []).length, 0);
+  const totalSold = cards.reduce((s, entry) => s + subSales(entry).reduce((a, p) => a + p, 0), 0);
+  const totalSoldQty = cards.reduce((s, entry) => s + subSales(entry).length, 0);
   const totalQty = cards.reduce((s, { subQty }) => s + subQty, 0);
-  const totalProfit = totalSold - cards.reduce((s, { card }) => {
-    const soldCount = (card.soldPrices || []).length;
-    return s + (card.totalInvestment / card.qty) * soldCount;
+  const totalProfit = totalSold - cards.reduce((s, entry) => {
+    return s + (entry.card.totalInvestment / entry.card.qty) * subSales(entry).length;
   }, 0) - (totalSoldQty > 0 ? shippingCost * (totalSoldQty / totalQty) : 0);
 
   // Projected total profit (expected at market values) for this sub
@@ -262,10 +266,11 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
       )}
 
       <div className="space-y-3">
-        {cards.map(({ card, subQty }) => {
+        {cards.map((entry) => {
+          const { card, subQty, priorClaim } = entry;
           const investPerCard = card.totalInvestment / card.qty;
           const totalCardInvest = investPerCard * subQty;
-          const sales = card.soldPrices || [];
+          const sales = subSales(entry);
           const salesTotal = sales.reduce((s, p) => s + p, 0);
           const cardProfit = salesTotal - investPerCard * sales.length;
           const isGraded = card.gradedQty > 0;
@@ -395,8 +400,8 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
                     <EditableSaleChip
                       key={i}
                       price={price}
-                      onUpdate={(newPrice) => onUpdateSale(card.id, i, newPrice)}
-                      onRemove={() => onRemoveSale(card.id, i)}
+                      onUpdate={(newPrice) => onUpdateSale(card.id, priorClaim + i, newPrice)}
+                      onRemove={() => onRemoveSale(card.id, priorClaim + i)}
                     />
                   ))}
                 </div>

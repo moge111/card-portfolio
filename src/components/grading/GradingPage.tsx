@@ -474,8 +474,14 @@ export default function GradingPage() {
     return { totalGraded, total10s, total9s, totalSub9s, actualRevenue, gradedInvestment, totalWithShipping, actualProfit };
   }, [sellableCards, keeperCost, returnedShipping]);
 
-  const subEntries = (key: number) =>
-    sellableCards.filter((c) => submissionMaps[key]?.[c.id]).map((c) => ({ card: c, subQty: submissionMaps[key][c.id] }));
+  const subEntries = (key: number) => {
+    const earlierSubs = submissions.slice(0, submissions.findIndex((sub) => sub.key === key));
+    return sellableCards.filter((c) => submissionMaps[key]?.[c.id]).map((c) => ({
+      card: c,
+      subQty: submissionMaps[key][c.id],
+      priorClaim: earlierSubs.reduce((s, sub) => s + (submissionMaps[sub.key]?.[c.id] || 0), 0),
+    }));
+  };
 
   const feeChecks = useMemo(() => {
     const checks: Record<number, ReturnType<typeof feeCheck>> = {};
