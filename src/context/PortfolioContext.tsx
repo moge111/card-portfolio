@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 38; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 39; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -237,6 +237,31 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
         card.actual10s += tens;
         card.actual9s += nines;
         card.actualSub9s += sub9s;
+      }
+    }
+
+    // v39: 11 PSA Vault eBay sales on 2026-10-20 — net proceeds after eBay
+    // fees. Skips a price the card already has so a UI entry or re-run wins.
+    if (storedVersion < 39) {
+      const saleDate = '2026-10-20';
+      const octTwentySales: Record<number, number[]> = {
+        59: [528.00],
+        60: [216.19],
+        62: [352.35],
+        63: [356.70, 334.95, 163.12],
+        65: [135.95, 36.15],
+        66: [195.31, 194.18, 142.24],
+      };
+      for (const card of stored) {
+        const prices = octTwentySales[card.id];
+        if (!prices) continue;
+        const soldDates = card.soldPrices.map((_, i) => card.soldDates?.[i] ?? null);
+        for (const price of prices) {
+          if (card.soldPrices.includes(price) || card.soldPrices.length >= card.gradedQty) continue;
+          card.soldPrices.push(price);
+          soldDates.push(saleDate);
+        }
+        card.soldDates = soldDates;
       }
     }
 
