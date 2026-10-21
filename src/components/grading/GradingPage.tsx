@@ -22,7 +22,7 @@ import type { GradingCard } from '../../types/portfolio';
 import { EBAY_FEE, SHIPPING_COST_PER_SALE } from '../../constants/fees';
 import { useGradingDesk } from '../../context/GradingDeskContext';
 import { defaultSubmissionMeta } from '../../data/submissionMeta';
-import { feeCheck, submissionEta } from '../../utils/gradingMath';
+import { allocateSales, feeCheck, submissionEta } from '../../utils/gradingMath';
 import { formatShortDate } from '../../utils/dates';
 import SubmissionTile, { type SubStats } from './SubmissionTile';
 import SubmissionEditor from './SubmissionEditor';
@@ -404,9 +404,10 @@ export default function GradingPage() {
     // Original expected (no actuals)
     const expectedProfit = sellableCards.reduce((s, c) => s + c.profit, 0) - keeperCost;
 
-    // Breakdown by submission. When a card spans subs, earlier subs claim its
-    // sales first (Sub 1 fills before Sub 2, 5A before 5B).
-    const calcActualSubStats = (subMap: Record<number, number>, priorClaims: Record<number, number>, shippingCost: number): SubStats => {
+    // Breakdown by submission. When a card spans subs, each sale goes to the
+    // sub it's tagged with; untagged sales fill earlier subs first.
+    const subKeys = submissions.map((sub) => sub.key);
+    const calcActualSubStats = (subKey: number, subMap: Record<number, number>, shippingCost: number): SubStats => {
       let subInvested = 0;
       let subRevenue = 0;
       let soldCount = 0;
@@ -424,12 +425,10 @@ export default function GradingPage() {
         if (c.gradedQty > 0) {
           const revPerGraded = calcActualRevenue(c) / c.gradedQty;
           subRevenue += revPerGraded * subQty;
-          const sales = c.soldPrices || [];
-          const priorClaim = priorClaims[c.id] || 0;
-          const subSoldCount = Math.min(Math.max(0, sales.length - priorClaim), subQty);
-          soldCount += subSoldCount;
-          soldRevenue += sales.slice(priorClaim, priorClaim + subSoldCount).reduce((s, p) => s + p, 0);
-          soldCost += investPerCard * subSoldCount;
+          const saleIndexes = allocateSales(c, subKeys, submissionMaps)[subKey] || [];
+          soldCount += saleIndexes.length;
+          soldRevenue += saleIndexes.reduce((s, i) => s + c.soldPrices[i], 0);
+          soldCost += investPerCard * saleIndexes.length;
         } else {
           // Not yet graded — fall back to expected revenue from market values × rates
           const revPerCard = c.qty > 0 ? c.netRevenue / c.qty : 0;
@@ -444,11 +443,8 @@ export default function GradingPage() {
     };
 
     const subStats: Record<number, SubStats> = {};
-    const priorClaims: Record<number, number> = {};
     for (const sub of submissions) {
-      const subMap = submissionMaps[sub.key] ?? {};
-      subStats[sub.key] = calcActualSubStats(subMap, { ...priorClaims }, sub.shipping);
-      for (const [cardId, qty] of Object.entries(subMap)) priorClaims[+cardId] = (priorClaims[+cardId] || 0) + qty;
+      subStats[sub.key] = calcActualSubStats(sub.key, submissionMaps[sub.key] ?? {}, sub.shipping);
     }
 
     const totalSoldRevenue = sellableCards.reduce((s, c) => s + (c.soldPrices || []).reduce((a, p) => a + p, 0), 0);
@@ -482,11 +478,11 @@ export default function GradingPage() {
   }, [sellableCards, keeperCost, returnedShipping]);
 
   const subEntries = (key: number) => {
-    const earlierSubs = submissions.slice(0, submissions.findIndex((sub) => sub.key === key));
+    const subKeys = submissions.map((sub) => sub.key);
     return sellableCards.filter((c) => submissionMaps[key]?.[c.id]).map((c) => ({
       card: c,
       subQty: submissionMaps[key][c.id],
-      priorClaim: earlierSubs.reduce((s, sub) => s + (submissionMaps[sub.key]?.[c.id] || 0), 0),
+      saleIndexes: allocateSales(c, subKeys, submissionMaps)[key] || [],
     }));
   };
 
@@ -670,7 +666,7 @@ export default function GradingPage() {
             cards={subEntries(openSub.key)}
             shippingCost={openSub.shipping}
             onClose={() => setOpenSim(null)}
-            onAddSale={addSale}
+            onAddSale={(cardId, price) => addSale(cardId, price, openSub.key)}
             onRemoveSale={removeSale}
             onUpdateSale={updateSale}
             onUpdateCard={updateGradingCard}

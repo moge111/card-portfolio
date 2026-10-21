@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 39; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 40; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -265,6 +265,22 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
       }
     }
 
+    // v40: sales now record which sub they came from. The 2026-10-20 sales
+    // (consecutive certs 169265525–537) were all Sub 5B (key 6). Only tags
+    // untagged sales so a re-run is a no-op.
+    if (storedVersion < 40) {
+      const subFiveBKey = 6;
+      const subFiveBCards = new Set([59, 60, 62, 63, 65, 66]);
+      for (const card of stored) {
+        if (!subFiveBCards.has(card.id)) continue;
+        const soldSubKeys = card.soldPrices.map((_, i) => card.soldSubKeys?.[i] ?? null);
+        card.soldDates?.forEach((date, i) => {
+          if (date === '2026-10-20' && soldSubKeys[i] == null) soldSubKeys[i] = subFiveBKey;
+        });
+        card.soldSubKeys = soldSubKeys;
+      }
+    }
+
     // For every other version bump: NEVER overwrite the user's stored card data.
     // Only append brand-new cards introduced in defaults so we don't lose user
     // edits to market values, rates, qty, costs, etc.
@@ -378,7 +394,7 @@ interface PortfolioContextType {
   deleteGradingCard: (id: number) => void;
   deleteSealedProduct: (id: number) => void;
   deleteSingle: (id: number) => void;
-  addSale: (cardId: number, price: number) => void;
+  addSale: (cardId: number, price: number, subKey?: number) => void;
   removeSale: (cardId: number, index: number) => void;
   updateSale: (cardId: number, index: number, newPrice: number) => void;
   resetAll: () => void;
@@ -457,13 +473,19 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const addSale = useCallback((cardId: number, price: number) => {
+  const addSale = useCallback((cardId: number, price: number, subKey?: number) => {
     setGrading((prev) => {
       const next = prev.map((c) => {
         if (c.id !== cardId) return c;
-        // Sales logged before dates existed stay undated (null)
+        // Sales logged before dates/sub tags existed stay null
         const soldDates = c.soldPrices.map((_, i) => c.soldDates?.[i] ?? null);
-        return { ...c, soldPrices: [...c.soldPrices, price], soldDates: [...soldDates, toISODate(today())] };
+        const soldSubKeys = c.soldPrices.map((_, i) => c.soldSubKeys?.[i] ?? null);
+        return {
+          ...c,
+          soldPrices: [...c.soldPrices, price],
+          soldDates: [...soldDates, toISODate(today())],
+          soldSubKeys: [...soldSubKeys, subKey ?? null],
+        };
       });
       localStorage.setItem(STORAGE_KEY_GRADING, JSON.stringify(next));
       return next;
@@ -476,7 +498,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         if (c.id !== cardId) return c;
         const soldPrices = c.soldPrices.filter((_, i) => i !== index);
         const soldDates = c.soldDates?.filter((_, i) => i !== index);
-        return { ...c, soldPrices, ...(soldDates && { soldDates }) };
+        const soldSubKeys = c.soldSubKeys?.filter((_, i) => i !== index);
+        return { ...c, soldPrices, ...(soldDates && { soldDates }), ...(soldSubKeys && { soldSubKeys }) };
       });
       localStorage.setItem(STORAGE_KEY_GRADING, JSON.stringify(next));
       return next;

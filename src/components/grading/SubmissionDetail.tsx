@@ -8,12 +8,11 @@ import { EBAY_FEE, SHIPPING_COST_PER_SALE } from '../../constants/fees';
 interface CardEntry {
   card: GradingCard;
   subQty: number;
-  // Copies of this card held by earlier subs — they claim its sales first
-  priorClaim: number;
+  // Indexes into card.soldPrices that belong to this sub (see allocateSales)
+  saleIndexes: number[];
 }
 
-// This sub's share of a card's sales, matching the submission tile's allocation
-const subSales = ({ card, subQty, priorClaim }: CardEntry) => (card.soldPrices || []).slice(priorClaim, priorClaim + subQty);
+const subSales = ({ card, saleIndexes }: CardEntry) => saleIndexes.map((i) => card.soldPrices[i]);
 
 interface SubmissionDetailProps {
   title: string;
@@ -267,7 +266,7 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
 
       <div className="space-y-3">
         {cards.map((entry) => {
-          const { card, subQty, priorClaim } = entry;
+          const { card, subQty, saleIndexes } = entry;
           const investPerCard = card.totalInvestment / card.qty;
           const totalCardInvest = investPerCard * subQty;
           const sales = subSales(entry);
@@ -400,14 +399,14 @@ export default function SubmissionDetail({ title, cards, shippingCost, onClose, 
                     <EditableSaleChip
                       key={i}
                       price={price}
-                      onUpdate={(newPrice) => onUpdateSale(card.id, priorClaim + i, newPrice)}
-                      onRemove={() => onRemoveSale(card.id, priorClaim + i)}
+                      onUpdate={(newPrice) => onUpdateSale(card.id, saleIndexes[i], newPrice)}
+                      onRemove={() => onRemoveSale(card.id, saleIndexes[i])}
                     />
                   ))}
                 </div>
               )}
 
-              {mode === 'sales' && <AddSaleRow card={card} onAdd={(price) => onAddSale(card.id, price)} />}
+              {mode === 'sales' && remaining > 0 && <AddSaleRow card={card} onAdd={(price) => onAddSale(card.id, price)} />}
             </div>
           );
         })}

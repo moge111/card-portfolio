@@ -30,6 +30,8 @@ export interface GradingCard {
   soldPrices: number[];
   // Parallel to soldPrices — YYYY-MM-DD, null for sales logged before dates were tracked
   soldDates?: (string | null)[];
+  // Parallel to soldPrices — submission key the sold copy came from; null = untagged
+  soldSubKeys?: (number | null)[];
   // Keeper cards: cost still counts but no sale is expected; tracked in Singles instead
   isKeeper?: boolean;
 }

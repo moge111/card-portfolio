@@ -295,3 +295,21 @@ export function feeCheck(entries: { card: GradingCard; subQty: number }[], tiers
     return { card, subQty, budgetPerCard, tier, shortfall: Math.max(0, required - budgetPerCard) * subQty };
   });
 }
+
+// Splits a card's sales across the subs that hold it. A sale tagged with a sub
+// goes to that sub; untagged sales fill subs in order (earlier subs first).
+// Returns the soldPrices indexes each sub owns.
+export function allocateSales(card: GradingCard, subKeys: number[], subMaps: Record<number, Record<number, number>>): Record<number, number[]> {
+  const owned: Record<number, number[]> = {};
+  const capacity = (key: number) => (subMaps[key]?.[card.id] || 0) - (owned[key]?.length || 0);
+  const untagged: number[] = [];
+  card.soldPrices.forEach((_, i) => {
+    const tag = card.soldSubKeys?.[i];
+    if (tag != null && subKeys.includes(tag) && capacity(tag) > 0) (owned[tag] ??= []).push(i);
+    else untagged.push(i);
+  });
+  for (const key of subKeys) {
+    while (untagged.length > 0 && capacity(key) > 0) (owned[key] ??= []).push(untagged.shift()!);
+  }
+  return owned;
+}
