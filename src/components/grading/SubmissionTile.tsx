@@ -11,7 +11,8 @@ export interface SubStats {
   cards: number;
   soldCount: number;
   soldRevenue: number;
-  currentPL: number;
+  realizedPL: number; // profit on sold copies only
+  realizedCost: number; // investment + shipping share of the sold copies
 }
 
 interface SubmissionTileProps {
@@ -27,8 +28,9 @@ interface SubmissionTileProps {
 export default function SubmissionTile({ sub, stats, isOpen, isAdmin, feeShortfall, onOpen, onEdit }: SubmissionTileProps) {
   // Before anything sells, show projected profit; once sales land, show realized P/L
   const hasSales = stats.soldCount > 0;
-  const pl = hasSales ? stats.currentPL : stats.profit;
-  const roi = stats.invested > 0 ? (pl / stats.invested) * 100 : 0;
+  const pl = hasSales ? stats.realizedPL : stats.profit;
+  const costBasis = hasSales ? stats.realizedCost : stats.invested;
+  const roi = costBasis > 0 ? (pl / costBasis) * 100 : 0;
   const eta = submissionEta(sub);
   const status = STATUS_STYLE[sub.status];
   const awaitingGrades = sub.status === 'shipped' || sub.status === 'at-psa';
@@ -74,7 +76,7 @@ export default function SubmissionTile({ sub, stats, isOpen, isAdmin, feeShortfa
         </div>
         <p className="font-mono text-[10px] text-text-secondary mt-1.5">
           {hasSales
-            ? `${stats.soldCount}/${stats.cards} sold · ${formatCurrency(stats.soldRevenue)} revenue`
+            ? `realized · ${stats.soldCount}/${stats.cards} sold · ${formatCurrency(stats.soldRevenue)} revenue`
             : `projected · 0/${stats.cards} sold`}
           {sub.tier ? ` · ${sub.tier}` : ''}
         </p>

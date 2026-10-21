@@ -411,6 +411,8 @@ export default function GradingPage() {
       let subRevenue = 0;
       let soldCount = 0;
       let soldRevenue = 0;
+      let soldCost = 0;
+      let sellableQty = 0;
       const cards = Object.values(subMap).reduce((s, v) => s + v, 0);
       gradingPortfolio.forEach((c) => {
         const subQty = subMap[c.id];
@@ -418,6 +420,7 @@ export default function GradingPage() {
         const investPerCard = c.totalInvestment / c.qty;
         subInvested += investPerCard * subQty;
         if (c.isKeeper) return; // keeper cost counts toward the sub, but no sale revenue
+        sellableQty += subQty;
         if (c.gradedQty > 0) {
           const revPerGraded = calcActualRevenue(c) / c.gradedQty;
           subRevenue += revPerGraded * subQty;
@@ -426,14 +429,18 @@ export default function GradingPage() {
           const subSoldCount = Math.min(Math.max(0, sales.length - priorClaim), subQty);
           soldCount += subSoldCount;
           soldRevenue += sales.slice(priorClaim, priorClaim + subSoldCount).reduce((s, p) => s + p, 0);
+          soldCost += investPerCard * subSoldCount;
         } else {
           // Not yet graded — fall back to expected revenue from market values × rates
           const revPerCard = c.qty > 0 ? c.netRevenue / c.qty : 0;
           subRevenue += revPerCard * subQty;
         }
       });
-      const currentPL = soldRevenue - subInvested - shippingCost;
-      return { invested: subInvested, profit: subRevenue - subInvested - shippingCost, cards, soldCount, soldRevenue, currentPL };
+      // Realized: sold copies only, each carrying its share of the sub's shipping
+      const soldShipping = sellableQty > 0 ? shippingCost * (soldCount / sellableQty) : 0;
+      const realizedCost = soldCost + soldShipping;
+      const realizedPL = soldRevenue - realizedCost;
+      return { invested: subInvested, profit: subRevenue - subInvested - shippingCost, cards, soldCount, soldRevenue, realizedPL, realizedCost };
     };
 
     const subStats: Record<number, SubStats> = {};
