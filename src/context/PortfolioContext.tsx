@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 40; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 41; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -278,6 +278,17 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
           if (date === '2026-10-20' && soldSubKeys[i] == null) soldSubKeys[i] = subFiveBKey;
         });
         card.soldSubKeys = soldSubKeys;
+      }
+    }
+
+    // v41: Aaron Donald PSA 7 (70) sold 2026-10-22 for $145.72 net — Sub 6
+    // (key 7). Skips if the price is already logged so a UI entry wins.
+    if (storedVersion < 41) {
+      for (const card of stored) {
+        if (card.id !== 70 || card.soldPrices.includes(145.72) || card.soldPrices.length >= card.gradedQty) continue;
+        card.soldDates = [...card.soldPrices.map((_, i) => card.soldDates?.[i] ?? null), '2026-10-22'];
+        card.soldSubKeys = [...card.soldPrices.map((_, i) => card.soldSubKeys?.[i] ?? null), 7];
+        card.soldPrices.push(145.72);
       }
     }
 

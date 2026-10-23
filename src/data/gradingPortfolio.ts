@@ -104,5 +104,5 @@ export const gradingPortfolio: GradingCard[] = [
   // carries its scarcity without a slab. Raw ask on the same listing was $750,
   // so ~1.9x raw for a PSA 10. Black-bordered Prizm stock chips on the edges,
   // which is what keeps the 30% ten rate where it is — if anything it's generous.
-  { id: 70, name: 'Aaron Donald Green Prizm Patch Auto /5 (2018 Panini Select MP-AD)', category: 'Sports', qty: 1, totalCost: 657.50, costPerCard: 657.50, gradingCost: 150, totalInvestment: 807.50, psa10Value: 1450, psa9Value: 820, psa10Rate: 0.30, psa9Rate: 0.45, sub9Rate: 0.25, expected10s: 0.3, expected9s: 0.5, expectedSub9s: 0.3, netRevenue: 840.07, profit: 32.57, roi: 4.0, breakEven10Rate: 27.4, gradedQty: 1, actual10s: 0, actual9s: 0, actualSub9s: 1, soldPrices: [] },
+  { id: 70, name: 'Aaron Donald Green Prizm Patch Auto /5 (2018 Panini Select MP-AD)', category: 'Sports', qty: 1, totalCost: 657.50, costPerCard: 657.50, gradingCost: 150, totalInvestment: 807.50, psa10Value: 1450, psa9Value: 820, psa10Rate: 0.30, psa9Rate: 0.45, sub9Rate: 0.25, expected10s: 0.3, expected9s: 0.5, expectedSub9s: 0.3, netRevenue: 840.07, profit: 32.57, roi: 4.0, breakEven10Rate: 27.4, gradedQty: 1, actual10s: 0, actual9s: 0, actualSub9s: 1, soldPrices: [145.72], soldDates: ['2026-10-22'], soldSubKeys: [7] },
 ];
