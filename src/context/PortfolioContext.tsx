@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 41; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 42; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -289,6 +289,15 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
         card.soldDates = [...card.soldPrices.map((_, i) => card.soldDates?.[i] ?? null), '2026-10-22'];
         card.soldSubKeys = [...card.soldPrices.map((_, i) => card.soldSubKeys?.[i] ?? null), 7];
         card.soldPrices.push(145.72);
+      }
+    }
+
+    // v42: the Donald sale (70) was logged from the UI at $143.31 (bid minus
+    // 13.25% and $2 ship); PSA Vault's actual proceeds were $145.72.
+    if (storedVersion < 42) {
+      for (const card of stored) {
+        if (card.id !== 70) continue;
+        card.soldPrices = card.soldPrices.map((p) => (p === 143.31 ? 145.72 : p));
       }
     }
 
