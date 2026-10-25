@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 42; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 43; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -298,6 +298,38 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
       for (const card of stored) {
         if (card.id !== 70) continue;
         card.soldPrices = card.soldPrices.map((p) => (p === 143.31 ? 145.72 : p));
+      }
+    }
+
+    // v43: 16 PSA Vault sales on 2026-10-24, all Sub 5A (key 5): certs
+    // 169543775–791 plus a re-certed Gengar. Cert order puts the 172 Pikachu
+    // (57) at $2,182.50 and the 173 (62) at $1,062. Skips a price already
+    // logged that day so a UI entry or re-run wins.
+    if (storedVersion < 43) {
+      const saleDate = '2026-10-24';
+      const subFiveAKey = 5;
+      const octTwentyFourSales: Record<number, number[]> = {
+        57: [2182.50],
+        58: [97.87, 91.35],
+        62: [1062.00],
+        63: [352.35, 348.00, 161.38, 148.33],
+        65: [133.54, 132.67, 116.14, 106.57],
+        66: [199.23, 189.22, 180.52, 132.67],
+      };
+      for (const card of stored) {
+        const prices = octTwentyFourSales[card.id];
+        if (!prices) continue;
+        const soldDates = card.soldPrices.map((_, i) => card.soldDates?.[i] ?? null);
+        const soldSubKeys = card.soldPrices.map((_, i) => card.soldSubKeys?.[i] ?? null);
+        for (const price of prices) {
+          const alreadyLogged = card.soldPrices.some((p, i) => p === price && soldDates[i] === saleDate);
+          if (alreadyLogged || card.soldPrices.length >= card.gradedQty) continue;
+          card.soldPrices.push(price);
+          soldDates.push(saleDate);
+          soldSubKeys.push(subFiveAKey);
+        }
+        card.soldDates = soldDates;
+        card.soldSubKeys = soldSubKeys;
       }
     }
 
