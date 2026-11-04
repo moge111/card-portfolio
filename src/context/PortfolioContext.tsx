@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 48; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 49; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -423,6 +423,36 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
           const actual = estimateToActual[String(price)];
           return actual !== undefined && card.soldDates?.[i] === '2026-11-04' ? actual : price;
         });
+      }
+    }
+
+    // v49: Sub 4 values reset to Nov 2026 comps (the June values were stale).
+    // Only the grade(s) each card actually got are set. Several are estimates
+    // with no sold data (39 Luffy SAA, 41 Sakura SP, 42/43 BPs). Charizard
+    // (37) keeps Parker's own $65; PSA 7s and the PSA 8 stay at raw cost.
+    if (storedVersion < 49) {
+      const novemberComps: Record<number, { psa10Value?: number; psa9Value?: number }> = {
+        38: { psa10Value: 165 },
+        39: { psa9Value: 120 },
+        40: { psa9Value: 60 },
+        41: { psa10Value: 120 },
+        42: { psa10Value: 75 },
+        43: { psa10Value: 75 },
+        44: { psa10Value: 52 },
+        45: { psa10Value: 70 },
+        46: { psa10Value: 90 },
+        47: { psa10Value: 45 },
+        48: { psa10Value: 45 },
+        49: { psa10Value: 45 },
+        53: { psa10Value: 60, psa9Value: 25 },
+        54: { psa9Value: 26 },
+        55: { psa10Value: 70 },
+        56: { psa10Value: 60 },
+      };
+      for (const card of stored) {
+        const comps = novemberComps[card.id];
+        if (!comps) continue;
+        Object.assign(card, recalcGradingCard({ ...card, ...comps }));
       }
     }
 
