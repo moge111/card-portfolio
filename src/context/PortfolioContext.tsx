@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 46; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 47; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -379,6 +379,36 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
         if (card.psa10Value === 200) card.psa10Value = 95;
         if (card.psa9Value === 56) card.psa9Value = 31;
         Object.assign(card, recalcGradingCard(card));
+      }
+    }
+
+    // v47: all 12 Mega Charizard X PSA 9s (37) sold 2026-11-04 on accepted
+    // offers — Sub 4 (key 4). Gross: 6 × $30.35 (certs 567/568/572–574/576),
+    // 5 × $32.13 (558/559/561/563/566), 1 × $32.70 (557). PSA hadn't posted
+    // fees yet (awaiting payment), so these are ESTIMATED net at 13%, the fee
+    // on every sub-$1k vault sale so far; correct to actual proceeds once paid.
+    // Skips if any 2026-11-04 sale is already logged on the card.
+    if (storedVersion < 47) {
+      const saleDate = '2026-11-04';
+      const subFourKey = 4;
+      const estimatedNet = [
+        ...Array(6).fill(26.40),
+        ...Array(5).fill(27.95),
+        28.45,
+      ];
+      for (const card of stored) {
+        if (card.id !== 37) continue;
+        const soldDates = card.soldPrices.map((_, i) => card.soldDates?.[i] ?? null);
+        if (soldDates.includes(saleDate)) continue;
+        const soldSubKeys = card.soldPrices.map((_, i) => card.soldSubKeys?.[i] ?? null);
+        for (const price of estimatedNet) {
+          if (card.soldPrices.length >= card.gradedQty) break;
+          card.soldPrices.push(price);
+          soldDates.push(saleDate);
+          soldSubKeys.push(subFourKey);
+        }
+        card.soldDates = soldDates;
+        card.soldSubKeys = soldSubKeys;
       }
     }
 
