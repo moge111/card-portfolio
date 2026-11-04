@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 43; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 44; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -330,6 +330,18 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
         }
         card.soldDates = soldDates;
         card.soldSubKeys = soldSubKeys;
+      }
+    }
+
+    // v44: Pete Crow-Armstrong PSA 10 (69), cert 175820339, sold 2026-11-03
+    // on a $3,000 accepted offer for $2,730 net — Sub 6 (key 7). Skips if the
+    // price is already logged so a UI entry wins.
+    if (storedVersion < 44) {
+      for (const card of stored) {
+        if (card.id !== 69 || card.soldPrices.includes(2730) || card.soldPrices.length >= card.gradedQty) continue;
+        card.soldDates = [...card.soldPrices.map((_, i) => card.soldDates?.[i] ?? null), '2026-11-03'];
+        card.soldSubKeys = [...card.soldPrices.map((_, i) => card.soldSubKeys?.[i] ?? null), 7];
+        card.soldPrices.push(2730);
       }
     }
 

@@ -92,7 +92,7 @@ export const gradingPortfolio: GradingCard[] = [
   // is an estimate anchored on the $1,504 raw buy at a ~2.3x graded multiple —
   // NOT a sold comp. Rates are the Bowman Chrome refractor baseline (chipped
   // chrome edges + centering), not card-specific. Both are the weak links here.
-  { id: 69, name: 'Pete Crow-Armstrong RC Red Refractor /5 (2024 Bowman Chrome Mega Box)', category: 'Sports', qty: 1, totalCost: 1504.48, costPerCard: 1504.48, gradingCost: 150, totalInvestment: 1654.48, psa10Value: 3500, psa9Value: 1900, psa10Rate: 0.40, psa9Rate: 0.42, sub9Rate: 0.18, expected10s: 0.4, expected9s: 0.4, expectedSub9s: 0.2, netRevenue: 2141.69, profit: 487.21, roi: 29.4, breakEven10Rate: 24.0, gradedQty: 1, actual10s: 1, actual9s: 0, actualSub9s: 0, soldPrices: [] },
+  { id: 69, name: 'Pete Crow-Armstrong RC Red Refractor /5 (2024 Bowman Chrome Mega Box)', category: 'Sports', qty: 1, totalCost: 1504.48, costPerCard: 1504.48, gradingCost: 150, totalInvestment: 1654.48, psa10Value: 3500, psa9Value: 1900, psa10Rate: 0.40, psa9Rate: 0.42, sub9Rate: 0.18, expected10s: 0.4, expected9s: 0.4, expectedSub9s: 0.2, netRevenue: 2141.69, profit: 487.21, roi: 29.4, breakEven10Rate: 24.0, gradedQty: 1, actual10s: 1, actual9s: 0, actualSub9s: 0, soldPrices: [2730], soldDates: ['2026-11-03'], soldSubKeys: [7] },
   // v31: repriced for the un-retirement — Donald worked out at the Rams facility
   // 8/7/26, decision expected within days (undecided as of 8/13). Values are
   // weighted ~65% that he returns. Grade rates stay put: player news moves
