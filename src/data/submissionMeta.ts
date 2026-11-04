@@ -13,7 +13,7 @@ export const defaultSubmissionMeta: Submission[] = [
   { key: 1, name: 'Sub 1', orderNumber: '26141760', tier: 'TCG Bulk', shipping: 47.33, status: 'returned', dateReturned: '2026-03-20' },
   { key: 2, name: 'Sub 2', description: 'Pokemon', orderNumber: '26141834', tier: 'TCG Bulk', shipping: 46.55, status: 'returned', dateReturned: '2026-03-28' },
   { key: 3, name: 'Sub 3', description: 'One Piece / Naruto', orderNumber: '26541215', shipping: 0, status: 'returned', dateReturned: '2026-05-18' },
-  { key: 4, name: 'Sub 4', description: 'Mixed', orderNumber: '14972306', tier: 'Value Bulk', turnaroundDays: 130, shipping: 112.07, status: 'at-psa', dateShipped: '2026-05-28' },
+  { key: 4, name: 'Sub 4', description: 'Mixed', orderNumber: '27307541', tier: 'Value Bulk', turnaroundDays: 130, shipping: 112.07, status: 'returned', dateShipped: '2026-05-28', dateReturned: '2026-11-04' },
   { key: 5, name: 'Sub 5A', description: 'Chinese Pokemon', orderNumber: '27174284', tier: 'Priority', turnaroundDays: 80, shipping: 69.99, status: 'returned', dateShipped: '2026-07-10', dateReturned: '2026-10-14' },
   { key: 6, name: 'Sub 5B', description: 'Chinese Pokemon', orderNumber: '27167007', tier: 'Priority', turnaroundDays: 80, shipping: 59.99, status: 'returned', dateShipped: '2026-07-10', dateReturned: '2026-10-09' },
   // Sub 6 was sent at the $150/card tier (Sept 2026); ship date not recorded.

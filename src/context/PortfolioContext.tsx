@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 44; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 45; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -342,6 +342,30 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
         card.soldDates = [...card.soldPrices.map((_, i) => card.soldDates?.[i] ?? null), '2026-11-03'];
         card.soldSubKeys = [...card.soldPrices.map((_, i) => card.soldSubKeys?.[i] ?? null), 7];
         card.soldPrices.push(2730);
+      }
+    }
+
+    // v45: Sub 4 (order 27307541, submission #14972306) came back — 50 cards,
+    // 30 PSA 10 / 16 PSA 9 / 4 sub-9 (one Charizard PSA 8, three Naruto PU
+    // 004–006 PSA 7). PSA billed $1,321.58: 50 × $24.99 grading plus the
+    // $72.08 return already in Sub 4's shipping. Guarded on gradedQty 0 so a
+    // UI entry wins and a re-run is a no-op.
+    if (storedVersion < 45) {
+      const subFourResults: Record<number, [number, number, number]> = {
+        37: [7, 12, 1], 38: [1, 0, 0], 39: [0, 1, 0], 40: [0, 1, 0],
+        41: [1, 0, 0], 42: [1, 0, 0], 43: [1, 0, 0], 44: [1, 0, 0],
+        45: [1, 0, 0], 46: [6, 0, 0], 47: [1, 0, 0], 48: [1, 0, 0],
+        49: [1, 0, 0], 50: [0, 0, 1], 51: [0, 0, 1], 52: [0, 0, 1],
+        53: [6, 1, 0], 54: [0, 1, 0], 55: [1, 0, 0], 56: [1, 0, 0],
+      };
+      for (const card of stored) {
+        const result = subFourResults[card.id];
+        if (!result || card.gradedQty !== 0) continue;
+        const [tens, nines, sub9s] = result;
+        card.gradedQty = tens + nines + sub9s;
+        card.actual10s = tens;
+        card.actual9s = nines;
+        card.actualSub9s = sub9s;
       }
     }
 

@@ -60,6 +60,14 @@ function loadSubmissionMeta(): Submission[] {
       sub.orderNumber = sub.orderNumber ?? '27418326';
       if (sub.shipping === 0) sub.shipping = 32.99;
     }
+    // Sub 4 (order 27307541, submission #14972306) returned 2026-11-04: PSA
+    // billed $1,321.58 (receipt 1745-3558) — 50 × $24.99 grading plus the
+    // $72.08 insured return already counted in its $112.07 shipping.
+    if (sub.key === 4 && sub.status === 'at-psa' && !sub.dateReturned) {
+      sub.status = 'returned';
+      sub.dateReturned = '2026-11-04';
+      if (!sub.orderNumber || sub.orderNumber === '14972306') sub.orderNumber = '27307541';
+    }
     if ((sub.key === 5 || sub.key === 6) && !sub.tier && !sub.turnaroundDays) {
       sub.tier = 'Priority';
       sub.turnaroundDays = 80;
