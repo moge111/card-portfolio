@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 45; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 46; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -366,6 +366,19 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
         card.actual10s = tens;
         card.actual9s = nines;
         card.actualSub9s = sub9s;
+      }
+    }
+
+    // v46: Mega Charizard X M2a (37) prices tanked. Parker accepted ~$30–32
+    // offers on all 12 PSA 9s (sales logged once PSA pays out) and is
+    // auctioning the 7 PSA 10s; recent PSA 10 comps run ~$80–110. Guarded on
+    // the original $200/$56 values so a UI edit wins.
+    if (storedVersion < 46) {
+      for (const card of stored) {
+        if (card.id !== 37) continue;
+        if (card.psa10Value === 200) card.psa10Value = 95;
+        if (card.psa9Value === 56) card.psa9Value = 31;
+        Object.assign(card, recalcGradingCard(card));
       }
     }
 
