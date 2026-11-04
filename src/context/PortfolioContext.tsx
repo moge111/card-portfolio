@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 47; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 48; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -385,8 +385,8 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
     // v47: all 12 Mega Charizard X PSA 9s (37) sold 2026-11-04 on accepted
     // offers — Sub 4 (key 4). Gross: 6 × $30.35 (certs 567/568/572–574/576),
     // 5 × $32.13 (558/559/561/563/566), 1 × $32.70 (557). PSA hadn't posted
-    // fees yet (awaiting payment), so these are ESTIMATED net at 13%, the fee
-    // on every sub-$1k vault sale so far; correct to actual proceeds once paid.
+    // fees yet (awaiting payment), so these were ESTIMATED net at 13% —
+    // corrected to gross in v48 (accepted offers have no fees).
     // Skips if any 2026-11-04 sale is already logged on the card.
     if (storedVersion < 47) {
       const saleDate = '2026-11-04';
@@ -409,6 +409,20 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
         }
         card.soldDates = soldDates;
         card.soldSubKeys = soldSubKeys;
+      }
+    }
+
+    // v48: accepted offers carry no PSA fees, so the 12 Charizard PSA 9 sales
+    // (37) net their full offer price. Swap v47's 13%-fee estimates for the
+    // gross amounts. Only touches 2026-11-04 entries still at an estimate.
+    if (storedVersion < 48) {
+      const estimateToActual: Record<string, number> = { '26.4': 30.35, '27.95': 32.13, '28.45': 32.70 };
+      for (const card of stored) {
+        if (card.id !== 37) continue;
+        card.soldPrices = card.soldPrices.map((price, i) => {
+          const actual = estimateToActual[String(price)];
+          return actual !== undefined && card.soldDates?.[i] === '2026-11-04' ? actual : price;
+        });
       }
     }
 
