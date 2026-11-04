@@ -9,7 +9,7 @@ const STORAGE_KEY_SEALED = 'portfolio-sealed';
 const STORAGE_KEY_SINGLES = 'portfolio-singles';
 export const STORAGE_KEY_SUBMISSIONS = 'portfolio-submissions';
 const STORAGE_KEY_VERSION = 'portfolio-data-version';
-const CURRENT_DATA_VERSION = 49; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
+const CURRENT_DATA_VERSION = 50; // Bump when default data changes (existing card edits are PRESERVED — only new card ids are appended)
 
 function getStoredVersion(): number {
   try {
@@ -453,6 +453,14 @@ function loadGradingWithMerge(defaults: GradingCard[], storedVersion: number): G
         const comps = novemberComps[card.id];
         if (!comps) continue;
         Object.assign(card, recalcGradingCard({ ...card, ...comps }));
+      }
+    }
+
+    // v50: Parker puts the Luffy SAA PSA 9 (39) at ~$300, not v49's $120 guess.
+    if (storedVersion < 50) {
+      for (const card of stored) {
+        if (card.id !== 39) continue;
+        Object.assign(card, recalcGradingCard({ ...card, psa9Value: 300 }));
       }
     }
 
